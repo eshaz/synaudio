@@ -4,21 +4,23 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --maxWorkers=100%",
     "format": "prettier --write '**/*.js' --write '**/*.*json*' --write '**/*.*html*'"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/eshaz/synaudio.git"
   },
-  "author": "",
+  "author": "Ethan Halsall",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/eshaz/synaudio/issues"
   },
+  "type": "module",
   "homepage": "https://github.com/eshaz/synaudio#readme",
   "devDependencies": {
-    "jest": "^28.1.1",
+    "@types/jest": "^27.5.1",
+    "jest": "^27.5.1",
     "prettier": "^2.7.1"
   },
   "dependencies": {

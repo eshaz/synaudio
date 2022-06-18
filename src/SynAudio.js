@@ -1,26 +1,29 @@
-//import { MPEGDecoderWebWorker } from "./mpg123-decoder.min.js";
-
-const MPEGDecoderWebWorker = window["mpg123-decoder"].MPEGDecoderWebWorker;
+import { MPEGDecoderWebWorker } from "mpg123-decoder";
 
 export default class SynAudio {
   constructor() {
-    this._decoder = new MPEGDecoderWebWorker();
     this._covarianceSampleSize = 5000;
   }
 
   async decode(audioData) {
-    const decodedAudio = await this._decoder.ready.then(() =>
-      this._decoder.decode(audioData)
-    );
+    let decoder = new MPEGDecoderWebWorker(),
+      decodedAudio;
 
-    await this._decoder.reset();
+    await decoder.ready.then(() =>
+      decoder
+        .decode(audioData)
+        .then((decoded) => (decodedAudio = decoded))
+        .then(() => decoder.free())
+    );
 
     return decodedAudio;
   }
 
   async sync(a, b) {
-    const decodedA = await this.decode(a);
-    const decodedB = await this.decode(b);
+    const [decodedA, decodedB] = await Promise.all([
+      this.decode(a),
+      this.decode(b),
+    ]);
 
     // sum the channels
     const audioA = [];
@@ -40,17 +43,19 @@ export default class SynAudio {
     }
 
     // find highest covariance
-    const result = [],
-      sampleOffset = { covariance: 0, sample: 0 };
+    const sampleOffset = { covariance: 0, sample: 0 };
 
-    for (let sample = 0; sample < audioA.length; sample++) {
-      let covariance = 0;
+    for (let sample = audioA.length - 1; sample >= 0; sample--) {
+      let covariance = 0,
+        samplesRemaining = audioA.length - sample;
 
       for (
-        let j = 0;
-        //j < decodedLeft.samplesDecoded && j + i < decodedRight.samplesDecoded;
-        j < this._covarianceSampleSize && j + sample < audioA.length;
-        j++
+        let j =
+          (this._covarianceSampleSize < samplesRemaining
+            ? this._covarianceSampleSize
+            : samplesRemaining) - 1;
+        j >= 0;
+        j--
       ) {
         covariance += audioA[sample + j] * audioB[j];
       }
@@ -59,10 +64,8 @@ export default class SynAudio {
         sampleOffset.covariance = covariance;
         sampleOffset.sample = sample;
       }
-
-      result.push({ covariance, sample });
     }
 
-    return result;
+    return sampleOffset;
   }
 }
