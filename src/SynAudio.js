@@ -1,12 +1,12 @@
 import { MPEGDecoderWebWorker } from "mpg123-decoder";
 
 export default class SynAudio {
-  constructor() {
-    this._covarianceSampleSize = 5000;
-    this._initialGranulatiry = 16;
+  constructor(options = {}) {
+    this._covarianceSampleSize = options.covarianceSampleSize || 5000;
+    this._initialGranularity = options.initialGranularity || 16;
   }
 
-  async decode(audioData) {
+  async _decode(audioData) {
     let decoder = new MPEGDecoderWebWorker(),
       decodedAudio;
 
@@ -20,35 +20,36 @@ export default class SynAudio {
     return decodedAudio;
   }
 
+  _setHeap(i, o, heapPos) {
+    const bytesPerElement = o.BYTES_PER_ELEMENT;
+
+    let floatPos = heapPos / bytesPerElement;
+
+    for (const channel of i) {
+      heapPos += channel.length * bytesPerElement;
+      o.set(channel, floatPos);
+      floatPos += channel.length;
+    }
+
+    return heapPos;
+  }
+
   async syncWASM(a, b, wasmData) {
     const [decodedA, decodedB] = await Promise.all([
-      this.decode(a),
-      this.decode(b),
+      this._decode(a),
+      this._decode(b),
     ]);
-
-    // sum the channels
-    const audioA = [];
-
-    for (let i = 0; i < decodedA.samplesDecoded; i++) {
-      audioA[i] = 0;
-      for (let j = 0; j < decodedA.channelData.length; j++)
-        audioA[i] += decodedA.channelData[j][i];
-    }
-
-    const audioB = [];
-
-    for (let i = 0; i < decodedB.samplesDecoded; i++) {
-      audioB[i] = 0;
-      for (let j = 0; j < decodedB.channelData.length; j++)
-        audioB[i] += decodedB.channelData[j][i];
-    }
 
     const pageSize = 64 * 1024;
     const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
 
     const memory = new WebAssembly.Memory({
       initial:
-        ((audioA.length + audioB.length) * floatByteLength) / pageSize + 2,
+        ((decodedA.samplesDecoded * decodedA.channelData.length +
+          decodedB.samplesDecoded * decodedB.channelData.length) *
+          floatByteLength) /
+          pageSize +
+        2,
     });
     const wasm = await WebAssembly.instantiate(wasmData, {
       env: { memory },
@@ -59,27 +60,20 @@ export default class SynAudio {
     const correlate = instanceExports.get("correlate");
     const dataArray = new Float32Array(memory.buffer);
 
-    let heapPos = instanceExports.get("__heap_base").value;
-    let floatPos = heapPos / floatByteLength;
-
-    // a data
-    const aPtr = heapPos;
-    heapPos += audioA.length * floatByteLength;
-    dataArray.set(audioA, floatPos);
-    floatPos += audioA.length;
-
-    // b data
-    const bPtr = heapPos;
-    dataArray.set(audioB, floatPos);
+    const aPtr = instanceExports.get("__heap_base").value;
+    const bPtr = this._setHeap(decodedA.channelData, dataArray, aPtr);
+    this._setHeap(decodedB.channelData, dataArray, bPtr);
 
     const bestSampleOffset = correlate(
       aPtr,
       decodedA.samplesDecoded,
+      decodedA.channelData.length,
       bPtr,
       decodedB.samplesDecoded,
+      decodedB.channelData.length,
       decodedA.sampleRate,
       this._covarianceSampleSize,
-      this._initialGranulatiry
+      this._initialGranularity
     );
 
     return bestSampleOffset;
@@ -87,8 +81,8 @@ export default class SynAudio {
 
   async sync(a, b) {
     const [decodedA, decodedB] = await Promise.all([
-      this.decode(a),
-      this.decode(b),
+      this._decode(a),
+      this._decode(b),
     ]);
 
     // sum the channels

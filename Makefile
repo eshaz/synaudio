@@ -2,27 +2,14 @@ CORRELATE_SRC="src/correlate.c"
 CORRELATE_BUILD="src/correlate.wasm"
 
 #		-msimd128 \
-#		-ffast-math \
-#		-ffinite-loops \
-#		-matomics \
-#		-mbulk-memory \
-#		-mmultivalue \
-#		-mmutable-globals \
-#		-mnontrapping-fptoint \
-#		-mreference-types \
-#		-msign-ext \
+#		-DWASM_SIMD=0 \
 
-# ----------------------
-# puff (inflate library)
-# ----------------------
 # requires: llvm, clang, llc, binaryen
 correlate:
 	@ clang \
 		--target=wasm32 \
 		-nostdlib \
 		-flto \
-		-msimd128 \
-		-DWASM_SIMD=1 \
 		-Wl,--import-memory \
 		-Wl,--export=correlate \
 		-Wl,--export=__heap_base \

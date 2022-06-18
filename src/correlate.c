@@ -1,9 +1,8 @@
-// finds the best coorelation point between two sets of audio data
+#ifdef WASM_SIMD
 #include <wasm_simd128.h>
 
 typedef float float4 __attribute__((__vector_size__(16)));
 
-#ifdef WASM_SIMD
 float nested_covariance(float *a, float *b, long aOffset, long covarianceSampleSize) {
     int loopUnroll = 128;
     float4 covarianceVector = wasm_f32x4_splat(0);
@@ -13,9 +12,9 @@ float nested_covariance(float *a, float *b, long aOffset, long covarianceSampleS
       bOffset < covarianceSampleSize - loopUnroll;
       bOffset += loopUnroll
     ) {
-      //for (int inc = 0; inc <= loopUnroll; inc+=4) {
-      //  covarianceVector = wasm_f32x4_add(covarianceVector, wasm_f32x4_mul(wasm_v128_load(&a[aOffset + bOffset + inc]), wasm_v128_load(&b[bOffset + inc])));
-      //}
+      /*for (int inc = 0; inc <= loopUnroll; inc+=4) {
+        covarianceVector = wasm_f32x4_add(covarianceVector, wasm_f32x4_mul(wasm_v128_load(&a[aOffset + bOffset + inc]), wasm_v128_load(&b[bOffset + inc])));
+      }*/
 
       covarianceVector = wasm_f32x4_add(covarianceVector, wasm_f32x4_mul(wasm_v128_load(&a[aOffset + bOffset]),       wasm_v128_load(&b[bOffset])));
       covarianceVector = wasm_f32x4_add(covarianceVector, wasm_f32x4_mul(wasm_v128_load(&a[aOffset + bOffset + 4]),   wasm_v128_load(&b[bOffset + 4])));
@@ -74,18 +73,18 @@ float nested_covariance(float *a, float *b, long aOffset, long covarianceSampleS
         covariance += a[aOffset + bOffset + inc] * b[bOffset + inc];
       }*/
 
-      covariance += a[aOffset + bOffset]       * b[bOffset];
-      covariance += a[aOffset + bOffset + 1]   * b[bOffset + 1];
-      covariance += a[aOffset + bOffset + 2]   * b[bOffset + 2];
-      covariance += a[aOffset + bOffset + 3]   * b[bOffset + 3];
+      covariance += a[aOffset + bOffset]      * b[bOffset];
+      covariance += a[aOffset + bOffset + 1]  * b[bOffset + 1];
+      covariance += a[aOffset + bOffset + 2]  * b[bOffset + 2];
+      covariance += a[aOffset + bOffset + 3]  * b[bOffset + 3];
 
-      covariance += a[aOffset + bOffset + 4]   * b[bOffset + 4];
-      covariance += a[aOffset + bOffset + 5]   * b[bOffset + 5];
-      covariance += a[aOffset + bOffset + 6]   * b[bOffset + 6];
-      covariance += a[aOffset + bOffset + 7]   * b[bOffset + 7];
+      covariance += a[aOffset + bOffset + 4]  * b[bOffset + 4];
+      covariance += a[aOffset + bOffset + 5]  * b[bOffset + 5];
+      covariance += a[aOffset + bOffset + 6]  * b[bOffset + 6];
+      covariance += a[aOffset + bOffset + 7]  * b[bOffset + 7];
 
-      covariance += a[aOffset + bOffset + 8]   * b[bOffset + 8];
-      covariance += a[aOffset + bOffset + 9]   * b[bOffset + 9];
+      covariance += a[aOffset + bOffset + 8]  * b[bOffset + 8];
+      covariance += a[aOffset + bOffset + 9]  * b[bOffset + 9];
       covariance += a[aOffset + bOffset + 10] * b[bOffset + 10];
       covariance += a[aOffset + bOffset + 11] * b[bOffset + 11];
 
@@ -99,18 +98,30 @@ float nested_covariance(float *a, float *b, long aOffset, long covarianceSampleS
 }
 #endif
 
+void sum_channels(float *data, long samples, int channels) {
+    for (int i = 0; i < channels - 1; i++)
+      for (int j = 0; j < samples; j++)
+        data[j] += data[j+i*samples];
+}
+
+// finds the best coorelation point between two sets of audio data
 float correlate(
     // audio baseline
     float *a, 
     long aSamples, 
+    int aChannels,
     // audio to compare
     float *b, 
     long bSamples, 
+    int bChannels,
     long sampleRate, // sample rate of both a and b
     long covarianceSampleSize, // amount of data to compare on b
     long initialGranularity // initial search size
     )
 {
+    sum_channels(a, aSamples, aChannels);
+    sum_channels(b, bSamples, bChannels);
+
     float bestCovariance = 0;
     long bestSampleOffset = 0;
 
