@@ -1,0 +1,102 @@
+<html>
+  <head>
+    <script src="./src/mpg123-decoder.min.js"></script>
+  </head>
+  <style>
+    body {
+      margin: 0;
+    }
+  </style>
+  <body>
+    <canvas id="fft" width="6000px" height="700px"></canvas>
+    <canvas id="compare" width="6000px" height="700px"></canvas>
+  </body>
+  <script type="module">
+    const getFFT = async ({ channelData, samplesDecoded, sampleRate }) => {
+      const audioCtx = new OfflineAudioContext(
+        channelData.length,
+        samplesDecoded,
+        sampleRate
+      );
+
+      const audioBuffer = audioCtx.createBuffer(
+        channelData.length,
+        samplesDecoded,
+        sampleRate
+      );
+
+      channelData.forEach((channel, idx) =>
+        audioBuffer.getChannelData(idx).set(channel)
+      );
+
+      const source = audioCtx.createBufferSource(audioBuffer);
+      source.buffer = audioBuffer;
+
+      const analyzer = audioCtx.createAnalyser();
+      analyzer.smoothingTimeConstant = 0;
+      analyzer.fftSize = this._fftSize;
+
+      const processor = audioCtx.createScriptProcessor(
+        this._fftSampleInterval,
+        channelData.length,
+        channelData.length
+      );
+
+      const fft = [];
+
+      processor.onaudioprocess = () => {
+        const output = new Uint8Array(analyzer.frequencyBinCount);
+        analyzer.getByteFrequencyData(output);
+        fft.push(output);
+      };
+
+      source.connect(analyzer);
+      analyzer.connect(processor);
+      processor.connect(audioCtx.destination);
+
+      source.start(0);
+
+      await audioCtx.startRendering();
+
+      return fft;
+    };
+
+    const drawFFT = (fft, canvasId) => {
+      const canvas = document.getElementById(canvasId);
+      const canvasCtx = canvas.getContext("2d");
+
+      let canvasXCursor = 0;
+      let canvasYCursor = 0;
+
+      for (let i = 0; i < fft.length; i++) {
+        const bins = fft[i];
+        for (let j = 0; j < bins.length; j++) {
+          canvasCtx.fillStyle = `rgba(0, ${bins[j]}, 0, 255)`;
+          canvasCtx.fillRect(i, j, 1, 1);
+        }
+      }
+    };
+
+    import SynAudio from "./src/SynAudio.js";
+
+    const synAudio = new SynAudio();
+
+    const mpeg = await fetch("src/mpeg.cbr.mp3")
+      .then((res) => res.arrayBuffer())
+      .then((body) => new Uint8Array(body));
+
+    const cutMpeg = await fetch("src/mpeg.cbr.1601425.mp3")
+      .then((res) => res.arrayBuffer())
+      .then((body) => new Uint8Array(body));
+
+    const covariances = await synAudio.sync(mpeg, cutMpeg);
+
+    console.log(covariances.sort((a, b) => b.covariance - a.covariance)); // 1600849
+
+    /*const fft = await synAudio.loadSyncData(mpeg);
+      const syncFFT = await synAudio.sync(cutMpeg);
+
+      drawFFT(fft, "fft");
+      drawFFT(syncFFT, "compare");*/
+  </script>
+</html>

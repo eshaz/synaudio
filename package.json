@@ -1,0 +1,29 @@
+{
+  "name": "synaudio",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write '**/*.js' --write '**/*.*json*' --write '**/*.*html*'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eshaz/synaudio.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eshaz/synaudio/issues"
+  },
+  "homepage": "https://github.com/eshaz/synaudio#readme",
+  "devDependencies": {
+    "jest": "^28.1.1",
+    "prettier": "^2.7.1"
+  },
+  "dependencies": {
+    "mpg123-decoder": "^0.3.14",
+    "opus-decoder": "^0.4.6",
+    "web-worker": "^1.2.0"
+  }
+}
