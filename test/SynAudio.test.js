@@ -20,8 +20,7 @@ const decode = async (audioData) => {
 };
 
 describe("SynAudio", () => {
-  let wasm,
-    fullMpeg,
+  let fullMpeg,
     cut_1601425_Mpeg,
     cut_287549_Mpeg,
     cut_2450800_Mpeg,
@@ -51,7 +50,6 @@ describe("SynAudio", () => {
   // prettier-ignore
   beforeAll(async () => {
     [
-      wasm,
       fullMpeg,
       cut_1601425_Mpeg,
       cut_287549_Mpeg,
@@ -79,7 +77,6 @@ describe("SynAudio", () => {
       cut_194648_32_gen19_Mpeg,
       cut_194648_32_gen20_Mpeg,
     ] = await Promise.all([
-      fs.readFile("src/correlate.wasm"),
       fs.readFile("test/data/mpeg.cbr.mp3").then(data => decode(data)),
       fs.readFile("test/data/mpeg.cbr.1601425.mp3").then(data => decode(data)),
       fs.readFile("test/data/mpeg.cbr.287549.mp3").then(data => decode(data)),
@@ -118,8 +115,7 @@ describe("SynAudio", () => {
     const result = await synAudio.syncWASM(
       fullMpeg,
       cut_1601425_Mpeg,
-      fullMpeg.sampleRate,
-      wasm
+      fullMpeg.sampleRate
     );
 
     expect(result.sampleOffset).toEqual(1600849);
@@ -137,8 +133,7 @@ describe("SynAudio", () => {
     const result = await synAudio.syncWASM(
       fullMpeg,
       cut_287549_Mpeg,
-      fullMpeg.sampleRate,
-      wasm
+      fullMpeg.sampleRate
     );
 
     expect(result.sampleOffset).toEqual(286973);
@@ -156,8 +151,7 @@ describe("SynAudio", () => {
     const result = await synAudio.syncWASM(
       fullMpeg,
       cut_2450800_Mpeg,
-      fullMpeg.sampleRate,
-      wasm
+      fullMpeg.sampleRate
     );
 
     expect(result.sampleOffset).toEqual(2450224);
@@ -175,8 +169,7 @@ describe("SynAudio", () => {
     const result = await synAudio.syncWASM(
       fullMpeg,
       cut_194648_Mpeg,
-      fullMpeg.sampleRate,
-      wasm
+      fullMpeg.sampleRate
     );
 
     expect(result.sampleOffset).toEqual(194072);
@@ -196,8 +189,7 @@ describe("SynAudio", () => {
     const result = await synAudio.syncWASM(
       fullMpeg,
       cut_194648_64_Mpeg,
-      fullMpeg.sampleRate,
-      wasm
+      fullMpeg.sampleRate
     );
 
     expect(result.sampleOffset).toEqual(194072);
@@ -217,8 +209,7 @@ describe("SynAudio", () => {
     const result = await synAudio.syncWASM(
       fullMpeg,
       cut_194648_32_Mpeg,
-      fullMpeg.sampleRate,
-      wasm
+      fullMpeg.sampleRate
     );
 
     expect(result.sampleOffset).toEqual(194072);
@@ -239,8 +230,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen2_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(193496); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -258,8 +248,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen3_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(192920); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -277,8 +266,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen4_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(192344); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -298,8 +286,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen5_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(191768); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -319,8 +306,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen6_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(191192); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -340,8 +326,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen7_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(190616); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -359,8 +344,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen8_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(190040); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -378,8 +362,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen9_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(189464); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -397,8 +380,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen10_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(188888); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -416,8 +398,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen11_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(188312); // 576 bytes added to beginning (one frame). Each reencode added a frame of
@@ -435,8 +416,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen12_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(187736); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -454,8 +434,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen13_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(187160); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -473,8 +452,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen14_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(186584); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -492,8 +470,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen15_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(186008); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -511,8 +488,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen16_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(185432); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -530,8 +506,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen17_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(184856); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -549,8 +524,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen18_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(184280); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -568,8 +542,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen19_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(183704); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
@@ -587,8 +560,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen20_Mpeg,
-        fullMpeg.sampleRate,
-        wasm
+        fullMpeg.sampleRate
       );
 
       expect(result.sampleOffset).toEqual(183128); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence

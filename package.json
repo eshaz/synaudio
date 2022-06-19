@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/.bin/jest --maxWorkers=100%",
-    "format": "prettier --write '**/*.js' --write '**/*.*json*' --write '**/*.*html*'"
+    "format": "prettier --write '**/*.js' --write '**/*.*json*' --write '**/*.*html*'",
+    "embed-wasm": "node embed-wasm.js $SIMD $SCALAR"
   },
   "repository": {
     "type": "git",
@@ -21,11 +22,13 @@
   "devDependencies": {
     "@types/jest": "^27.5.1",
     "jest": "^27.5.1",
-    "prettier": "^2.7.1",
     "mpg123-decoder": "^0.3.14",
-    "opus-decoder": "^0.4.6"
+    "opus-decoder": "^0.4.6",
+    "prettier": "^2.7.1"
   },
   "dependencies": {
+    "simple-yenc": "^0.2.1",
+    "wasm-feature-detect": "^1.2.11",
     "web-worker": "^1.2.0"
   }
 }
