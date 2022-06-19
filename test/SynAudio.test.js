@@ -99,7 +99,7 @@ describe("SynAudio", () => {
 
     const result = await synAudio.syncWASM(fullMpeg, cut_1601425_Mpeg, wasm);
 
-    expect(result).toEqual(1600849);
+    expect(result.sampleOffset).toEqual(1600849);
   });
 
   it("should find the sample accurate sync point between two clips 287549", async () => {
@@ -110,7 +110,7 @@ describe("SynAudio", () => {
 
     const result = await synAudio.syncWASM(fullMpeg, cut_287549_Mpeg, wasm);
 
-    expect(result).toEqual(286973);
+    expect(result.sampleOffset).toEqual(286973);
   });
 
   it("should find the sample accurate sync point between two clips 2450224", async () => {
@@ -121,7 +121,7 @@ describe("SynAudio", () => {
 
     const result = await synAudio.syncWASM(fullMpeg, cut_2450800_Mpeg, wasm);
 
-    expect(result).toEqual(2450224);
+    expect(result.sampleOffset).toEqual(2450224);
   });
 
   it("should find the sample accurate sync point between two clips 194072", async () => {
@@ -132,7 +132,7 @@ describe("SynAudio", () => {
 
     const result = await synAudio.syncWASM(fullMpeg, cut_194648_Mpeg, wasm);
 
-    expect(result).toEqual(194072);
+    expect(result.sampleOffset).toEqual(194072);
   });
 
   it("should find the sample accurate sync point between two clips 194072 64kbs", async () => {
@@ -143,7 +143,7 @@ describe("SynAudio", () => {
 
     const result = await synAudio.syncWASM(fullMpeg, cut_194648_64_Mpeg, wasm);
 
-    expect(result).toEqual(194072);
+    expect(result.sampleOffset).toEqual(194072);
   });
 
   it("should find the sample accurate sync point between two clips 194072 32kbs", async () => {
@@ -154,7 +154,7 @@ describe("SynAudio", () => {
 
     const result = await synAudio.syncWASM(fullMpeg, cut_194648_32_Mpeg, wasm);
 
-    expect(result).toEqual(194072);
+    expect(result.sampleOffset).toEqual(194072);
   });
 
   describe("Generational encoding", () => {
@@ -170,7 +170,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(193496); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(193496); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 3nd generation", async () => {
@@ -185,7 +185,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(192920); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(192920); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 3rd generation", async () => {
@@ -200,7 +200,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(192920); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(192920); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 4th generation", async () => {
@@ -215,7 +215,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(192344); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(192344); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 5th generation", async () => {
@@ -230,7 +230,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(191768); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(191768); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 6th generation", async () => {
@@ -245,7 +245,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(191192); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(191192); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 7th generation", async () => {
@@ -260,7 +260,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(190616); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(190616); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 8th generation", async () => {
@@ -275,7 +275,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(190040); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(190040); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 9th generation", async () => {
@@ -290,7 +290,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(189464); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(189464); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 10th generation", async () => {
@@ -305,7 +305,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(188888); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(188888); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 11th generation", async () => {
@@ -320,7 +320,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(188312); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(188312); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 12th generation", async () => {
@@ -335,7 +335,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(187736); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(187736); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 13th generation", async () => {
@@ -350,7 +350,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(187160); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(187160); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 14th generation", async () => {
@@ -365,7 +365,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(186584); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(186584); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 15th generation", async () => {
@@ -380,7 +380,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(186008); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(186008); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 16th generation", async () => {
@@ -395,7 +395,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(185432); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(185432); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 17th generation", async () => {
@@ -410,7 +410,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(184856); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(184856); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 18th generation", async () => {
@@ -425,7 +425,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(184280); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(184280); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 19th generation", async () => {
@@ -440,7 +440,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(183704); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(183704); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
 
     it("should find the sample accurate sync point between two clips 194072 32kbs 20th generation", async () => {
@@ -455,7 +455,7 @@ describe("SynAudio", () => {
         wasm
       );
 
-      expect(result).toEqual(183128); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
+      expect(result.sampleOffset).toEqual(183128); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
     });
   });
 });
