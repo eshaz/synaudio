@@ -104,8 +104,16 @@ export default class SynAudio {
     const bestSampleOffset = heapView.getInt32(bestSampleOffsetPtr, true);
     const sampleTrim = heapView.getInt32(sampleTrimPtr, true);
 
-    console.log({ sampleOffset: bestSampleOffset, covariance: bestCovariance, trim: sampleTrim });
+    console.log({
+      sampleOffset: bestSampleOffset,
+      covariance: bestCovariance,
+      trim: sampleTrim,
+    });
 
-    return { sampleOffset: bestSampleOffset, covariance: bestCovariance, trim: sampleTrim };
+    return {
+      sampleOffset: bestSampleOffset,
+      covariance: bestCovariance,
+      trim: sampleTrim,
+    };
   }
 }

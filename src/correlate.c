@@ -95,7 +95,7 @@ void correlate(
     *bestCovariance = 0;
     *bestSampleOffset = 0;
 
-    // find highest covariance
+    // find sample offset of a where the greatest covariance exists between a and b
     // do a rough search for covariance in every <initialGranularity> samples
     long aOffsetLimit = aSamples - covarianceSampleSize;
 
@@ -130,7 +130,7 @@ void correlate(
 
       float covarianceSum = sum_covariance(covariance);
 
-      if (covarianceSum > *bestCovariance) {
+      if (covarianceSum >= *bestCovariance) {
         *bestCovariance = covarianceSum;
         *bestSampleTrim = sampleTrim;
       }
