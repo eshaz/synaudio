@@ -1,101 +1,68 @@
 #ifdef WASM_SIMD
+
 #include <wasm_simd128.h>
 
-typedef float float4 __attribute__((__vector_size__(16)));
+typedef float covariance_type __attribute__((__vector_size__(16)));
+#define covariance_size 4
+#define new_covariance wasm_f32x4_splat(0)
+#define calc_covariance(vec, a, b, aOffset, bOffset) vec = wasm_f32x4_add(vec, wasm_f32x4_mul(wasm_v128_load(&a[aOffset + bOffset]), wasm_v128_load(&b[bOffset])))
+#define sum_covariance(vec) wasm_f32x4_extract_lane(vec, 0) + wasm_f32x4_extract_lane(vec, 1) + wasm_f32x4_extract_lane(vec, 2) + wasm_f32x4_extract_lane(vec, 3)
 
-#define covariance_v128(vec, a, b, aOffset, bOffset) vec = wasm_f32x4_add(vec, wasm_f32x4_mul(wasm_v128_load(&a[aOffset + bOffset]), wasm_v128_load(&b[bOffset])))
-
-float nested_covariance(float *a, float *b, long aOffset, long covarianceSampleSize) {
-    int loopUnroll = 128;
-    float4 covarianceVector = wasm_f32x4_splat(0);
-
-    for (
-      long bOffset = 0;
-      bOffset < covarianceSampleSize - loopUnroll;
-      bOffset += loopUnroll
-    ) {
-      /*for (int inc = 0; inc <= loopUnroll; inc+=4) {
-        covarianceVector = wasm_f32x4_add(covarianceVector, wasm_f32x4_mul(wasm_v128_load(&a[aOffset + bOffset + inc]), wasm_v128_load(&b[bOffset + inc])));
-      }*/
-
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 4);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 8);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 12);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 16);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 20);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 24);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 28);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 32);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 36);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 40);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 44);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 48);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 52);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 56);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 60);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 64);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 68);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 72);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 76);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 80);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 84);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 88);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 92);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 96);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 100);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 104);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 106);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 112);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 116);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 120);
-      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 124);
-    }
-
-    return
-      wasm_f32x4_extract_lane(covarianceVector, 0) + 
-      wasm_f32x4_extract_lane(covarianceVector, 1) + 
-      wasm_f32x4_extract_lane(covarianceVector, 2) + 
-      wasm_f32x4_extract_lane(covarianceVector, 3);
-}
 #else
 
-#define covariance_f32(vec, a, b, aOffset, bOffset) vec += a[aOffset + bOffset] * b[bOffset]
+typedef float covariance_type;
+#define covariance_size 1
+#define new_covariance 0
+#define calc_covariance(cov, a, b, aOffset, bOffset) cov += a[aOffset + bOffset] * b[bOffset]
+#define sum_covariance(cov) cov
 
-float nested_covariance(float *a, float *b, long aOffset, long covarianceSampleSize) {
-    int loopUnroll = 16;
-    float covariance = 0;
+#endif
+
+float nested_calc_covariance(float *a, float *b, long aOffset, long covarianceSampleSize) {
+    int loopUnroll = 32*covariance_size;
+    covariance_type covarianceSum = new_covariance;
 
     for (
       long bOffset = 0;
       bOffset < covarianceSampleSize - loopUnroll;
       bOffset+=loopUnroll
     ) {
-      /*for (int inc = 0; inc < loopUnroll; inc++) {
-        covariance += a[aOffset + bOffset + inc] * b[bOffset + inc];
-      }*/
-
-      covariance_f32(covariance, a, b, aOffset, bOffset);
-      //covariance_f32(covariance, a, b, aOffset, bOffset + 1);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 2);
-      //covariance_f32(covariance, a, b, aOffset, bOffset + 3);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 4);
-      //covariance_f32(covariance, a, b, aOffset, bOffset + 5);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 6);
-      //covariance_f32(covariance, a, b, aOffset, bOffset + 7);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 8);
-      //covariance_f32(covariance, a, b, aOffset, bOffset + 9);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 10);
-      //covariance_f32(covariance, a, b, aOffset, bOffset + 11);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 12);
-      //covariance_f32(covariance, a, b, aOffset, bOffset + 13);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 14);
-      //covariance_f32(covariance, a, b, aOffset, bOffset + 15);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 1 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 2 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 3 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 4 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 5 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 6 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 7 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 8 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 9 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 10 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 11 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 12 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 13 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 14 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 15 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 16 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 17 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 18 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 19 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 20 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 21 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 22 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 23 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 24 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 25 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 26 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 27 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 28 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 29 * covariance_size);
+      calc_covariance(covarianceSum, a, b, aOffset, bOffset + 30 * covariance_size);
+      //calc_covariance(covarianceSum, a, b, aOffset, bOffset + 31 * covariance_size);
     }
 
-    return covariance;
+    return sum_covariance(covarianceSum);
 }
-#endif
 
 void sum_channels(float *data, long samples, int channels) {
     for (int i = 0; i < channels - 1; i++)
@@ -117,7 +84,8 @@ void correlate(
     long covarianceSampleSize, // amount of data to compare on b
     long initialGranularity, // initial search size
     float *bestCovariance,
-    long *bestSampleOffset
+    long *bestSampleOffset,
+    long *sampleTrim
     )
 {
     sum_channels(a, aSamples, aChannels);
@@ -131,7 +99,7 @@ void correlate(
     long aOffsetLimit = aSamples - covarianceSampleSize;
 
     for (long aOffset = 0; aOffset < aOffsetLimit; aOffset += initialGranularity) {
-      float covariance = nested_covariance(a, b, aOffset, covarianceSampleSize);
+      float covariance = nested_calc_covariance(a, b, aOffset, covarianceSampleSize);
 
       if (*bestCovariance < covariance) {
         *bestCovariance = covariance;
@@ -143,11 +111,14 @@ void correlate(
     aOffsetLimit = *bestSampleOffset + initialGranularity;
 
     for (long aOffset = *bestSampleOffset-initialGranularity; aOffset < aOffsetLimit; aOffset++) {
-      float covariance = nested_covariance(a, b, aOffset, covarianceSampleSize);
+      float covariance = nested_calc_covariance(a, b, aOffset, covarianceSampleSize);
 
       if (*bestCovariance < covariance) {
         *bestCovariance = covariance;
         *bestSampleOffset = aOffset;
       }
     }
+
+    // trim any non-matching data from beginning of b
+    *sampleTrim = 0;
 }

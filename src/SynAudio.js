@@ -43,6 +43,7 @@ export default class SynAudio {
   }
 
   async syncWASM(a, b, wasmData) {
+    // need build for SIMD and non-SIMD (Safari)
     const [decodedA, decodedB] = await Promise.all([
       this._decode(a),
       this._decode(b),
@@ -82,6 +83,7 @@ export default class SynAudio {
       bPtr
     );
     const bestSampleOffsetPtr = bestCovariancePtr + floatByteLength;
+    const sampleTrimPtr = bestSampleOffsetPtr + floatByteLength;
 
     correlate(
       aPtr,
@@ -94,12 +96,16 @@ export default class SynAudio {
       this._covarianceSampleSize,
       this._initialGranularity,
       bestCovariancePtr,
-      bestSampleOffsetPtr
+      bestSampleOffsetPtr,
+      sampleTrimPtr
     );
 
     const bestCovariance = heapView.getFloat32(bestCovariancePtr, true);
     const bestSampleOffset = heapView.getInt32(bestSampleOffsetPtr, true);
+    const sampleTrim = heapView.getInt32(sampleTrimPtr, true);
 
-    return { sampleOffset: bestSampleOffset, covariance: bestCovariance };
+    console.log({ sampleOffset: bestSampleOffset, covariance: bestCovariance, trim: sampleTrim });
+
+    return { sampleOffset: bestSampleOffset, covariance: bestCovariance, trim: sampleTrim };
   }
 }
