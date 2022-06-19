@@ -99,7 +99,7 @@ describe("SynAudio", () => {
 
     const result = await synAudio.syncWASM(fullMpeg, cut_1601425_Mpeg, wasm);
 
-    expect(result.sampleOffset).toEqual(1600849);
+    expect(result.sampleOffset).toEqual(1600849); // trim = 576
   });
 
   it("should find the sample accurate sync point between two clips 287549", async () => {
