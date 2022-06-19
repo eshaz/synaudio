@@ -1,5 +1,6 @@
 import { decode } from "simple-yenc";
 import featureDetect from "wasm-feature-detect";
+import Worker from "web-worker";
 
 const wasmModule = new WeakMap();
 
@@ -24,88 +25,168 @@ export default class SynAudio {
         );
       wasmModule.set(this._module);
     }
+
+    this.SynAudioWorker = function (
+      module,
+      covarianceSampleSize,
+      initialGranularity
+    ) {
+      this._setAudioDataOnHeap = (i, o, heapPos) => {
+        const bytesPerElement = o.BYTES_PER_ELEMENT;
+
+        let floatPos = heapPos / bytesPerElement;
+
+        for (const channel of i) {
+          heapPos += channel.length * bytesPerElement;
+          o.set(channel, floatPos);
+          floatPos += channel.length;
+        }
+
+        return heapPos;
+      };
+
+      this.sync = (a, b, sampleRate) => {
+        const pageSize = 64 * 1024;
+        const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
+
+        const memory = new WebAssembly.Memory({
+          initial:
+            ((a.samplesDecoded * a.channelData.length +
+              b.samplesDecoded * b.channelData.length) *
+              floatByteLength) /
+              pageSize +
+            2,
+        });
+
+        return this._module
+          .then((module) =>
+            WebAssembly.instantiate(module, {
+              env: { memory },
+            })
+          )
+          .then((wasm) => {
+            const instanceExports = new Map(Object.entries(wasm.exports));
+
+            const correlate = instanceExports.get("correlate");
+            const dataArray = new Float32Array(memory.buffer);
+            const heapView = new DataView(memory.buffer);
+
+            const aPtr = instanceExports.get("__heap_base").value;
+            const bPtr = this._setAudioDataOnHeap(
+              a.channelData,
+              dataArray,
+              aPtr
+            );
+            const bestCovariancePtr = this._setAudioDataOnHeap(
+              b.channelData,
+              dataArray,
+              bPtr
+            );
+            const bestSampleOffsetPtr = bestCovariancePtr + floatByteLength;
+            const sampleTrimPtr = bestSampleOffsetPtr + floatByteLength;
+
+            correlate(
+              aPtr,
+              a.samplesDecoded,
+              a.channelData.length,
+              bPtr,
+              b.samplesDecoded,
+              b.channelData.length,
+              sampleRate,
+              this._covarianceSampleSize,
+              this._initialGranularity,
+              bestCovariancePtr,
+              bestSampleOffsetPtr,
+              sampleTrimPtr
+            );
+
+            const bestCovariance = heapView.getFloat32(bestCovariancePtr, true);
+            const bestSampleOffset = heapView.getInt32(
+              bestSampleOffsetPtr,
+              true
+            );
+            const sampleTrim = heapView.getInt32(sampleTrimPtr, true);
+
+            console.log({
+              sampleOffset: bestSampleOffset,
+              covariance: bestCovariance,
+              trim: sampleTrim,
+            });
+
+            return {
+              sampleOffset: bestSampleOffset,
+              covariance: bestCovariance,
+              trim: sampleTrim,
+            };
+          });
+      };
+
+      this._module = module;
+      this._covarianceSampleSize = covarianceSampleSize;
+      this._initialGranularity = initialGranularity;
+    };
   }
 
-  _setAudioDataOnHeap(i, o, heapPos) {
-    const bytesPerElement = o.BYTES_PER_ELEMENT;
+  async syncWorker(a, b, sampleRate) {
+    const webworkerSourceCode =
+      "'use strict';" +
+      `(${((SynAudioWorker, covarianceSampleSize, initialGranularity) => {
+        self.onmessage = ({ data: { module, a, b, sampleRate } }) => {
+          const worker = new SynAudioWorker(
+            Promise.resolve(module),
+            covarianceSampleSize,
+            initialGranularity
+          );
 
-    let floatPos = heapPos / bytesPerElement;
+          worker.sync(a, b, sampleRate).then((results) => {
+            self.postMessage(results);
+            self.terminate();
+          });
+        };
+      }).toString()})(${this.SynAudioWorker.toString()}, ${
+        this._covarianceSampleSize
+      }, ${this._initialGranularity})`;
 
-    for (const channel of i) {
-      heapPos += channel.length * bytesPerElement;
-      o.set(channel, floatPos);
-      floatPos += channel.length;
+    let type = "text/javascript",
+      source;
+
+    try {
+      // browser
+      source = URL.createObjectURL(new Blob([webworkerSourceCode], { type }));
+    } catch {
+      // nodejs
+      source = `data:${type};base64,${Buffer.from(webworkerSourceCode).toString(
+        "base64"
+      )}`;
     }
 
-    return heapPos;
+    const worker = new Worker(source, { name: "SynAudio" });
+
+    const result = new Promise((resolve) => {
+      worker.onmessage = (message) => {
+        resolve(message.data);
+      };
+    });
+
+    this._module.then((module) => {
+      worker.postMessage({
+        module,
+        a,
+        b,
+        sampleRate,
+      });
+    });
+
+    return result;
   }
 
-  async syncWASM(a, b, sampleRate) {
-    // need build for SIMD and non-SIMD (Safari)
-
-    const pageSize = 64 * 1024;
-    const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
-
-    const memory = new WebAssembly.Memory({
-      initial:
-        ((a.samplesDecoded * a.channelData.length +
-          b.samplesDecoded * b.channelData.length) *
-          floatByteLength) /
-          pageSize +
-        2,
-    });
-
-    const wasm = await this._module.then((module) =>
-      WebAssembly.instantiate(module, {
-        env: { memory },
-      })
-    );
-
-    const instanceExports = new Map(Object.entries(wasm.exports));
-
-    const correlate = instanceExports.get("correlate");
-    const dataArray = new Float32Array(memory.buffer);
-    const heapView = new DataView(memory.buffer);
-
-    const aPtr = instanceExports.get("__heap_base").value;
-    const bPtr = this._setAudioDataOnHeap(a.channelData, dataArray, aPtr);
-    const bestCovariancePtr = this._setAudioDataOnHeap(
-      b.channelData,
-      dataArray,
-      bPtr
-    );
-    const bestSampleOffsetPtr = bestCovariancePtr + floatByteLength;
-    const sampleTrimPtr = bestSampleOffsetPtr + floatByteLength;
-
-    correlate(
-      aPtr,
-      a.samplesDecoded,
-      a.channelData.length,
-      bPtr,
-      b.samplesDecoded,
-      b.channelData.length,
-      sampleRate,
+  async sync(a, b, sampleRate) {
+    const worker = new this.SynAudioWorker(
+      this._module,
       this._covarianceSampleSize,
-      this._initialGranularity,
-      bestCovariancePtr,
-      bestSampleOffsetPtr,
-      sampleTrimPtr
+      this._initialGranularity
     );
 
-    const bestCovariance = heapView.getFloat32(bestCovariancePtr, true);
-    const bestSampleOffset = heapView.getInt32(bestSampleOffsetPtr, true);
-    const sampleTrim = heapView.getInt32(sampleTrimPtr, true);
-
-    console.log({
-      sampleOffset: bestSampleOffset,
-      covariance: bestCovariance,
-      trim: sampleTrim,
-    });
-
-    return {
-      sampleOffset: bestSampleOffset,
-      covariance: bestCovariance,
-      trim: sampleTrim,
-    };
+    return worker.sync(a, b, sampleRate);
   }
 }
