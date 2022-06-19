@@ -1,6 +1,23 @@
 import fs from "fs/promises";
+import { MPEGDecoderWebWorker } from "mpg123-decoder";
 
 import SynAudio from "../src/SynAudio.js";
+
+const decode = async (audioData) => {
+  let decodedAudio;
+  const decoder = new MPEGDecoderWebWorker();
+
+  await decoder.ready.then(() =>
+    decoder
+      .decode(audioData)
+      .then((audio) => {
+        decodedAudio = audio;
+      })
+      .then(() => decoder.free())
+  );
+
+  return decodedAudio;
+};
 
 describe("SynAudio", () => {
   let wasm,
@@ -31,6 +48,7 @@ describe("SynAudio", () => {
     cut_194648_32_gen19_Mpeg,
     cut_194648_32_gen20_Mpeg;
 
+  // prettier-ignore
   beforeAll(async () => {
     [
       wasm,
@@ -62,32 +80,32 @@ describe("SynAudio", () => {
       cut_194648_32_gen20_Mpeg,
     ] = await Promise.all([
       fs.readFile("src/correlate.wasm"),
-      fs.readFile("test/data/mpeg.cbr.mp3"),
-      fs.readFile("test/data/mpeg.cbr.1601425.mp3"),
-      fs.readFile("test/data/mpeg.cbr.287549.mp3"),
-      fs.readFile("test/data/mpeg.cbr.2450800.mp3"),
-      fs.readFile("test/data/mpeg.cbr.194648.mp3"),
-      fs.readFile("test/data/mpeg.64.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen2.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen3.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen4.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen5.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen6.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen7.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen8.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen9.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen10.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen11.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen12.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen13.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen14.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen15.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen16.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen17.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen18.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen19.194648.mp3"),
-      fs.readFile("test/data/mpeg.32.gen20.194648.mp3"),
+      fs.readFile("test/data/mpeg.cbr.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.cbr.1601425.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.cbr.287549.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.cbr.2450800.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.cbr.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.64.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen2.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen3.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen4.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen5.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen6.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen7.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen8.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen9.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen10.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen11.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen12.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen13.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen14.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen15.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen16.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen17.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen18.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen19.194648.mp3").then(data => decode(data)),
+      fs.readFile("test/data/mpeg.32.gen20.194648.mp3").then(data => decode(data)),
     ]);
   });
 
@@ -97,7 +115,12 @@ describe("SynAudio", () => {
       initialGranularity: 16,
     });
 
-    const result = await synAudio.syncWASM(fullMpeg, cut_1601425_Mpeg, wasm);
+    const result = await synAudio.syncWASM(
+      fullMpeg,
+      cut_1601425_Mpeg,
+      fullMpeg.sampleRate,
+      wasm
+    );
 
     expect(result.sampleOffset).toEqual(1600849);
     // first rendered MPEG frame is less similar
@@ -111,7 +134,12 @@ describe("SynAudio", () => {
       initialGranularity: 64,
     });
 
-    const result = await synAudio.syncWASM(fullMpeg, cut_287549_Mpeg, wasm);
+    const result = await synAudio.syncWASM(
+      fullMpeg,
+      cut_287549_Mpeg,
+      fullMpeg.sampleRate,
+      wasm
+    );
 
     expect(result.sampleOffset).toEqual(286973);
     // first rendered MPEG frame is less similar
@@ -125,7 +153,12 @@ describe("SynAudio", () => {
       initialGranularity: 16,
     });
 
-    const result = await synAudio.syncWASM(fullMpeg, cut_2450800_Mpeg, wasm);
+    const result = await synAudio.syncWASM(
+      fullMpeg,
+      cut_2450800_Mpeg,
+      fullMpeg.sampleRate,
+      wasm
+    );
 
     expect(result.sampleOffset).toEqual(2450224);
     // first rendered MPEG frame is less similar
@@ -139,7 +172,12 @@ describe("SynAudio", () => {
       initialGranularity: 32,
     });
 
-    const result = await synAudio.syncWASM(fullMpeg, cut_194648_Mpeg, wasm);
+    const result = await synAudio.syncWASM(
+      fullMpeg,
+      cut_194648_Mpeg,
+      fullMpeg.sampleRate,
+      wasm
+    );
 
     expect(result.sampleOffset).toEqual(194072);
     // first rendered MPEG frame is less similar
@@ -155,7 +193,12 @@ describe("SynAudio", () => {
       initialGranularity: 32,
     });
 
-    const result = await synAudio.syncWASM(fullMpeg, cut_194648_64_Mpeg, wasm);
+    const result = await synAudio.syncWASM(
+      fullMpeg,
+      cut_194648_64_Mpeg,
+      fullMpeg.sampleRate,
+      wasm
+    );
 
     expect(result.sampleOffset).toEqual(194072);
     // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
@@ -171,7 +214,12 @@ describe("SynAudio", () => {
       initialGranularity: 32,
     });
 
-    const result = await synAudio.syncWASM(fullMpeg, cut_194648_32_Mpeg, wasm);
+    const result = await synAudio.syncWASM(
+      fullMpeg,
+      cut_194648_32_Mpeg,
+      fullMpeg.sampleRate,
+      wasm
+    );
 
     expect(result.sampleOffset).toEqual(194072);
     // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
@@ -191,6 +239,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen2_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -209,6 +258,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen3_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -227,6 +277,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen4_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -247,6 +298,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen5_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -267,6 +319,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen6_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -287,6 +340,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen7_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -305,6 +359,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen8_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -323,6 +378,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen9_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -341,6 +397,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen10_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -359,6 +416,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen11_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -377,6 +435,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen12_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -395,6 +454,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen13_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -413,6 +473,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen14_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -431,6 +492,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen15_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -449,6 +511,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen16_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -467,6 +530,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen17_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -485,6 +549,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen18_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -503,6 +568,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen19_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 
@@ -521,6 +587,7 @@ describe("SynAudio", () => {
       const result = await synAudio.syncWASM(
         fullMpeg,
         cut_194648_32_gen20_Mpeg,
+        fullMpeg.sampleRate,
         wasm
       );
 

@@ -21,11 +21,11 @@
   "devDependencies": {
     "@types/jest": "^27.5.1",
     "jest": "^27.5.1",
-    "prettier": "^2.7.1"
+    "prettier": "^2.7.1",
+    "mpg123-decoder": "^0.3.14",
+    "opus-decoder": "^0.4.6"
   },
   "dependencies": {
-    "mpg123-decoder": "^0.3.14",
-    "opus-decoder": "^0.4.6",
     "web-worker": "^1.2.0"
   }
 }

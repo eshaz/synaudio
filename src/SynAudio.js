@@ -1,31 +1,7 @@
-import { MPEGDecoderWebWorker } from "mpg123-decoder";
-
-const decoded = new WeakMap();
-
 export default class SynAudio {
   constructor(options = {}) {
     this._covarianceSampleSize = options.covarianceSampleSize || 11025;
     this._initialGranularity = options.initialGranularity || 16;
-  }
-
-  async _decode(audioData) {
-    let decodedAudio = decoded.get(audioData);
-
-    if (!decodedAudio) {
-      const decoder = new MPEGDecoderWebWorker();
-
-      await decoder.ready.then(() =>
-        decoder
-          .decode(audioData)
-          .then((audio) => {
-            decodedAudio = audio;
-            decoded.set(audioData, audio);
-          })
-          .then(() => decoder.free())
-      );
-    }
-
-    return decodedAudio;
   }
 
   _setAudioDataOnHeap(i, o, heapPos) {
@@ -42,20 +18,16 @@ export default class SynAudio {
     return heapPos;
   }
 
-  async syncWASM(a, b, wasmData) {
+  async syncWASM(a, b, sampleRate, wasmData) {
     // need build for SIMD and non-SIMD (Safari)
-    const [decodedA, decodedB] = await Promise.all([
-      this._decode(a),
-      this._decode(b),
-    ]);
 
     const pageSize = 64 * 1024;
     const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
 
     const memory = new WebAssembly.Memory({
       initial:
-        ((decodedA.samplesDecoded * decodedA.channelData.length +
-          decodedB.samplesDecoded * decodedB.channelData.length) *
+        ((a.samplesDecoded * a.channelData.length +
+          b.samplesDecoded * b.channelData.length) *
           floatByteLength) /
           pageSize +
         2,
@@ -72,13 +44,9 @@ export default class SynAudio {
     const heapView = new DataView(memory.buffer);
 
     const aPtr = instanceExports.get("__heap_base").value;
-    const bPtr = this._setAudioDataOnHeap(
-      decodedA.channelData,
-      dataArray,
-      aPtr
-    );
+    const bPtr = this._setAudioDataOnHeap(a.channelData, dataArray, aPtr);
     const bestCovariancePtr = this._setAudioDataOnHeap(
-      decodedB.channelData,
+      b.channelData,
       dataArray,
       bPtr
     );
@@ -87,12 +55,12 @@ export default class SynAudio {
 
     correlate(
       aPtr,
-      decodedA.samplesDecoded,
-      decodedA.channelData.length,
+      a.samplesDecoded,
+      a.channelData.length,
       bPtr,
-      decodedB.samplesDecoded,
-      decodedB.channelData.length,
-      decodedA.sampleRate,
+      b.samplesDecoded,
+      b.channelData.length,
+      sampleRate,
       this._covarianceSampleSize,
       this._initialGranularity,
       bestCovariancePtr,
