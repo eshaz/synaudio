@@ -2,13 +2,15 @@ CORRELATE_SRC="src/correlate.c"
 CORRELATE_BUILD="src/correlate.wasm"
 
 #		-msimd128 \
-#		-DWASM_SIMD=0 \
+#		-DWASM_SIMD \
 
 # requires: llvm, clang, llc, binaryen
 correlate:
 	@ clang \
 		--target=wasm32 \
 		-nostdlib \
+		-msimd128 \
+		-DWASM_SIMD \
 		-flto \
 		-Wl,--import-memory \
 		-Wl,--export=correlate \

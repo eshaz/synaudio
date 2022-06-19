@@ -1,21 +1,29 @@
 import { MPEGDecoderWebWorker } from "mpg123-decoder";
 
+const decoded = new WeakMap();
+
 export default class SynAudio {
   constructor(options = {}) {
-    this._covarianceSampleSize = options.covarianceSampleSize || 5000;
+    this._covarianceSampleSize = options.covarianceSampleSize || 11025;
     this._initialGranularity = options.initialGranularity || 16;
   }
 
   async _decode(audioData) {
-    let decoder = new MPEGDecoderWebWorker(),
-      decodedAudio;
+    let decodedAudio = decoded.get(audioData);
 
-    await decoder.ready.then(() =>
-      decoder
-        .decode(audioData)
-        .then((decoded) => (decodedAudio = decoded))
-        .then(() => decoder.free())
-    );
+    if (!decodedAudio) {
+      const decoder = new MPEGDecoderWebWorker();
+
+      await decoder.ready.then(() =>
+        decoder
+          .decode(audioData)
+          .then((audio) => {
+            decodedAudio = audio;
+            decoded.set(audioData, audio);
+          })
+          .then(() => decoder.free())
+      );
+    }
 
     return decodedAudio;
   }
@@ -51,6 +59,7 @@ export default class SynAudio {
           pageSize +
         2,
     });
+
     const wasm = await WebAssembly.instantiate(wasmData, {
       env: { memory },
     });
@@ -77,56 +86,5 @@ export default class SynAudio {
     );
 
     return bestSampleOffset;
-  }
-
-  async sync(a, b) {
-    const [decodedA, decodedB] = await Promise.all([
-      this._decode(a),
-      this._decode(b),
-    ]);
-
-    // sum the channels
-    const audioA = [];
-
-    for (let i = 0; i < decodedA.samplesDecoded; i++) {
-      audioA[i] = 0;
-      for (let j = 0; j < decodedA.channelData.length; j++)
-        audioA[i] += decodedA.channelData[j][i];
-    }
-
-    const audioB = [];
-
-    for (let i = 0; i < decodedB.samplesDecoded; i++) {
-      audioB[i] = 0;
-      for (let j = 0; j < decodedB.channelData.length; j++)
-        audioB[i] += decodedB.channelData[j][i];
-    }
-
-    // find highest covariance
-    const sampleOffset = { covariance: 0, sample: 0 };
-
-    for (let sample = 0; sample < audioA.length; sample++) {
-      let covariance = 0,
-        samplesRemaining = audioA.length - sample;
-
-      /*for (
-        let j =
-          (this._covarianceSampleSize < samplesRemaining
-            ? this._covarianceSampleSize
-            : samplesRemaining) - 1;
-        j >= 0;
-        j--
-      ) {*/
-      for (let j = 0; j < this._covarianceSampleSize; j++) {
-        covariance += audioA[sample + j] * audioB[j];
-      }
-
-      if (sampleOffset.covariance < covariance) {
-        sampleOffset.covariance = covariance;
-        sampleOffset.sample = sample;
-      }
-    }
-
-    return sampleOffset.sample;
   }
 }
