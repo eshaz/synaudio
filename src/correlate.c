@@ -18,37 +18,38 @@ float nested_covariance(float *a, float *b, long aOffset, long covarianceSampleS
         covarianceVector = wasm_f32x4_add(covarianceVector, wasm_f32x4_mul(wasm_v128_load(&a[aOffset + bOffset + inc]), wasm_v128_load(&b[bOffset + inc])));
       }*/
 
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 4);
+      covariance_v128(covarianceVector, a, b, aOffset, bOffset);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 4);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 8);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 12);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 12);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 16);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 20);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 20);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 24);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 28);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 28);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 32);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 36);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 36);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 40);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 44);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 44);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 48);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 52);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 52);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 56);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 60);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 60);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 64);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 68);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 68);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 72);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 76);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 76);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 80);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 84);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 84);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 88);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 92);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 92);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 96);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 100);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 100);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 104);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 106);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 106);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 112);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 116);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 116);
       covariance_v128(covarianceVector, a, b, aOffset, bOffset + 120);
-      covariance_v128(covarianceVector, a, b, aOffset, bOffset + 124);
+      //covariance_v128(covarianceVector, a, b, aOffset, bOffset + 124);
     }
 
     return
@@ -75,21 +76,21 @@ float nested_covariance(float *a, float *b, long aOffset, long covarianceSampleS
       }*/
 
       covariance_f32(covariance, a, b, aOffset, bOffset);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 1);
+      //covariance_f32(covariance, a, b, aOffset, bOffset + 1);
       covariance_f32(covariance, a, b, aOffset, bOffset + 2);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 3);
+      //covariance_f32(covariance, a, b, aOffset, bOffset + 3);
       covariance_f32(covariance, a, b, aOffset, bOffset + 4);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 5);
+      //covariance_f32(covariance, a, b, aOffset, bOffset + 5);
       covariance_f32(covariance, a, b, aOffset, bOffset + 6);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 7);
+      //covariance_f32(covariance, a, b, aOffset, bOffset + 7);
       covariance_f32(covariance, a, b, aOffset, bOffset + 8);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 9);
+      //covariance_f32(covariance, a, b, aOffset, bOffset + 9);
       covariance_f32(covariance, a, b, aOffset, bOffset + 10);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 11);
+      //covariance_f32(covariance, a, b, aOffset, bOffset + 11);
       covariance_f32(covariance, a, b, aOffset, bOffset + 12);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 13);
+      //covariance_f32(covariance, a, b, aOffset, bOffset + 13);
       covariance_f32(covariance, a, b, aOffset, bOffset + 14);
-      covariance_f32(covariance, a, b, aOffset, bOffset + 15);
+      //covariance_f32(covariance, a, b, aOffset, bOffset + 15);
     }
 
     return covariance;

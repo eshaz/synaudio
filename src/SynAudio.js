@@ -71,8 +71,16 @@ export default class SynAudio {
     const heapView = new DataView(memory.buffer);
 
     const aPtr = instanceExports.get("__heap_base").value;
-    const bPtr = this._setAudioDataOnHeap(decodedA.channelData, dataArray, aPtr);
-    const bestCovariancePtr = this._setAudioDataOnHeap(decodedB.channelData, dataArray, bPtr);
+    const bPtr = this._setAudioDataOnHeap(
+      decodedA.channelData,
+      dataArray,
+      aPtr
+    );
+    const bestCovariancePtr = this._setAudioDataOnHeap(
+      decodedB.channelData,
+      dataArray,
+      bPtr
+    );
     const bestSampleOffsetPtr = bestCovariancePtr + floatByteLength;
 
     correlate(
@@ -92,8 +100,6 @@ export default class SynAudio {
     const bestCovariance = heapView.getFloat32(bestCovariancePtr, true);
     const bestSampleOffset = heapView.getInt32(bestSampleOffsetPtr, true);
 
-    console.log({sampleOffset: bestSampleOffset, covariance: bestCovariance})
-
-    return {sampleOffset: bestSampleOffset, covariance: bestCovariance};
+    return { sampleOffset: bestSampleOffset, covariance: bestCovariance };
   }
 }
