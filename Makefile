@@ -1,14 +1,14 @@
 CORRELATE_SRC="src/correlate.c"
-CORRELATE_BUILD="src/correlate-scalar.wasm"
+CORRELATE_SCALAR_BUILD="src/correlate-scalar.wasm"
 CORRELATE_SIMD_BUILD="src/correlate-simd.wasm"
 
-default: embed-wasm clean
+default: embed-wasm
 
 clean:
 	rm -f src/*.wasm
 
 # requires: llvm, clang, llc, binaryen
-correlate:
+correlate-scalar:
 	@ clang \
 		--target=wasm32 \
 		-nostdlib \
@@ -19,7 +19,7 @@ correlate:
 		-Wl,--no-entry \
 		-Wl,--lto-O3 \
 		-O3 \
-		-o "$(CORRELATE_BUILD)" \
+		-o "$(CORRELATE_SCALAR_BUILD)" \
 		$(CORRELATE_SRC)
 	@ wasm-opt \
 		-lmu \
@@ -29,8 +29,8 @@ correlate:
 		--strip-producers \
 		--vacuum \
 		--converge \
-		$(CORRELATE_BUILD) \
-		-o $(CORRELATE_BUILD)
+		$(CORRELATE_SCALAR_BUILD) \
+		-o $(CORRELATE_SCALAR_BUILD)
 
 correlate-simd:
 	@ clang \
@@ -58,7 +58,8 @@ correlate-simd:
 		$(CORRELATE_SIMD_BUILD) \
 		-o $(CORRELATE_SIMD_BUILD)
 
-embed-wasm: correlate correlate-simd
-    SIMD=${CORRELATE_SIMD_BUILD} \
-	SCALAR=${CORRELATE_BUILD} \
+embed-wasm: correlate-scalar correlate-simd
+	SIMD=${CORRELATE_SIMD_BUILD} \
+	SCALAR=${CORRELATE_SCALAR_BUILD} \
 	npm run embed-wasm
+	

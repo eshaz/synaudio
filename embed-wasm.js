@@ -11,9 +11,9 @@ const embedWasm = async (simdPath, scalarPath) => {
   ]);
 
   const simdMatcher =
-    /(?<begin>const simdWasm = String.raw`)(?<wasm>.*?)(?<end>`;)/;
+    /(?<begin>const simdWasm = String.raw`)(?<wasm>[\s\S]*?)(?<end>`;)/;
   const scalarMatcher =
-    /(?<begin>const scalarWasm = String.raw`)(?<wasm>.*?)(?<end>`;)/;
+    /(?<begin>const scalarWasm = String.raw`)(?<wasm>[\s\S]*?)(?<end>`;)/;
 
   const simdContent = synAudio.match(simdMatcher);
   const scalarContent = synAudio.match(scalarMatcher);
