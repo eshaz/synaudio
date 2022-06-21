@@ -118,6 +118,8 @@ describe("SynAudio", () => {
       fullMpeg.sampleRate
     );
 
+    console.log(result);
+
     expect(result.sampleOffset).toEqual(1600849);
     // first rendered MPEG frame is less similar
     expect(result.trim).toBeGreaterThanOrEqual(576);
@@ -135,6 +137,8 @@ describe("SynAudio", () => {
       cut_287549_Mpeg,
       fullMpeg.sampleRate
     );
+
+    console.log(result);
 
     expect(result.sampleOffset).toEqual(286973);
     // first rendered MPEG frame is less similar
@@ -154,6 +158,8 @@ describe("SynAudio", () => {
       fullMpeg.sampleRate
     );
 
+    console.log(result);
+
     expect(result.sampleOffset).toEqual(2450224);
     // first rendered MPEG frame is less similar
     expect(result.trim).toBeGreaterThanOrEqual(576);
@@ -171,6 +177,8 @@ describe("SynAudio", () => {
       cut_194648_Mpeg,
       fullMpeg.sampleRate
     );
+
+    console.log(result);
 
     expect(result.sampleOffset).toEqual(194072);
     // first rendered MPEG frame is less similar
@@ -192,6 +200,8 @@ describe("SynAudio", () => {
       fullMpeg.sampleRate
     );
 
+    console.log(result);
+
     expect(result.sampleOffset).toEqual(194072);
     // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
     const roundedTrim = Math.ceil(result.trim / 576) * 576;
@@ -211,6 +221,8 @@ describe("SynAudio", () => {
       cut_194648_32_Mpeg,
       fullMpeg.sampleRate
     );
+
+    console.log(result);
 
     expect(result.sampleOffset).toEqual(194072);
     // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
@@ -233,6 +245,8 @@ describe("SynAudio", () => {
         fullMpeg.sampleRate
       );
 
+      console.log(result);
+
       expect(result.sampleOffset).toEqual(193496); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
       expect(result.trim).toBeGreaterThanOrEqual(576 * 2);
@@ -251,6 +265,8 @@ describe("SynAudio", () => {
         fullMpeg.sampleRate
       );
 
+      console.log(result);
+
       expect(result.sampleOffset).toEqual(192920); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
       expect(result.trim).toBeGreaterThanOrEqual(576 * 3);
@@ -268,6 +284,8 @@ describe("SynAudio", () => {
         cut_194648_32_gen4_Mpeg,
         fullMpeg.sampleRate
       );
+
+      console.log(result);
 
       expect(result.sampleOffset).toEqual(192344); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
@@ -289,6 +307,8 @@ describe("SynAudio", () => {
         fullMpeg.sampleRate
       );
 
+      console.log(result);
+
       expect(result.sampleOffset).toEqual(191768); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
       const roundedTrim = Math.ceil(result.trim / 576) * 576;
@@ -308,6 +328,8 @@ describe("SynAudio", () => {
         cut_194648_32_gen6_Mpeg,
         fullMpeg.sampleRate
       );
+
+      console.log(result);
 
       expect(result.sampleOffset).toEqual(191192); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
@@ -329,6 +351,8 @@ describe("SynAudio", () => {
         fullMpeg.sampleRate
       );
 
+      console.log(result);
+
       expect(result.sampleOffset).toEqual(190616); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
       expect(result.trim).toBeGreaterThanOrEqual(576 * 7);
@@ -346,6 +370,8 @@ describe("SynAudio", () => {
         cut_194648_32_gen8_Mpeg,
         fullMpeg.sampleRate
       );
+
+      console.log(result);
 
       expect(result.sampleOffset).toEqual(190040); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
@@ -365,6 +391,8 @@ describe("SynAudio", () => {
         fullMpeg.sampleRate
       );
 
+      console.log(result);
+
       expect(result.sampleOffset).toEqual(189464); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
       expect(result.trim).toBeGreaterThanOrEqual(576 * 9);
@@ -383,6 +411,8 @@ describe("SynAudio", () => {
         fullMpeg.sampleRate
       );
 
+      console.log(result);
+
       expect(result.sampleOffset).toEqual(188888); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
       expect(result.trim).toBeGreaterThanOrEqual(576 * 10);
@@ -400,6 +430,8 @@ describe("SynAudio", () => {
         cut_194648_32_gen11_Mpeg,
         fullMpeg.sampleRate
       );
+
+      console.log(result);
 
       expect(result.sampleOffset).toEqual(188312); // 576 bytes added to beginning (one frame). Each reencode added a frame of
       // first rendered MPEG frame is less similar
@@ -437,6 +469,8 @@ describe("SynAudio", () => {
         fullMpeg.sampleRate
       );
 
+      console.log(result);
+
       expect(result.sampleOffset).toEqual(187160); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
       expect(result.trim).toBeGreaterThanOrEqual(576 * 13);
@@ -454,6 +488,8 @@ describe("SynAudio", () => {
         cut_194648_32_gen14_Mpeg,
         fullMpeg.sampleRate
       );
+
+      console.log(result);
 
       expect(result.sampleOffset).toEqual(186584); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
@@ -473,6 +509,8 @@ describe("SynAudio", () => {
         fullMpeg.sampleRate
       );
 
+      console.log(result);
+
       expect(result.sampleOffset).toEqual(186008); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
       expect(result.trim).toBeGreaterThanOrEqual(576 * 15);
@@ -490,6 +528,8 @@ describe("SynAudio", () => {
         cut_194648_32_gen16_Mpeg,
         fullMpeg.sampleRate
       );
+
+      console.log(result);
 
       expect(result.sampleOffset).toEqual(185432); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
@@ -509,6 +549,8 @@ describe("SynAudio", () => {
         fullMpeg.sampleRate
       );
 
+      console.log(result);
+
       expect(result.sampleOffset).toEqual(184856); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
       expect(result.trim).toBeGreaterThanOrEqual(576 * 17);
@@ -526,6 +568,8 @@ describe("SynAudio", () => {
         cut_194648_32_gen18_Mpeg,
         fullMpeg.sampleRate
       );
+
+      console.log(result);
 
       expect(result.sampleOffset).toEqual(184280); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
@@ -545,6 +589,8 @@ describe("SynAudio", () => {
         fullMpeg.sampleRate
       );
 
+      console.log(result);
+
       expect(result.sampleOffset).toEqual(183704); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
       expect(result.trim).toBeGreaterThanOrEqual(576 * 19);
@@ -562,6 +608,8 @@ describe("SynAudio", () => {
         cut_194648_32_gen20_Mpeg,
         fullMpeg.sampleRate
       );
+
+      console.log(result);
 
       expect(result.sampleOffset).toEqual(183128); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
@@ -589,6 +637,11 @@ describe("SynAudio", () => {
         synAudio.syncWorker(fullMpeg, cut_194648_Mpeg, fullMpeg.sampleRate),
       ]);
 
+      console.log(cut_1601425_Mpeg_result);
+      console.log(cut_287549_Mpeg_result);
+      console.log(cut_2450800_Mpeg_result);
+      console.log(cut_194648_Mpeg_result);
+
       expect(cut_1601425_Mpeg_result.sampleOffset).toEqual(1600849);
       expect(cut_1601425_Mpeg_result.trim).toBeGreaterThanOrEqual(576);
       expect(cut_1601425_Mpeg_result.trim).toBeLessThanOrEqual(576 * 2);
@@ -603,7 +656,8 @@ describe("SynAudio", () => {
 
       expect(cut_194648_Mpeg_result.sampleOffset).toEqual(194072);
       // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
-      const roundedTrim_194648 = Math.ceil(cut_194648_Mpeg_result.trim / 576) * 576;
+      const roundedTrim_194648 =
+        Math.ceil(cut_194648_Mpeg_result.trim / 576) * 576;
       expect(roundedTrim_194648).toBeGreaterThanOrEqual(576);
       expect(roundedTrim_194648).toBeLessThanOrEqual(576 * 2);
     });
