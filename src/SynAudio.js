@@ -7,12 +7,12 @@ const simd=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,0,0,1,
 const wasmModule = new WeakMap();
 
 /* WASM strings are embeded during the build */
-const simdWasm = String.raw`dynEncode000eo{'nns|{s{}O)q}szosmmvso~mposÂ.O\N.Oy/.!/.!/N...x0.ó..x0.óôò..ó..óôò...ó...óôò.>.ó.>.óôò.ONy.ó.ONy.óôò.^.ó.^.óôò.n.ó.n.óôò.~.ó.~.óôò..ó..óôò..ó..óôò.®.ó.®.óôò.¾.ó.¾.óôò.Î.ó.Î.óôò.Þ.ó.Þ.óôò.î.ó.î.óôò.þ.ó.þ.óôò..ó..óôò..ó..óôò.®.ó.®.óôò.¾.ó.¾.óôò.Î.ó.Î.óôò.Þ.ó.Þ.óôò.î.ó.î.óôò.þ.ó.þ.óôò..ó..óôò..ó..óôò.®.ó.®.óôò.¾.ó.¾.óôò.Î.ó.Î.óôò.Þ.ó.Þ.óôò.î.ó.î.óôò.þ.ó.þ.óôò/.Ox/.Ox0.V.¼O/.OD.OD..y/(N.OZ.O/.Oy0O]N./.O0'/N..8É®.8É®.8É®.8É®/.Ox/.Oy0.N..'Ox/./N..8É®/.Ox/.Oy0N.OWNO/'./.O0'/N..8É®.8É®.8É®.8É®/.Ox/.Oy0.S..'Ox/N..8É®/.Ox/.Oy0..À0!É±Ä/%.(OXN.O/.O/.!QÍ /$.Å/./O/N..8É¯/..x8É/....±Ä0".%.0-.-.-.-   .$£0 .#lN..D.. F. /#."/&./..®/..x/.(..x0X.O0).x/'..)y/N.OZNR/.Oy/(.O0SNR/...x/..Ox/R/N..8É®/.Ox/.Oy0..)y/.(OW..Ox/..x.y.)y/N..8É®.8É®.8É®.8É®/.Ox/.Oy0..'VN.O/.!QÍ /$..Ox/...x.)yOx/.Å/N..8É¯/.8É/....±Ä0".%.0-.-.-.-   .$£0 .#lN..D.. F. /#."/&./..®/.Ox/.Ox/.Ox/.Oy0.OXN.!QÍ / O/N.8É/..Ox..&..!É±Ä.0-.-.-.-   . £0".#nN..D.."F."/#.6/.!QÍ /!..¯/.Ox/.Ox/.Ox/.Oy0(ousmtsos9w{r?@F`;
-const scalarWasm = String.raw`dynEncode000eo{'nns|{s{}O)q}szosmmvso~mposü.O/\N.O.y/N..x08.¡..x08.¡¢.8.¡.8.¡¢.8.¡.8.¡¢.8~.¡.8~.¡¢.8z.¡.8z.¡¢.8v.¡.8v.¡¢.8r.¡.8r.¡¢.8n.¡.8n.¡¢.8j.¡.8j.¡¢.8f.¡.8f.¡¢.8b.¡.8b.¡¢.8^.¡.8^.¡¢.8Z.¡.8Z.¡¢.8V.¡.8V.¡¢.8R.¡.8R.¡¢.ONy8.¡.ONy8.¡¢.8J.¡.8J.¡¢.8F.¡.8F.¡¢.8B.¡.8B.¡¢.8>.¡.8>.¡¢.8:.¡.8:.¡¢.86.¡.86.¡¢.82.¡.82.¡¢.8..¡.8..¡¢.8*.¡.8*.¡¢.8&.¡.8&.¡¢.8".¡.8".¡¢.8.¡.8.¡¢.8.¡.8.¡¢.8.¡.8.¡¢.8.¡.8.¡¢.8.¡.8.¡¢.                                /.Ox/.O.x0.V.õO/.OD.OD..y/'N.OZ.O/.Oy0O]N./.O0&/N..8É®.8É®.8É®.8É®/.Ox/.Oy0.N..&Ox/./N..8É®/.Ox/.Oy0N.OWNO/&./.O0&/N..8É®.8É®.8É®.8É®/.Ox/.Oy0.S..&Ox/N..8É®/.Ox/.Oy0..À0 É±Ä/$.'OXN.O/.O/. QÍ /#.Å/./O/N..8É¯/..x8É/....±Ä0!.$..#£0."lN..D..F./".!/%./..®/..x/.'..x0X.O0(.x/&..(y/N.OZNR/.Oy/'.O0SNR/...x/..Ox/R/N..8É®/.Ox/.Oy0..(y/.'OW..Ox/..x.y.(y/N..8É®.8É®.8É®.8É®/.Ox/.Oy0..&VN.O/. QÍ /#..Ox/...x.(yOx/.Å/N..8É¯/.8É/....±Ä0!.$..#£0."lN..D..F./".!/%./..®/.Ox/.Ox/.Ox/.Oy0.OXN. QÍ /O/N.8É/..Ox..%.. É±Ä..£0!."nN..D..!F.!/".6/. QÍ / ..¯/.Ox/.Ox/.Ox/.Oy0`;
+const simdWasm = String.raw`dynEncode0064dÅ×ÑedddeteÄpããããããããããããdfsegÉÒÚjÑÉÑÓÖÝfdfgfedjleãd¥äìhokfmÇÓÖÖÉÐÅØÉddoÃÃÌÉÅÔÃÆÅ×Égdnzezhmßgàsãjáf¤e¥d°qdf¥f¬qdf¥eÏ¥deÏe¥eÕe¥àÕe¥fØdÎe¥hÏ¥fÚ¥eÎf¥bccckÕ}f¥eÕe¥h­g¤eÐ~¥dff¤f¤qddde~Î¥fØÎ­d~¥fØÎ­Õqd¥do¥h³h¤}jdfg¤ff|ÎadfdfadfdaHeaofdfadftfadftaHeaoftf¥Îfo¥lÎoj¥fÏjqdooh¤do¥fØÎfdo~Î¥fØÎadfdfadfdaHeaofdofeªqeof¥ã×jh¤df¥fØÎodf~Î¥fØÎfdofdöfdf¥eÖfojªqdefÏjf¥fØ~|Îdfg¤f~ÎofÎfdofdöfdofhofhöfhf¥lÎfj¥fÏjqdoo|Î|¥eÎ«qdoof¤h¥d°qdi¥f¬qdi¥eÏ~¥d|¥dhÏh¥eÕh¥àÕih¥fØgÎh¥hÏ¥fÚ¥eÎf¥bccckÕf¥eÕh¥h­¥dg¤hÐ}¥dff¤f¤qdggh}Î¥fØÎ­g}¥fØÎ­Õqd¥do¥h³h¤jgfg¤ff|ÎadfdfadfdaHeaofdfadftfadftaHeaoftf¥Îfo¥lÎoj¥fÏjqdooh¤go¥fØÎfgo}Î¥fØÎadfdfadfdaHeaofdohifªqeof¥ã×jh¤gf¥fØÎogf}Î¥fØÎfdofdöfdf¥eÖfojªqdhfÏjf¥fØ}|Îgfg¤f}ÎofÎfdofdöfdofhofhöfhf¥lÎfj¥fÏjqdoo|Î|~¥eÎ«qdoo¥dhn¥dfdm¥dfdekÏ|f¤k¥d°qdk¥gÕof¤k¥eÏi¥g­h¤¥depeodfk¥àÕejg¤yffdffhfflffpyf¥tÎfj¥hÏjqdoooh¤de¥fØÎfojg¤yffdyf¥hÎfj¥eÏjqdoof¤i¥g­h¤¥dipeogfk¥àÕijg¤zffdffhfflffpzf¥tÎfj¥hÏjqdooo©qdgi¥fØÎfg¤zffdzf¥hÎfo¥eÏoqdoozk|¥d®h¤l¥fØ§ddä#ök¥iÏe¥fÚ¥eÎf¥eÕ~f¥bccckÕ¥fØ}awukzk¥i¬e¥h­de¥dig¤di¥fØÎfd{dikÎ¥fØÎfdf¤h¤apddddddddddddddddpapddddddddddddddddqapddddddddddddddddrpeoyzawsapddddddddddddddddrfãh¤apddddddddddddddddqapddddddddddddddddp¥dpeojefgoapddddddddddddddddqapddddddddddddddddpg¤pfadddsaIetoaddduaIevaJeaHefaddtsaIewoaddtuaIexaJeaHeprvvaJeaHexxaJeaHerqttaJeaHewwaJeaHeqf¥Îfo¥Îoj¥fÏjqdo}of~©qdpf¥fØfÎadddsaIesfgÎaddduaIetaJeaHeprttaJeaHerqssaJeaHeqopagpafpadpaeöööùqagqafqadqaeöööùragrafradraeöööùÂh¤nifdmfdihoy{yeÎe|ilÎi®qdool¥eØjhÎhjÏif¤k¥d°h¤¨ddddddddypeok¥eÏlfãk¥gÕo©h¤¨ddddddddyipeohoÎedi¥fØÎf¨ddddddddyg¤yffdyf¥hÎfo¥eÏoqdoejÏoel¥g­qdde¥fØÎfhkÎeÏjÏog¤yffdffhfflffpyf¥tÎfo¥hÏoqdooi¬h¤§ddä#ödi¥fØÎek¥iÏf¥fÚ¥eÎh¥eÕ}h¥bccckÕh¥fØlawukzk¥i¬|f¥h­g¤di¥fØÎ~fd{dikÎ¥fØÎfdf¤|h¤apddddddddddddddddpapddddddddddddddddqapddddddddddddddddrpeoyzawsapddddddddddddddddrfãh¤apddddddddddddddddqapddddddddddddddddp¥dpeohjefgoapddddddddddddddddqapddddddddddddddddpg¤pfadddsaIetoaddduaIevaJeaHefaddtsaIewoaddtuaIexaJeaHeprvvaJeaHexxaJeaHerqttaJeaHewwaJeaHeqf¥Îfo¥Îoj¥fÏjqdolof}©qdpf¥fØf~ÎadddsaIesfgÎaddduaIetaJeaHeprttaJeaHerqssaJeaHeqopagpafpadpaeöööùqagqafqadqaeöööùragrafradraeöööùÂh¤nifdmfdoy{ye¥hÎei¥eÎi«qdoood~sØÅÖËÉØÃÊÉÅØÙÖÉ×ek×ÍÑÈ`;
+const scalarWasm = String.raw`dynEncode000eo{ns|{s{}O)q}szosmmvso~mposýúN.OZ.OV.Oy/..O/,.O/+.O/-O/NO/.OUN./N...x0/8.8 F../8.8 F.Ox/.+.Ox0U.-N..Ox0....*zxOx8.8 F..,x/...*Ox0*UN.OZ.OV.Oy/.O/..O/,.O/+O/O/*NO/.OUN./N...x0-8.8 F..-8.8 F.Ox/.,.Ox0U.+N..Ox0....*zxOx8.8 F...x/..*Ox0*UO/.OD.OD..y/+N.OZ.O/N.Oy0OWNO/./.O0/N.'.8É®.8É®.8É®.8É®/'.Ox/.Oy0.N..Ox/./N.'.8É®/'.Ox/.Oy0N.OWNO/./.O0/N.(.8É®.8É®.8É®.8É®/(.Ox/.Oy0.S..Ox/N.(.8É®/(.Ox/.Oy0.(.À0É±Ä/.+OXN.O//.Ox/.Ox/*.O/0.QÍ /!.Oy0-O/..-O/,.Å/(O/N..Ox0180É/)...xOx8/&Q/Q/Q/N.OV..'.(±Ä0¡0.8.¡0¢Q /O/..¢Q /..¢Q /NN.-.,/./.*/N.8.¡0 .8.¡0"¢.Oy8.¡0#.Oy8.¡0$¢.  /."."¢.$.$¢.  /. . ¢.#.#¢.  /.Ox/.Ox/.Oy0../.0S.O0.1x8.¡0..x8.¡0 ¢. /. . ¢. /..¢. /..!£É..!£É­..!£É­°±Ä0.%lN..D..F./%./.'.)¯.&É®/'../x/.+..x0X.O0.x/,..y/N.OZNR/'.Oy/.O0SNR/'...x/..Ox/R/'N.'.8É®/'.Ox/.Oy0..y/.OW..Ox/..x.y.y/N.'.8É®.8É®.8É®.8É®/'.Ox/.Oy0..,VN.Ox/.O/-.QÍ /!.Oy0+O/*.+O/...yO.xOx/.Å/(N..Ox080É/)...xOx8/$Q/Q/Q/N.OV..'.(±Ä0¡0.8.¡0¢Q /O/..¢Q /..¢Q /NN.+../././N.8.¡0.8.¡0 ¢.Oy8.¡0".Oy8.¡0#¢.  /. . ¢.#.#¢.  /..¢."."¢.  /.Ox/.Ox/.Oy0.*/.-S.O0.x8.¡0..x8.¡0¢. /..¢. /..¢. /..!£É..!£É­..!£É­°±Ä0.%lN..D..F./%.'.)¯.$É®/'.Ox/.,.Ox0U`;
 
 export default class SynAudio {
   constructor(options = {}) {
-    this._covarianceSampleSize = options.covarianceSampleSize || 11025;
+    this._correlationSampleSize = options.correlationSampleSize || 11025;
     this._initialGranularity = options.initialGranularity || 16;
 
     this._module = wasmModule.get(SynAudio);
@@ -28,7 +28,7 @@ export default class SynAudio {
 
     this.SynAudioWorker = function (
       module,
-      covarianceSampleSize,
+      correlationSampleSize,
       initialGranularity
     ) {
       this._setAudioDataOnHeap = (i, o, heapPos) => {
@@ -93,7 +93,7 @@ export default class SynAudio {
               b.samplesDecoded,
               b.channelData.length,
               sampleRate,
-              this._covarianceSampleSize,
+              this._correlationSampleSize,
               this._initialGranularity,
               bestCovariancePtr,
               bestSampleOffsetPtr,
@@ -109,20 +109,20 @@ export default class SynAudio {
 
             /*console.log({
               sampleOffset: bestSampleOffset,
-              covariance: bestCovariance,
+              correlation: bestCovariance,
               trim: sampleTrim,
             });*/
 
             return {
               sampleOffset: bestSampleOffset,
-              covariance: bestCovariance,
+              correlation: bestCovariance,
               trim: sampleTrim,
             };
           });
       };
 
       this._module = module;
-      this._covarianceSampleSize = covarianceSampleSize;
+      this._correlationSampleSize = correlationSampleSize;
       this._initialGranularity = initialGranularity;
     };
   }
@@ -130,11 +130,11 @@ export default class SynAudio {
   async syncWorker(a, b, sampleRate) {
     const webworkerSourceCode =
       "'use strict';" +
-      `(${((SynAudioWorker, covarianceSampleSize, initialGranularity) => {
+      `(${((SynAudioWorker, correlationSampleSize, initialGranularity) => {
         self.onmessage = ({ data: { module, a, b, sampleRate } }) => {
           const worker = new SynAudioWorker(
             Promise.resolve(module),
-            covarianceSampleSize,
+            correlationSampleSize,
             initialGranularity
           );
 
@@ -143,7 +143,7 @@ export default class SynAudio {
           });
         };
       }).toString()})(${this.SynAudioWorker.toString()}, ${
-        this._covarianceSampleSize
+        this._correlationSampleSize
       }, ${this._initialGranularity})`;
 
     let type = "text/javascript",
@@ -183,7 +183,7 @@ export default class SynAudio {
   async sync(a, b, sampleRate) {
     const worker = new this.SynAudioWorker(
       this._module,
-      this._covarianceSampleSize,
+      this._correlationSampleSize,
       this._initialGranularity
     );
 
