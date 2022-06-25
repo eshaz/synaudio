@@ -1,7 +1,15 @@
 {
   "name": "synaudio",
   "version": "0.0.1",
-  "description": "",
+  "description": "Library that finds the synchronization point between two similar audio clips.",
+  "keywords": [
+    "wasm",
+    "simd",
+    "web worker",
+    "correlation",
+    "audio",
+    "synchronization"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/.bin/jest --maxWorkers=100%",
@@ -12,8 +20,11 @@
     "type": "git",
     "url": "git+https://github.com/eshaz/synaudio.git"
   },
-  "author": "Ethan Halsall",
-  "license": "ISC",
+  "author": {
+    "name": "Ethan Halsall",
+    "email": "ethanhalsall@pm.me"
+  },
+  "license": "LGPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/eshaz/synaudio/issues"
   },

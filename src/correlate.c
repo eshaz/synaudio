@@ -1,4 +1,20 @@
-//#define WASM_SIMD
+/* Copyright 2022 Ethan Halsall
+    
+    This file is part of synaudio.
+    
+    synaudio is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    synaudio is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>
+*/
 
 #define min(a, b) a < b ? a : b
 #define max(a, b) a > b ? a : b
@@ -138,7 +154,6 @@ void correlate(
     float *b, 
     long bSamples, 
     int bChannels,
-    long sampleRate, // sample rate of both a and b
     long sampleSize, // amount of data to compare on b
     long initialGranularity, // initial search size
     float *bestCorrelation, // stores best correlation

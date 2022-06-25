@@ -112,11 +112,7 @@ describe("SynAudio", () => {
       initialGranularity: 16,
     });
 
-    const result = await synAudio.sync(
-      fullMpeg,
-      cut_1601425_Mpeg,
-      fullMpeg.sampleRate
-    );
+    const result = await synAudio.sync(fullMpeg, cut_1601425_Mpeg);
 
     console.log(result);
 
@@ -132,11 +128,7 @@ describe("SynAudio", () => {
       initialGranularity: 64,
     });
 
-    const result = await synAudio.sync(
-      fullMpeg,
-      cut_287549_Mpeg,
-      fullMpeg.sampleRate
-    );
+    const result = await synAudio.sync(fullMpeg, cut_287549_Mpeg);
 
     console.log(result);
 
@@ -152,11 +144,7 @@ describe("SynAudio", () => {
       initialGranularity: 16,
     });
 
-    const result = await synAudio.sync(
-      fullMpeg,
-      cut_2450800_Mpeg,
-      fullMpeg.sampleRate
-    );
+    const result = await synAudio.sync(fullMpeg, cut_2450800_Mpeg);
 
     console.log(result);
 
@@ -172,11 +160,7 @@ describe("SynAudio", () => {
       initialGranularity: 32,
     });
 
-    const result = await synAudio.sync(
-      fullMpeg,
-      cut_194648_Mpeg,
-      fullMpeg.sampleRate
-    );
+    const result = await synAudio.sync(fullMpeg, cut_194648_Mpeg);
 
     console.log(result);
 
@@ -194,11 +178,7 @@ describe("SynAudio", () => {
       initialGranularity: 32,
     });
 
-    const result = await synAudio.sync(
-      fullMpeg,
-      cut_194648_64_Mpeg,
-      fullMpeg.sampleRate
-    );
+    const result = await synAudio.sync(fullMpeg, cut_194648_64_Mpeg);
 
     console.log(result);
 
@@ -216,11 +196,7 @@ describe("SynAudio", () => {
       initialGranularity: 32,
     });
 
-    const result = await synAudio.sync(
-      fullMpeg,
-      cut_194648_32_Mpeg,
-      fullMpeg.sampleRate
-    );
+    const result = await synAudio.sync(fullMpeg, cut_194648_32_Mpeg);
 
     console.log(result);
 
@@ -239,11 +215,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen2_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen2_Mpeg);
 
       console.log(result);
 
@@ -259,11 +231,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen3_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen3_Mpeg);
 
       console.log(result);
 
@@ -279,11 +247,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen4_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen4_Mpeg);
 
       console.log(result);
 
@@ -301,11 +265,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen5_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen5_Mpeg);
 
       console.log(result);
 
@@ -323,11 +283,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen6_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen6_Mpeg);
 
       console.log(result);
 
@@ -345,11 +301,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen7_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen7_Mpeg);
 
       console.log(result);
 
@@ -365,11 +317,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen8_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen8_Mpeg);
 
       console.log(result);
 
@@ -385,11 +333,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen9_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen9_Mpeg);
 
       console.log(result);
 
@@ -405,11 +349,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen10_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen10_Mpeg);
 
       console.log(result);
 
@@ -425,11 +365,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen11_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen11_Mpeg);
 
       console.log(result);
 
@@ -445,11 +381,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen12_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen12_Mpeg);
 
       expect(result.sampleOffset).toEqual(187736); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
       // first rendered MPEG frame is less similar
@@ -463,11 +395,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen13_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen13_Mpeg);
 
       console.log(result);
 
@@ -483,11 +411,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen14_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen14_Mpeg);
 
       console.log(result);
 
@@ -503,11 +427,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen15_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen15_Mpeg);
 
       console.log(result);
 
@@ -523,11 +443,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen16_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen16_Mpeg);
 
       console.log(result);
 
@@ -543,11 +459,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen17_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen17_Mpeg);
 
       console.log(result);
 
@@ -563,11 +475,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen18_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen18_Mpeg);
 
       console.log(result);
 
@@ -583,11 +491,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen19_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen19_Mpeg);
 
       console.log(result);
 
@@ -603,11 +507,7 @@ describe("SynAudio", () => {
         initialGranularity: 32,
       });
 
-      const result = await synAudio.sync(
-        fullMpeg,
-        cut_194648_32_gen20_Mpeg,
-        fullMpeg.sampleRate
-      );
+      const result = await synAudio.sync(fullMpeg, cut_194648_32_gen20_Mpeg);
 
       console.log(result);
 
@@ -631,10 +531,10 @@ describe("SynAudio", () => {
         cut_2450800_Mpeg_result,
         cut_194648_Mpeg_result,
       ] = await Promise.all([
-        synAudio.syncWorker(fullMpeg, cut_1601425_Mpeg, fullMpeg.sampleRate),
-        synAudio.syncWorker(fullMpeg, cut_287549_Mpeg, fullMpeg.sampleRate),
-        synAudio.syncWorker(fullMpeg, cut_2450800_Mpeg, fullMpeg.sampleRate),
-        synAudio.syncWorker(fullMpeg, cut_194648_Mpeg, fullMpeg.sampleRate),
+        synAudio.syncWorker(fullMpeg, cut_1601425_Mpeg),
+        synAudio.syncWorker(fullMpeg, cut_287549_Mpeg),
+        synAudio.syncWorker(fullMpeg, cut_2450800_Mpeg),
+        synAudio.syncWorker(fullMpeg, cut_194648_Mpeg),
       ]);
 
       console.log(cut_1601425_Mpeg_result);
@@ -656,8 +556,8 @@ describe("SynAudio", () => {
 
       expect(cut_194648_Mpeg_result.sampleOffset).toEqual(194072);
       // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
-      const roundedTrim_194648 =
-        Math.ceil(cut_194648_Mpeg_result.trim / 576) * 576;
+      //const roundedTrim_194648 =
+      //  Math.ceil(cut_194648_Mpeg_result.trim / 576) * 576;
       //expect(roundedTrim_194648).toBeGreaterThanOrEqual(576);
       //expect(roundedTrim_194648).toBeLessThanOrEqual(576 * 2);
     });
