@@ -1,5 +1,8 @@
 //#define WASM_SIMD
 
+#define min(a, b) a < b ? a : b
+#define max(a, b) a > b ? a : b
+
 #ifdef WASM_SIMD
 
 #include <wasm_simd128.h>
@@ -56,6 +59,12 @@ typedef float float4;
 
 #endif
 
+#define calc_correlation_step(cov, aStd, bStd, aMean, bMean, a, b) \
+  calc_stddev(aStd, a, aMean); \
+  calc_stddev(bStd, b, bMean); \
+  calc_covariance(covariance, a, b, aMean, bMean);
+
+
 float calc_correlation(float *a, float *b, float aMean, float bMean, long sampleSize) {
     int loopUnroll = 1*float4_size;
     float4 covariance = new_float4;
@@ -67,40 +76,38 @@ float calc_correlation(float *a, float *b, float aMean, float bMean, long sample
       i < sampleSize - loopUnroll;
       i+=loopUnroll
     ) {
-      calc_stddev(aStd, a[i], aMean);
-      calc_stddev(bStd, b[i], bMean);
-      calc_covariance(covariance, a[i],                        b[i],                        aMean, bMean);
-      //calc_covariance(covariance, a[i + 1 * float4_size],  b[i + 1 * float4_size],  aMean, bMean);
-      //calc_covariance(covariance, a[i + 2 * float4_size],  b[i + 2 * float4_size],  aMean, bMean);
-      //calc_covariance(covariance, a[i + 3 * float4_size],  b[i + 3 * float4_size],  aMean, bMean);
-      //calc_covariance(covariance, a[i + 4 * float4_size],  b[i + 4 * float4_size],  aMean, bMean);
-      //calc_covariance(covariance, a[i + 5 * float4_size],  b[i + 5 * float4_size],  aMean, bMean);
-      //calc_covariance(covariance, a[i + 6 * float4_size],  b[i + 6 * float4_size],  aMean, bMean);
-      //calc_covariance(covariance, a[i + 7 * float4_size],  b[i + 7 * float4_size],  aMean, bMean);
-      //calc_covariance(covariance, a[i + 8 * float4_size],  b[i + 8 * float4_size],  aMean, bMean);
-      //calc_covariance(covariance, a[i + 9 * float4_size],  b[i + 9 * float4_size],  aMean, bMean);
-      //calc_covariance(covariance, a[i + 10 * float4_size], b[i + 10 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 11 * float4_size], b[i + 11 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 12 * float4_size], b[i + 12 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 13 * float4_size], b[i + 13 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 14 * float4_size], b[i + 14 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 15 * float4_size], b[i + 15 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 16 * float4_size], b[i + 16 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 17 * float4_size], b[i + 17 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 18 * float4_size], b[i + 18 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 19 * float4_size], b[i + 19 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 20 * float4_size], b[i + 20 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 21 * float4_size], b[i + 21 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 22 * float4_size], b[i + 22 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 23 * float4_size], b[i + 23 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 24 * float4_size], b[i + 24 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 25 * float4_size], b[i + 25 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 26 * float4_size], b[i + 26 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 27 * float4_size], b[i + 27 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 28 * float4_size], b[i + 28 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 29 * float4_size], b[i + 29 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 30 * float4_size], b[i + 30 * float4_size], aMean, bMean);
-      //calc_covariance(covariance, a[i + 31 * float4_size], b[i + 31 * float4_size], aMean, bMean);
+      calc_correlation_step(covariance, aStd, bStd, aMean, bMean, a[i],                    b[i]                   );
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 1  * float4_size], b[i + 1  * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 2  * float4_size], b[i + 2  * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 3  * float4_size], b[i + 3  * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 4  * float4_size], b[i + 4  * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 5  * float4_size], b[i + 5  * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 6  * float4_size], b[i + 6  * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 7  * float4_size], b[i + 7  * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 8  * float4_size], b[i + 8  * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 9  * float4_size], b[i + 9  * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 10 * float4_size], b[i + 10 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 11 * float4_size], b[i + 11 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 12 * float4_size], b[i + 12 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 13 * float4_size], b[i + 13 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 14 * float4_size], b[i + 14 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 15 * float4_size], b[i + 15 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 16 * float4_size], b[i + 16 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 17 * float4_size], b[i + 17 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 18 * float4_size], b[i + 18 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 19 * float4_size], b[i + 19 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 20 * float4_size], b[i + 20 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 21 * float4_size], b[i + 21 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 22 * float4_size], b[i + 22 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 23 * float4_size], b[i + 23 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 24 * float4_size], b[i + 24 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 25 * float4_size], b[i + 25 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 26 * float4_size], b[i + 26 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 27 * float4_size], b[i + 27 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 28 * float4_size], b[i + 28 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 29 * float4_size], b[i + 29 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 30 * float4_size], b[i + 30 * float4_size]);
+    //calc_correlation_part(covariance, aStd, bStd, aMean, bMean, a[i + 31 * float4_size], b[i + 31 * float4_size]);
     }
 
     return sum_covariance(covariance, sampleSize) / (sum_stddev(aStd, sampleSize) * sum_stddev(bStd, sampleSize));
@@ -134,11 +141,15 @@ void correlate(
     long sampleRate, // sample rate of both a and b
     long sampleSize, // amount of data to compare on b
     long initialGranularity, // initial search size
-    float *bestCorrelation,
-    long *bestSampleOffset,
-    long *bestSampleTrim
+    float *bestCorrelation, // stores best correlation
+    long *bestSampleOffset // stores sample offset of a where b has the best correlation
     )
 {
+    sampleSize = min(aSamples, sampleSize); // base data length must be >= sample size
+    sampleSize -= sampleSize % float4_size; // sample size must be divisible by the size of the vector
+    bSamples = min(bSamples, sampleSize); // sample size must be >= comparison data
+
+    // sum together to normalize audio with differing channels
     sum_channels(a, aSamples, aChannels);
     sum_channels(b, bSamples, bChannels);
 
@@ -173,8 +184,8 @@ void correlate(
     }
 
     // narrow down exact correlation from previous results
-    aOffsetStart = *bestSampleOffset - initialGranularity * 2;
-    aOffsetEnd = *bestSampleOffset + initialGranularity * 2;
+    aOffsetStart = max(*bestSampleOffset - initialGranularity * 2, 0);
+    aOffsetEnd = min(*bestSampleOffset + initialGranularity * 2, aSamples - sampleSize);
 
     aSum = sum_for_mean(a, aOffsetStart, aOffsetStart + sampleSize);
 
@@ -196,21 +207,4 @@ void correlate(
     long bOffsetStart = 0;
     long bOffsetEnd = sampleSize;
     float bMeanLength = bOffsetEnd;
-/*
-    // trim any non-matching data from beginning of b
-    for (long bOffset = bOffsetStart; bOffset < bOffsetEnd; bOffset++) {
-      float bMean = bSum / bMeanLength;
-      // shift mean sum up one element
-      bSum -= (double) b[bOffset];
-      bSum += (double) b[bOffset + sampleSize];
-
-      correlation = calc_correlation(a + *bestSampleOffset + bOffset, b + bOffset, bestAMean, bMean, sampleSize);
-
-      if (*bestCorrelation < correlation) {
-        bestBMean = bMean;
-        *bestCorrelation = correlation;
-        *bestSampleTrim = bOffset;
-      }
-    }
-*/
 }
