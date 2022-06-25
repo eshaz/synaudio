@@ -11,9 +11,10 @@
     "synchronization"
   ],
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/.bin/jest --maxWorkers=100%",
-    "format": "prettier --write '**/*.js' --write '**/*.*json*' --write '**/*.*html*'",
+    "format": "prettier --write '**/*.js' --write '**/*.*json*' --write '**/*.*html*' --write '**/*.*ts*'",
     "embed-wasm": "node embed-wasm.js $SIMD $SCALAR"
   },
   "repository": {

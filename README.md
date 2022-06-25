@@ -82,32 +82,30 @@ const synAudio = new SynAudio({
 
 ### Types
 
-* `PCMAudio`
-  ```ts
-  interface PCMAudio {
-    channelData: Float32Array[];
-    samplesDecoded: number;
-  }
-  ```
-  * `channelData`
-    * Array of Float32Array of audio data
-    * Each Float32Array represents a single channel
-    * Each channel should be exactly the same length
-  * `samplesDecoded`
-    * Total number of samples in a single audio channel
+```ts
+interface PCMAudio {
+  channelData: Float32Array[];
+  samplesDecoded: number;
+}
+```
+* `channelData`
+  * Array of Float32Array of audio data
+  * Each Float32Array represents a single channel
+  * Each channel should be exactly the same length
+* `samplesDecoded`
+  * Total number of samples in a single audio channel
 
-* `SynAudioResult`
-  ```ts
-  interface SynAudioResult {
-    correlation: number;
-    sampleOffset: number; 
-  }
-  ```
-  * `correlation`
-    * Correlation coefficient of the `base` and `comparison` audio at the `sampleOffset`
-    * Ranging from -1 (worst) to 1 (best)
-  * `sampleOffset`
-    * Number of samples relative to `base` where `comparison` has the highest correlation
+```ts
+interface SynAudioResult {
+  correlation: number;
+  sampleOffset: number; 
+}
+```
+* `correlation`
+  * Correlation coefficient of the `base` and `comparison` audio at the `sampleOffset`
+  * Ranging from -1 (worst) to 1 (best)
+* `sampleOffset`
+  * Number of samples relative to `base` where `comparison` has the highest correlation
 
 ### Methods
 

@@ -87,7 +87,7 @@ export default class SynAudio {
               env: { memory },
             })
           )
-          .then(({exports}) => {
+          .then(({ exports }) => {
             const instanceExports = new Map(Object.entries(exports));
 
             const correlate = instanceExports.get("correlate");
