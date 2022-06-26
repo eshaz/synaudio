@@ -198,28 +198,30 @@ void correlate(
       }
     }
 
-    // narrow down exact correlation from previous results
-    aOffsetStart = max(*bestSampleOffset - initialGranularity * 2, 0);
-    aOffsetEnd = min(*bestSampleOffset + initialGranularity * 2, aSamples - sampleSize);
-
-    aSum = sum_for_mean(a, aOffsetStart, aOffsetStart + sampleSize);
-
-    for (long aOffset = aOffsetStart; aOffset < aOffsetEnd; aOffset++) {
-      float aMean = aSum / sampleSize;
-      // shift mean sum up one element
-      aSum -= (double) a[aOffset];
-      aSum += (double) a[aOffset + sampleSize];
-
-      correlation = calc_correlation(a + aOffset, b, aMean, bMean, sampleSize);
-
-      if (*bestCorrelation < correlation) {
-        bestAMean = aMean;
-        *bestCorrelation = correlation;
-        *bestSampleOffset = aOffset;
+    if (initialGranularity > 1) {
+      // narrow down exact correlation from previous results
+      aOffsetStart = max(*bestSampleOffset - initialGranularity * 2, 0);
+      aOffsetEnd = min(*bestSampleOffset + initialGranularity * 2, aSamples - sampleSize);
+  
+      aSum = sum_for_mean(a, aOffsetStart, aOffsetStart + sampleSize);
+  
+      for (long aOffset = aOffsetStart; aOffset < aOffsetEnd; aOffset++) {
+        float aMean = aSum / sampleSize;
+        // shift mean sum up one element
+        aSum -= (double) a[aOffset];
+        aSum += (double) a[aOffset + sampleSize];
+  
+        correlation = calc_correlation(a + aOffset, b, aMean, bMean, sampleSize);
+  
+        if (*bestCorrelation < correlation) {
+          bestAMean = aMean;
+          *bestCorrelation = correlation;
+          *bestSampleOffset = aOffset;
+        }
       }
+  
+      long bOffsetStart = 0;
+      long bOffsetEnd = sampleSize;
+      float bMeanLength = bOffsetEnd;
     }
-
-    long bOffsetStart = 0;
-    long bOffsetEnd = sampleSize;
-    float bMeanLength = bOffsetEnd;
 }

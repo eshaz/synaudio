@@ -717,11 +717,79 @@ describe("SynAudio", () => {
   });
 
   describe("syncWorkerConcurrent", () => {
-    runTestSuite(testData, it, "syncWorkerConcurrent", 4);
+    runTestSuite(testData, it, "syncWorkerConcurrent", 8);
+  });
+
+  describe("initialGranularity", () => {
+    it("should find the sample accurate sync point between two clips 194072 32kbs 20th generation when granularity is set to 1", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 14004,
+        initialGranularity: 1,
+      });
+
+      const result = await testData.then((data) =>
+        synAudio.syncWorkerConcurrent(
+          data.fullMpeg,
+          data.cut_194648_32_gen20_Mpeg,
+          16
+        )
+      );
+
+      console.log(result);
+
+      expect(result.sampleOffset).toEqual(183128);
+      // first rendered MPEG frame is less similar
+      //expect(result.trim).toBeGreaterThanOrEqual(576);
+      //expect(result.trim).toBeLessThanOrEqual(576 * 2);
+    }, 10000);
+
+    it("should find the sample accurate sync point between two clips 194072 32kbs 20th generation when granularity is set to 2", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 14004,
+        initialGranularity: 2,
+      });
+
+      const result = await testData.then((data) =>
+        synAudio.syncWorkerConcurrent(
+          data.fullMpeg,
+          data.cut_194648_32_gen20_Mpeg,
+          16
+        )
+      );
+
+      console.log(result);
+
+      expect(result.sampleOffset).toEqual(183128);
+      // first rendered MPEG frame is less similar
+      //expect(result.trim).toBeGreaterThanOrEqual(576);
+      //expect(result.trim).toBeLessThanOrEqual(576 * 2);
+    }, 10000);
+
+    it("should find the sample accurate sync point between two clips 194072 32kbs 20th generation when granularity is set to 3", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 14004,
+        initialGranularity: 3,
+      });
+
+      const result = await testData.then((data) =>
+        synAudio.syncWorkerConcurrent(
+          data.fullMpeg,
+          data.cut_194648_32_gen20_Mpeg,
+          16
+        )
+      );
+
+      console.log(result);
+
+      expect(result.sampleOffset).toEqual(183128);
+      // first rendered MPEG frame is less similar
+      //expect(result.trim).toBeGreaterThanOrEqual(576);
+      //expect(result.trim).toBeLessThanOrEqual(576 * 2);
+    }, 10000);
   });
 
   describe("Web Worker", () => {
-    it("should find the sample accurate sync points multithreaded", async () => {
+    it("should find the sample accurate sync points running in parallel", async () => {
       const synAudio = new SynAudio({
         correlationSampleSize: 11025,
         initialGranularity: 16,
@@ -744,6 +812,57 @@ describe("SynAudio", () => {
         ),
         testData.then((data) =>
           synAudio.syncWorker(data.fullMpeg, data.cut_194648_Mpeg)
+        ),
+      ]);
+
+      console.log(cut_1601425_Mpeg_result);
+      console.log(cut_287549_Mpeg_result);
+      console.log(cut_2450800_Mpeg_result);
+      console.log(cut_194648_Mpeg_result);
+
+      expect(cut_1601425_Mpeg_result.sampleOffset).toEqual(1600849);
+      //expect(cut_1601425_Mpeg_result.trim).toBeGreaterThanOrEqual(576);
+      //expect(cut_1601425_Mpeg_result.trim).toBeLessThanOrEqual(576 * 2);
+
+      expect(cut_287549_Mpeg_result.sampleOffset).toEqual(286973);
+      //expect(cut_287549_Mpeg_result.trim).toBeGreaterThanOrEqual(576);
+      //expect(cut_287549_Mpeg_result.trim).toBeLessThanOrEqual(576 * 2);
+
+      expect(cut_2450800_Mpeg_result.sampleOffset).toEqual(2450224);
+      //expect(cut_2450800_Mpeg_result.trim).toBeGreaterThanOrEqual(576);
+      //expect(cut_2450800_Mpeg_result.trim).toBeLessThanOrEqual(576 * 2);
+
+      expect(cut_194648_Mpeg_result.sampleOffset).toEqual(194072);
+      // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
+      //const roundedTrim_194648 =
+      //  Math.ceil(cut_194648_Mpeg_result.trim / 576) * 576;
+      //expect(roundedTrim_194648).toBeGreaterThanOrEqual(576);
+      //expect(roundedTrim_194648).toBeLessThanOrEqual(576 * 2);
+    });
+
+    it("should find the sample accurate sync points running in parallel multi threaded", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 11025,
+        initialGranularity: 16,
+      });
+
+      const [
+        cut_1601425_Mpeg_result,
+        cut_287549_Mpeg_result,
+        cut_2450800_Mpeg_result,
+        cut_194648_Mpeg_result,
+      ] = await Promise.all([
+        testData.then((data) =>
+          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_1601425_Mpeg, 4)
+        ),
+        testData.then((data) =>
+          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_287549_Mpeg, 4)
+        ),
+        testData.then((data) =>
+          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_2450800_Mpeg, 4)
+        ),
+        testData.then((data) =>
+          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_194648_Mpeg, 4)
         ),
       ]);
 
