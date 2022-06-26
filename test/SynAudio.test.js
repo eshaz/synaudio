@@ -713,11 +713,11 @@ describe("SynAudio", () => {
   });
 
   describe("syncWorker", () => {
-    runTestSuite(testData, it, "syncWorker");
+    runTestSuite(testData, it.concurrent, "syncWorker");
   });
 
   describe("syncWorkerThreaded", () => {
-    runTestSuite(testData, it, "syncWorkerThreaded", 8);
+    runTestSuite(testData, it, "syncWorkerThreaded", 4);
   });
 
   describe("Web Worker", () => {
