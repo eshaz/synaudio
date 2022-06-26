@@ -23,6 +23,7 @@ import Worker from "web-worker";
 const simd=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,10,10,1,8,0,65,0,253,15,253,98,11]))
 
 const wasmModule = new WeakMap();
+const webworkerSource = new WeakMap();
 
 /* WASM strings are embeded during the build */
 const simdWasm = String.raw`dynEncode0064dÅ×ÑedddereÄnããããããããããdfsegÉÒÚjÑÉÑÓÖÝfdfgfedjleãd¥äìhokfmÇÓÖÖÉÐÅØÉddoÃÃÌÉÅÔÃÆÅ×Égdnwewhvãgàkßjáejej¬v¥hÓwf¤e¥d°qdf¥f¬qdf¥eÏx¥deÏye¥eÕze¥àÕoe¥fØ{dÎ|e¥hÏ}¥fÚ¥eÎf¥bccckÕpf¥eÕ~e¥h­tg¤esÐq¥djf¤f¤tqdddeqÎ¥fØÎ­dq¥fØÎ|­Õqd¥df}¥h³h¤pndjg¤jjrÎuadfdjadfdaHeaofdjuadftjadftaHeaoftj¥Îjf¥lÎfn¥fÏnqdoo~h¤df¥fØÎjdfqÎ¥fØÎadfdjadfdaHeaofdoojeªqeoj¥ã×fzh¤dj¥fØÎndjqÎ¥fØÎfdnfdöfdj¥eÖjofyªqdejÏnj¥fØqrÎudjg¤jqÎfjuÎfdffdöfdffhffhöfhj¥lÎjn¥fÏnqdoor{Îrxs¥eÎs«qdoovwÏof¤i¥f¬qdhoho¬p¥d°qdi¥eÏxp¥eÕyp¥àÕhp¥fØzgÎ{p¥hÏ|¥fÚ¥eÎf¥bccckÕif¥eÕ}¥drp¥h­~¥dsg¤psÐq¥djf¤f¤~qdggpqÎ¥fØÎ­gq¥fØÎ{­Õqd¥df|¥h³h¤ingjg¤jjrÎtadfdjadfdaHeaofdjtadftjadftaHeaoftj¥Îjf¥lÎfn¥fÏnqdoo}h¤gf¥fØÎjgfqÎ¥fØÎadfdjadfdaHeaofdophjªqeoj¥eÖfyh¤gj¥fØÎngjqÎ¥fØÎfdnfdöfdfjofpªqdpjÏnj¥fØqrÎtgjg¤jqÎfjtÎufdffdöfdfufhffhöfhj¥lÎjn¥fÏnqdoorzÎrxs¥eÎs«qdoo¥dim¥dfdl¥dfdeoÏpf¤o¥d°qdo¥gÕff¤vw¥ã×Îe¥g­h¤¥dhpeodjo¥àÕhng¤jfdjfhjfljfpj¥tÎjn¥hÏnqdoofh¤dh¥fØÎjfng¤jfdj¥hÎjn¥eÏnqdoof¤e¥g­h¤¥depeogjo¥àÕeng¤jfdjfhjfljfpj¥tÎjn¥hÏnqdoof©qdge¥fØÎjg¤jfdj¥hÎjf¥eÏfqdooop¥d®h¤k¥fØr§ddä#öo¥hÏsawoo¥i¬qde¥dhg¤dh¥fØÎfddhoÎ¥fØÎfdf¤qh¤apddddddddddddddddapddddddddddddddddapddddddddddddddddpeoaw¥dnejgfapddddddddddddddddapddddddddddddddddapddddddddddddddddg¤jadddaIefadddaIeaJeaHej¥tÎjf¥tÎfaJeaHeaJeaHesn¥hÎn®qdooagafadaeöööùagafadaeöööùagafadaeöööùÂh¤mhfdlfdhioerÎephkÎh®qdook¥eØeiÎfpfp¬kieÏe¥de¥d®hf¤o¥d°h¤¨ddddddddpeovw¥ã×Îifão¥gÕe©h¤¨ddddddddhpeodh¥fØÎj¨ddddddddefg¤jfdj¥hÎjf¥eÏfqdoehÎoei¥g­qdde¥fØÎjhvÎeÏwÏfg¤jfdjfhjfljfpj¥tÎjf¥hÏfqdoohk¬h¤§ddä#öo¥hÏidh¥fØÎeawoo¥i¬pg¤dh¥fØÎfddhoÎ¥fØÎfdf¤ph¤apddddddddddddddddapddddddddddddddddapddddddddddddddddpeoaw¥dnejgfapddddddddddddddddapddddddddddddddddapddddddddddddddddg¤jadddaIefadddaIeaJeaHej¥tÎjf¥tÎfaJeaHeaJeaHein¥hÎn®qdooagafadaeöööùagafadaeöööùagafadaeöööùÂh¤mhfdlfdoe¥hÎekh¥eÎh«qdoood~sØÅÖËÉØÃÊÉÅØÙÖÉ×ek×ÍÑÈ`;
@@ -66,11 +67,6 @@ export default class SynAudio {
       this.sync = (a, b) => {
         const pageSize = 64 * 1024;
         const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
-
-        if (a.sampleRate !== b.sampleRate)
-          throw new Error(
-            "SynAudio: sample rates of both audio data must be the same"
-          );
 
         const memory = new WebAssembly.Memory({
           initial:
@@ -142,36 +138,93 @@ export default class SynAudio {
     };
   }
 
+  async syncWorkerConcurrent(a, b, threads = 1) {
+    const promises = [];
+    const lengths = [];
+
+    // split a buffer into equal chunks for threads
+    // overlap at the end of the buffer by correlation sample size
+    let offset = 0;
+    for (let i = 1; i <= threads; i++) {
+      const aBufferLength = Math.ceil(a.samplesDecoded / threads);
+      const correlationSampleOverlap =
+        i === threads ? 0 : this._correlationSampleSize;
+
+      const aSplit = {
+        channelData: [],
+      };
+
+      for (const channel of a.channelData) {
+        const cutChannel = channel.subarray(
+          offset,
+          offset + aBufferLength + correlationSampleOverlap
+        );
+        aSplit.channelData.push(cutChannel);
+        aSplit.samplesDecoded = cutChannel.length;
+      }
+
+      const actualLength =
+        aBufferLength < a.samplesDecoded ? aBufferLength : a.samplesDecoded;
+      lengths.push(actualLength);
+      offset += actualLength;
+
+      promises.push(this.syncWorker(aSplit, b));
+    }
+
+    const results = await Promise.all(promises);
+
+    // find the result with the highest correlation and calculate the offset relative to the input data
+    let bestResultIdx = 0;
+    let bestCorrelation = -1;
+    for (let i = 0; i < results.length; i++)
+      if (results[i].correlation > bestCorrelation) {
+        bestResultIdx = i;
+        bestCorrelation = results[i].correlation;
+      }
+
+    return {
+      correlation: results[bestResultIdx].correlation,
+      sampleOffset:
+        results[bestResultIdx].sampleOffset +
+        lengths.slice(0, bestResultIdx).reduce((acc, len) => acc + len, 0),
+    };
+  }
+
   async syncWorker(a, b) {
-    const webworkerSourceCode =
-      "'use strict';" +
-      `(${((SynAudioWorker, correlationSampleSize, initialGranularity) => {
-        self.onmessage = ({ data: { module, a, b } }) => {
-          const worker = new SynAudioWorker(
-            Promise.resolve(module),
-            correlationSampleSize,
-            initialGranularity
-          );
+    let source = webworkerSource.get(this);
 
-          worker.sync(a, b).then((results) => {
-            self.postMessage(results);
-          });
-        };
-      }).toString()})(${this.SynAudioWorker.toString()}, ${
-        this._correlationSampleSize
-      }, ${this._initialGranularity})`;
+    if (!source) {
+      const webworkerSourceCode =
+        "'use strict';" +
+        `(${((SynAudioWorker, correlationSampleSize, initialGranularity) => {
+          self.onmessage = ({ data: { module, a, b } }) => {
+            const worker = new SynAudioWorker(
+              Promise.resolve(module),
+              correlationSampleSize,
+              initialGranularity
+            );
 
-    let type = "text/javascript",
-      source;
+            worker.sync(a, b).then((results) => {
+              self.postMessage(results);
+            });
+          };
+        }).toString()})(${this.SynAudioWorker.toString()}, ${
+          this._correlationSampleSize
+        }, ${this._initialGranularity})`;
 
-    try {
-      // browser
-      source = URL.createObjectURL(new Blob([webworkerSourceCode], { type }));
-    } catch {
-      // nodejs
-      source = `data:${type};base64,${Buffer.from(webworkerSourceCode).toString(
-        "base64"
-      )}`;
+      let type = "text/javascript";
+
+      try {
+        // browser
+        source = URL.createObjectURL(new Blob([webworkerSourceCode], { type }));
+      } catch {
+        // nodejs
+        source = `data:${type};base64,${Buffer.from(
+          webworkerSourceCode
+        ).toString("base64")}`;
+      }
+
+      webworkerSource.set(this, source);
     }
 
     const worker = new Worker(source, { name: "SynAudio" });
