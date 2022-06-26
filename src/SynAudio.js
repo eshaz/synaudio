@@ -133,7 +133,7 @@ export default class SynAudio {
         return result;
       };
 
-      this.sync = (a, b) => {
+      this._sync = (a, b) => {
         const pageSize = 64 * 1024;
         const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
 
@@ -231,7 +231,7 @@ export default class SynAudio {
           lengths.push(actualLength);
           offset += actualLength;
 
-          promises.push(this.syncWorker(aSplit, b));
+          promises.push(this._syncWorker(aSplit, b));
         }
 
         return Promise.all(promises).then((results) => {
@@ -255,11 +255,11 @@ export default class SynAudio {
         });
       };
 
-      this.syncWorker = (a, b) => {
-        return this._executeAsWorker("sync", [a, b]);
+      this._syncWorker = (a, b) => {
+        return this._executeAsWorker("_sync", [a, b]);
       };
 
-      this.syncWorkerConcurrent = (a, b, threads) => {
+      this._syncWorkerConcurrentMain = (a, b, threads) => {
         // can't serialize the webworker polyfill in nodejs
         return globalThis.Worker
           ? this._executeAsWorker("_syncWorkerConcurrent", [a, b, threads])
@@ -269,8 +269,8 @@ export default class SynAudio {
       // needed to serialize minified code when methods are refererenced as a string
       // prettier-ignore
       this._workerMethods = new Map([
-        ["sync", this.sync],
-        ["syncWorker", this.syncWorker],
+        ["_sync", this._sync],
+        ["_syncWorker", this._syncWorker],
         ["_syncWorkerConcurrent", this._syncWorkerConcurrent],
       ]);
 
@@ -287,14 +287,14 @@ export default class SynAudio {
   }
 
   async syncWorkerConcurrent(a, b, threads = 1) {
-    return this._instance.syncWorkerConcurrent(a, b, threads);
+    return this._instance._syncWorkerConcurrentMain(a, b, threads);
   }
 
   async syncWorker(a, b) {
-    return this._instance.syncWorker(a, b);
+    return this._instance._syncWorker(a, b);
   }
 
   async sync(a, b) {
-    return this._instance.sync(a, b);
+    return this._instance._sync(a, b);
   }
 }
