@@ -205,14 +205,17 @@ export default class SynAudio {
         const promises = [];
         const lengths = [];
 
+        const aCorrelationOverlap = Math.ceil(
+          this._correlationSampleSize / threads
+        );
+        const aBufferSplit =
+          Math.ceil(a.samplesDecoded / threads) + this._correlationSampleSize;
+        const aBufferLength = aBufferSplit - aCorrelationOverlap;
+
         // split a buffer into equal chunks for threads
         // overlap at the end of the buffer by correlation sample size
         let offset = 0;
         for (let i = 1; i <= threads; i++) {
-          const aBufferLength = Math.ceil(a.samplesDecoded / threads);
-          const correlationSampleOverlap =
-            i === threads ? 0 : this._correlationSampleSize;
-
           const aSplit = {
             channelData: [],
           };
@@ -220,16 +223,14 @@ export default class SynAudio {
           for (let i = 0; i < a.channelData.length; i++) {
             const cutChannel = a.channelData[i].subarray(
               offset,
-              offset + aBufferLength + correlationSampleOverlap
+              offset + aBufferLength
             );
             aSplit.channelData.push(cutChannel);
             aSplit.samplesDecoded = cutChannel.length;
           }
 
-          const actualLength =
-            aBufferLength < a.samplesDecoded ? aBufferLength : a.samplesDecoded;
-          lengths.push(actualLength);
-          offset += actualLength;
+          lengths.push(aSplit.samplesDecoded - aCorrelationOverlap);
+          offset += aSplit.samplesDecoded - aCorrelationOverlap;
 
           promises.push(this._syncWorker(aSplit, b));
         }
