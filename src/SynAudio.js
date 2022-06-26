@@ -67,11 +67,6 @@ export default class SynAudio {
         const pageSize = 64 * 1024;
         const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
 
-        if (a.sampleRate !== b.sampleRate)
-          throw new Error(
-            "SynAudio: sample rates of both audio data must be the same"
-          );
-
         const memory = new WebAssembly.Memory({
           initial:
             ((a.samplesDecoded * a.channelData.length +
@@ -140,6 +135,60 @@ export default class SynAudio {
       this._correlationSampleSize = correlationSampleSize;
       this._initialGranularity = initialGranularity;
     };
+  }
+
+  async syncWorkerThreaded(a, b, threadCount = 1) {
+    const promises = [];
+    const lengths = [];
+    const asplits = [];
+
+    let offset = 0;
+
+    for (let i = 1; i <= threadCount; i++) {
+      const aBufferLength = Math.ceil(a.samplesDecoded / threadCount);
+      const correlationSampleOverlap =
+        i === threadCount ? 0 : this._correlationSampleSize;
+
+      const aSplit = {
+        channelData: [],
+      };
+
+      for (const channel of a.channelData) {
+        const cutChannel = channel.subarray(
+          offset,
+          offset + aBufferLength + correlationSampleOverlap
+        );
+        aSplit.channelData.push(cutChannel);
+        aSplit.samplesDecoded = cutChannel.length;
+      }
+
+      const actualLength =
+        aBufferLength < a.samplesDecoded ? aBufferLength : a.samplesDecoded;
+      lengths.push(actualLength);
+      offset += actualLength;
+
+      asplits.push(aSplit);
+      promises.push(this.syncWorker(aSplit, b));
+    }
+
+    const results = await Promise.all(promises);
+
+    let bestResultIdx = 0;
+    let bestCorrelation = -1;
+    for (let i = 0; i < results.length; i++)
+      if (results[i].correlation > bestCorrelation) {
+        bestResultIdx = i;
+        bestCorrelation = results[i].correlation;
+      }
+
+    const result = {
+      correlation: results[bestResultIdx].correlation,
+      sampleOffset:
+        results[bestResultIdx].sampleOffset +
+        lengths.slice(0, bestResultIdx).reduce((acc, len) => acc + len, 0),
+    };
+
+    return result;
   }
 
   async syncWorker(a, b) {
