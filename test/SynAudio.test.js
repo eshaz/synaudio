@@ -716,8 +716,8 @@ describe("SynAudio", () => {
     runTestSuite(testData, it.concurrent, "syncWorker");
   });
 
-  describe("syncWorkerThreaded", () => {
-    runTestSuite(testData, it, "syncWorkerThreaded", 4);
+  describe("syncWorkerConcurrent", () => {
+    runTestSuite(testData, it, "syncWorkerConcurrent", 4);
   });
 
   describe("Web Worker", () => {

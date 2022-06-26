@@ -9,21 +9,24 @@ declare interface SynAudioResult {
 }
 
 declare interface SynAudioOptions {
-  correlationSampleSize?: number;
-  initialGranularity?: number;
+  correlationSampleSize?: number; // default 11025
+  initialGranularity?: number; // default 16
 }
 
 declare class SynAudio {
   constructor(options?: SynAudioOptions);
 
-  public async sync(
+  public sync(base: PCMAudio, comparison: PCMAudio): Promise<SynAudioResult>;
+
+  public syncWorker(
     base: PCMAudio,
     comparison: PCMAudio
   ): Promise<SynAudioResult>;
 
-  public async syncWorker(
+  public syncWorkerConcurrent(
     base: PCMAudio,
-    comparison: PCMAudio
+    comparison: PCMAudio,
+    threads?: number // default 1
   ): Promise<SynAudioResult>;
 }
 

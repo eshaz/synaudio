@@ -138,16 +138,17 @@ export default class SynAudio {
     };
   }
 
-  async syncWorkerThreaded(a, b, threadCount = 1) {
+  async syncWorkerConcurrent(a, b, threads = 1) {
     const promises = [];
     const lengths = [];
 
+    // split a buffer into equal chunks for threads
+    // overlap at the end of the buffer by correlation sample size
     let offset = 0;
-
-    for (let i = 1; i <= threadCount; i++) {
-      const aBufferLength = Math.ceil(a.samplesDecoded / threadCount);
+    for (let i = 1; i <= threads; i++) {
+      const aBufferLength = Math.ceil(a.samplesDecoded / threads);
       const correlationSampleOverlap =
-        i === threadCount ? 0 : this._correlationSampleSize;
+        i === threads ? 0 : this._correlationSampleSize;
 
       const aSplit = {
         channelData: [],
@@ -172,6 +173,7 @@ export default class SynAudio {
 
     const results = await Promise.all(promises);
 
+    // find the result with the highest correlation and calculate the offset relative to the input data
     let bestResultIdx = 0;
     let bestCorrelation = -1;
     for (let i = 0; i < results.length; i++)

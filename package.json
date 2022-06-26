@@ -2,6 +2,11 @@
   "name": "synaudio",
   "version": "0.0.1",
   "description": "Library that finds the synchronization point between two similar audio clips.",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "src/SynAudio.js"
+  ],
   "keywords": [
     "wasm",
     "simd",
