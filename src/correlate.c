@@ -218,8 +218,8 @@ void correlate(
 
     if (initialGranularity > 1) {
       // narrow down exact correlation from previous results
-      aOffsetStart = max(*bestSampleOffset - initialGranularity * 2, 0);
-      aOffsetEnd = min(*bestSampleOffset + initialGranularity * 2, aSamples - sampleSize);
+      aOffsetStart = max(*bestSampleOffset - initialGranularity * initialGranularity, 0);
+      aOffsetEnd = min(*bestSampleOffset + initialGranularity * initialGranularity, aSamples - sampleSize);
   
       aSum = sum_for_mean(a, aOffsetStart, aOffsetStart + sampleSize);
   
