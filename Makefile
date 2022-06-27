@@ -26,6 +26,12 @@ correlate-scalar:
 		-O4 \
 		--reorder-functions \
 		--reorder-locals \
+		--coalesce-locals \
+		--optimize-instructions \
+		--optimize-added-constants-propagate \
+		--const-hoisting \
+		--simplify-globals \
+		--simplify-locals \
 		--strip-producers \
 		--vacuum \
 		--converge \
@@ -52,6 +58,12 @@ correlate-simd:
 		-O4 \
 		--reorder-functions \
 		--reorder-locals \
+		--coalesce-locals \
+		--optimize-instructions \
+		--optimize-added-constants-propagate \
+		--const-hoisting \
+		--simplify-globals \
+		--simplify-locals \
 		--strip-producers \
 		--vacuum \
 		--converge \
