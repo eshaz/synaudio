@@ -1,6 +1,6 @@
 {
   "name": "synaudio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Library that finds the synchronization point between two similar audio clips.",
   "files": [
     "index.js",
@@ -36,6 +36,10 @@
   },
   "type": "module",
   "homepage": "https://github.com/eshaz/synaudio#readme",
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/eshaz"
+  },
   "devDependencies": {
     "@types/jest": "^27.5.1",
     "jest": "^27.5.1",

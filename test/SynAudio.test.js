@@ -36,7 +36,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         )
       );
 
-      console.log(result);
+      process.stdout.write(
+        "\n" +
+          "should find the sample accurate sync point between two clips 1600849" +
+          "\n"
+      );
+      process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
       expect(result.sampleOffset).toEqual(1600849);
       // first rendered MPEG frame is less similar
@@ -57,7 +62,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](data.fullMpeg, data.cut_287549_Mpeg, threads)
       );
 
-      console.log(result);
+      process.stdout.write(
+        "\n" +
+          "should find the sample accurate sync point between two clips 287549" +
+          "\n"
+      );
+      process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
       expect(result.sampleOffset).toEqual(286973);
       // first rendered MPEG frame is less similar
@@ -82,7 +92,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         )
       );
 
-      console.log(result);
+      process.stdout.write(
+        "\n" +
+          "should find the sample accurate sync point between two clips 2450224" +
+          "\n"
+      );
+      process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
       expect(result.sampleOffset).toEqual(2450224);
       // first rendered MPEG frame is less similar
@@ -103,7 +118,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](data.fullMpeg, data.cut_194648_Mpeg, threads)
       );
 
-      console.log(result);
+      process.stdout.write(
+        "\n" +
+          "should find the sample accurate sync point between two clips 194072" +
+          "\n"
+      );
+      process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
       expect(result.sampleOffset).toEqual(194072);
       // first rendered MPEG frame is less similar
@@ -130,7 +150,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         )
       );
 
-      console.log(result);
+      process.stdout.write(
+        "\n" +
+          "should find the sample accurate sync point between two clips 194072 64kbs" +
+          "\n"
+      );
+      process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
       expect(result.sampleOffset).toEqual(194072);
       // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
@@ -157,7 +182,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         )
       );
 
-      console.log(result);
+      process.stdout.write(
+        "\n" +
+          "should find the sample accurate sync point between two clips 194072 32kbs" +
+          "\n"
+      );
+      process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
       expect(result.sampleOffset).toEqual(194072);
       // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
@@ -185,7 +215,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 2nd generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(193496); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -210,7 +245,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 3nd generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(192920); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -235,7 +275,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 4th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(192344); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
@@ -262,7 +307,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 5th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(191768); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
@@ -289,7 +339,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 6th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(191192); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
@@ -316,7 +371,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 7th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(190616); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -341,7 +401,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 8th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(190040); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -366,7 +431,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 9th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(189464); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -391,7 +461,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 10th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(188888); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -416,7 +491,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 11th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(188312); // 576 bytes added to beginning (one frame). Each reencode added a frame of
         // first rendered MPEG frame is less similar
@@ -441,6 +521,13 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 12th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
+
         expect(result.sampleOffset).toEqual(187736); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
         //expect(result.trim).toBeGreaterThanOrEqual(576 * 12);
@@ -464,7 +551,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 13th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(187160); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -489,7 +581,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 14th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(186584); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -514,7 +611,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 15th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(186008); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -539,7 +641,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 16th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(185432); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -564,7 +671,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 17th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(184856); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -589,7 +701,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 18th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(184280); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -614,7 +731,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 19th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(183704); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -639,7 +761,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
           )
         );
 
-        console.log(result);
+        process.stdout.write(
+          "\n" +
+            "should find the sample accurate sync point between two clips 194072 32kbs 20th generation" +
+            "\n"
+        );
+        process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
         expect(result.sampleOffset).toEqual(183128); // 576 bytes added to beginning (one frame). Each reencode added a frame of silence
         // first rendered MPEG frame is less similar
@@ -717,11 +844,94 @@ describe("SynAudio", () => {
   });
 
   describe("syncWorkerConcurrent", () => {
-    runTestSuite(testData, it, "syncWorkerConcurrent", 4);
+    runTestSuite(testData, it, "syncWorkerConcurrent", 8);
+  });
+
+  describe("initialGranularity", () => {
+    it("should find the sample accurate sync point between two clips 194072 32kbs 20th generation when granularity is set to 1", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 14004,
+        initialGranularity: 1,
+      });
+
+      const result = await testData.then((data) =>
+        synAudio.syncWorkerConcurrent(
+          data.fullMpeg,
+          data.cut_194648_32_gen20_Mpeg,
+          16
+        )
+      );
+
+      process.stdout.write(
+        "\n" +
+          "should find the sample accurate sync point between two clips 194072 32kbs 20th generation when granularity is set to 1" +
+          "\n"
+      );
+      process.stdout.write("\t" + JSON.stringify(result) + "\n");
+
+      expect(result.sampleOffset).toEqual(183128);
+      // first rendered MPEG frame is less similar
+      //expect(result.trim).toBeGreaterThanOrEqual(576);
+      //expect(result.trim).toBeLessThanOrEqual(576 * 2);
+    }, 10000);
+
+    it("should find the sample accurate sync point between two clips 194072 32kbs 20th generation when granularity is set to 2", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 14004,
+        initialGranularity: 2,
+      });
+
+      const result = await testData.then((data) =>
+        synAudio.syncWorkerConcurrent(
+          data.fullMpeg,
+          data.cut_194648_32_gen20_Mpeg,
+          16
+        )
+      );
+
+      process.stdout.write(
+        "\n" +
+          "should find the sample accurate sync point between two clips 194072 32kbs 20th generation when granularity is set to 2" +
+          "\n"
+      );
+      process.stdout.write("\t" + JSON.stringify(result) + "\n");
+
+      expect(result.sampleOffset).toEqual(183128);
+      // first rendered MPEG frame is less similar
+      //expect(result.trim).toBeGreaterThanOrEqual(576);
+      //expect(result.trim).toBeLessThanOrEqual(576 * 2);
+    }, 10000);
+
+    it("should find the sample accurate sync point between two clips 194072 32kbs 20th generation when granularity is set to 3", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 14004,
+        initialGranularity: 3,
+      });
+
+      const result = await testData.then((data) =>
+        synAudio.syncWorkerConcurrent(
+          data.fullMpeg,
+          data.cut_194648_32_gen20_Mpeg,
+          16
+        )
+      );
+
+      process.stdout.write(
+        "\n" +
+          "should find the sample accurate sync point between two clips 194072 32kbs 20th generation when granularity is set to 3" +
+          "\n"
+      );
+      process.stdout.write("\t" + JSON.stringify(result) + "\n");
+
+      expect(result.sampleOffset).toEqual(183128);
+      // first rendered MPEG frame is less similar
+      //expect(result.trim).toBeGreaterThanOrEqual(576);
+      //expect(result.trim).toBeLessThanOrEqual(576 * 2);
+    }, 10000);
   });
 
   describe("Web Worker", () => {
-    it("should find the sample accurate sync points multithreaded", async () => {
+    it("should find the sample accurate sync points running in parallel", async () => {
       const synAudio = new SynAudio({
         correlationSampleSize: 11025,
         initialGranularity: 16,
@@ -747,10 +957,71 @@ describe("SynAudio", () => {
         ),
       ]);
 
-      console.log(cut_1601425_Mpeg_result);
-      console.log(cut_287549_Mpeg_result);
-      console.log(cut_2450800_Mpeg_result);
-      console.log(cut_194648_Mpeg_result);
+      process.stdout.write(
+        "\n" +
+          "should find the sample accurate sync points running in parallel" +
+          "\n"
+      );
+      process.stdout.write(JSON.stringify(cut_1601425_Mpeg_result) + "\n");
+      process.stdout.write(JSON.stringify(cut_287549_Mpeg_result) + "\n");
+      process.stdout.write(JSON.stringify(cut_2450800_Mpeg_result) + "\n");
+      process.stdout.write(JSON.stringify(cut_194648_Mpeg_result) + "\n");
+
+      expect(cut_1601425_Mpeg_result.sampleOffset).toEqual(1600849);
+      //expect(cut_1601425_Mpeg_result.trim).toBeGreaterThanOrEqual(576);
+      //expect(cut_1601425_Mpeg_result.trim).toBeLessThanOrEqual(576 * 2);
+
+      expect(cut_287549_Mpeg_result.sampleOffset).toEqual(286973);
+      //expect(cut_287549_Mpeg_result.trim).toBeGreaterThanOrEqual(576);
+      //expect(cut_287549_Mpeg_result.trim).toBeLessThanOrEqual(576 * 2);
+
+      expect(cut_2450800_Mpeg_result.sampleOffset).toEqual(2450224);
+      //expect(cut_2450800_Mpeg_result.trim).toBeGreaterThanOrEqual(576);
+      //expect(cut_2450800_Mpeg_result.trim).toBeLessThanOrEqual(576 * 2);
+
+      expect(cut_194648_Mpeg_result.sampleOffset).toEqual(194072);
+      // first rendered MPEG frame is less similar, in practice one would round up to the nearest MPEG frame and splice there
+      //const roundedTrim_194648 =
+      //  Math.ceil(cut_194648_Mpeg_result.trim / 576) * 576;
+      //expect(roundedTrim_194648).toBeGreaterThanOrEqual(576);
+      //expect(roundedTrim_194648).toBeLessThanOrEqual(576 * 2);
+    });
+
+    it("should find the sample accurate sync points running in parallel multi threaded", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 11025,
+        initialGranularity: 16,
+      });
+
+      const [
+        cut_1601425_Mpeg_result,
+        cut_287549_Mpeg_result,
+        cut_2450800_Mpeg_result,
+        cut_194648_Mpeg_result,
+      ] = await Promise.all([
+        testData.then((data) =>
+          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_1601425_Mpeg, 4)
+        ),
+        testData.then((data) =>
+          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_287549_Mpeg, 4)
+        ),
+        testData.then((data) =>
+          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_2450800_Mpeg, 4)
+        ),
+        testData.then((data) =>
+          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_194648_Mpeg, 4)
+        ),
+      ]);
+
+      process.stdout.write(
+        "\n" +
+          "should find the sample accurate sync points running in parallel multi threaded" +
+          "\n"
+      );
+      process.stdout.write(JSON.stringify(cut_1601425_Mpeg_result) + "\n");
+      process.stdout.write(JSON.stringify(cut_287549_Mpeg_result) + "\n");
+      process.stdout.write(JSON.stringify(cut_2450800_Mpeg_result) + "\n");
+      process.stdout.write(JSON.stringify(cut_194648_Mpeg_result) + "\n");
 
       expect(cut_1601425_Mpeg_result.sampleOffset).toEqual(1600849);
       //expect(cut_1601425_Mpeg_result.trim).toBeGreaterThanOrEqual(576);

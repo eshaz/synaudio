@@ -23,11 +23,10 @@ import Worker from "web-worker";
 const simd=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,10,10,1,8,0,65,0,253,15,253,98,11]))
 
 const wasmModule = new WeakMap();
-const webworkerSource = new WeakMap();
 
 /* WASM strings are embeded during the build */
-const simdWasm = String.raw`dynEncode0064dÅ×ÑedddereÄnããããããããããdfsegÉÒÚjÑÉÑÓÖÝfdfgfedjleãd¥äìhokfmÇÓÖÖÉÐÅØÉddoÃÃÌÉÅÔÃÆÅ×Égdnwewhvãgàkßjáejej¬v¥hÓwf¤e¥d°qdf¥f¬qdf¥eÏx¥deÏye¥eÕze¥àÕoe¥fØ{dÎ|e¥hÏ}¥fÚ¥eÎf¥bccckÕpf¥eÕ~e¥h­tg¤esÐq¥djf¤f¤tqdddeqÎ¥fØÎ­dq¥fØÎ|­Õqd¥df}¥h³h¤pndjg¤jjrÎuadfdjadfdaHeaofdjuadftjadftaHeaoftj¥Îjf¥lÎfn¥fÏnqdoo~h¤df¥fØÎjdfqÎ¥fØÎadfdjadfdaHeaofdoojeªqeoj¥ã×fzh¤dj¥fØÎndjqÎ¥fØÎfdnfdöfdj¥eÖjofyªqdejÏnj¥fØqrÎudjg¤jqÎfjuÎfdffdöfdffhffhöfhj¥lÎjn¥fÏnqdoor{Îrxs¥eÎs«qdoovwÏof¤i¥f¬qdhoho¬p¥d°qdi¥eÏxp¥eÕyp¥àÕhp¥fØzgÎ{p¥hÏ|¥fÚ¥eÎf¥bccckÕif¥eÕ}¥drp¥h­~¥dsg¤psÐq¥djf¤f¤~qdggpqÎ¥fØÎ­gq¥fØÎ{­Õqd¥df|¥h³h¤ingjg¤jjrÎtadfdjadfdaHeaofdjtadftjadftaHeaoftj¥Îjf¥lÎfn¥fÏnqdoo}h¤gf¥fØÎjgfqÎ¥fØÎadfdjadfdaHeaofdophjªqeoj¥eÖfyh¤gj¥fØÎngjqÎ¥fØÎfdnfdöfdfjofpªqdpjÏnj¥fØqrÎtgjg¤jqÎfjtÎufdffdöfdfufhffhöfhj¥lÎjn¥fÏnqdoorzÎrxs¥eÎs«qdoo¥dim¥dfdl¥dfdeoÏpf¤o¥d°qdo¥gÕff¤vw¥ã×Îe¥g­h¤¥dhpeodjo¥àÕhng¤jfdjfhjfljfpj¥tÎjn¥hÏnqdoofh¤dh¥fØÎjfng¤jfdj¥hÎjn¥eÏnqdoof¤e¥g­h¤¥depeogjo¥àÕeng¤jfdjfhjfljfpj¥tÎjn¥hÏnqdoof©qdge¥fØÎjg¤jfdj¥hÎjf¥eÏfqdooop¥d®h¤k¥fØr§ddä#öo¥hÏsawoo¥i¬qde¥dhg¤dh¥fØÎfddhoÎ¥fØÎfdf¤qh¤apddddddddddddddddapddddddddddddddddapddddddddddddddddpeoaw¥dnejgfapddddddddddddddddapddddddddddddddddapddddddddddddddddg¤jadddaIefadddaIeaJeaHej¥tÎjf¥tÎfaJeaHeaJeaHesn¥hÎn®qdooagafadaeöööùagafadaeöööùagafadaeöööùÂh¤mhfdlfdhioerÎephkÎh®qdook¥eØeiÎfpfp¬kieÏe¥de¥d®hf¤o¥d°h¤¨ddddddddpeovw¥ã×Îifão¥gÕe©h¤¨ddddddddhpeodh¥fØÎj¨ddddddddefg¤jfdj¥hÎjf¥eÏfqdoehÎoei¥g­qdde¥fØÎjhvÎeÏwÏfg¤jfdjfhjfljfpj¥tÎjf¥hÏfqdoohk¬h¤§ddä#öo¥hÏidh¥fØÎeawoo¥i¬pg¤dh¥fØÎfddhoÎ¥fØÎfdf¤ph¤apddddddddddddddddapddddddddddddddddapddddddddddddddddpeoaw¥dnejgfapddddddddddddddddapddddddddddddddddapddddddddddddddddg¤jadddaIefadddaIeaJeaHej¥tÎjf¥tÎfaJeaHeaJeaHein¥hÎn®qdooagafadaeöööùagafadaeöööùagafadaeöööùÂh¤mhfdlfdoe¥hÎekh¥eÎh«qdoood~sØÅÖËÉØÃÊÉÅØÙÖÉ×ek×ÍÑÈ`;
-const scalarWasm = String.raw`dynEncode000eo{ns|{s{}O)q}szosmmvso~mpos..V/N.OZ.OV.Oy/.O/.O/.O/NO/.OUN./N...x0 8.8 F.. 8.8 F.Ox/..Ox0U.N..Ox0....zxOx8.8 F..x/..Ox0U...)/N.OV....V)0OZ.Oy/.O/.O/.O/O/O/NO/.OUN./N...x08.8 F..8.8 F.Ox/..Ox0U.N..Ox0....zxOx8.8 F..x/..Ox0UO/.OD.OD..y/N.OZ.O/N.Oy0OWNO/./.O0/N./.8É®.8É®.8É®.8É®//.Ox/.Oy0.N..Ox/./N./.8É®//.Ox/.Oy0N.OWNO/./.O0/N.0.8É®.8É®.8É®.8É®/0.Ox/.Oy0.S..Ox/N.0.8É®/0.Ox/.Oy0.0.À0&É±Ä/'.OXN.O/.Ox/.Ox/.O/ .&QÍ /).Oy0O/.O/.Å/0O/N..Ox0!80%É/1...xOx8/.Q/"Q/#Q/$N.OV.%./.0±Ä0%¡0#.8.'¡0$¢Q /"O/.#.#¢Q /#.$.$¢Q /$NN../././N.8.%¡0(.8.'¡0*¢.Oy8.%¡0+.Oy8.'¡0,¢."  /".*.*¢.,.,¢.$  /$.(.(¢.+.+¢.#  /#.Ox/.Ox/.Oy0./. S.O0.!x8.%¡0%..x8.'¡0(¢." /".(.(¢.$ /$.%.%¢.# /#.".)£É.#.)£É­.$.)£É­°±Ä0".-lN..D.."F."/-././.1¯..É®//..x/...x0X.O0.x0...V)/..y0O.OX)/N.OZNR//.Oy/.O0SNR//...Ox/R//./N./.8É®//.Ox/.Oy0..x/.OW..Ox/..x.y/N./.8É®.8É®.8É®.8É®//.Ox/.Oy0..VN.Ox/.O/.&QÍ /).Oy0O/.O/.O.xOx/.Å/0N..Ox080%É/1...xOx8/,Q/"Q/#Q/$N.OV.%./.0±Ä0%¡0#.8.'¡0$¢Q /"O/.#.#¢Q /#.$.$¢Q /$NN../././N.8.%¡0&.8.'¡0(¢.Oy8.%¡0*.Oy8.'¡0+¢."  /".(.(¢.+.+¢.$  /$.&.&¢.*.*¢.#  /#.Ox/.Ox/.Oy0./.S.O0.x8.%¡0%..x8.'¡0&¢." /".&.&¢.$ /$.%.%¢.# /#.".)£É.#.)£É­.$.)£É­°±Ä0".-lN..D.."F."/-./.1¯.,É®//.Ox/..Ox0U`;
+const simdWasm = String.raw`dynEncode0015v,uu$zzV 0xzvz tt}zvtwvz	'ÿ"5V&]V5V%65(6(5(6'U5+5575'ú7&5575(ú7%ûù5%5'ú7$5%5(ú7#ûù555'ú7"555(ú7!ûù5E5'ú7 5E5(ú7ûù6+5*5%5%ûù5#5#ûù5!5!ûù55ûù6*5)5&5&ûù5$5$ûù5"5"ûù5 5 ûù6)5VU65V%75]" 5VV 65*45*45*45*4§§§6-5)45)45)45)4§§§6,U55a"5V6U5VZU56! 5V655V7?5¨7.5.©5-§6-55?5¨7.5.©5,§6, 5V5["55655V76556U5?5¨7.5.©5?5¨7.5.©5-§§6-5?5¨7.5.©5?5¨7.5.©5,§§6,5V65V65V7"  5+45+45+45+4§§§5ÇXÔ§7ªÐ5,5ªÐ´5-5ªÐ´·¸Ë #'Y68U5555]07$V6%U5Va"5V]"5V6)V56*5V6+5V6 55V7,6-5V7.VV7V6!5V6/5V^6'U55&6"V6UU5'"5555"V^55"V5-^"V65.VdU5!656U555#7(5ù 55(%5%ù %5V565V65V7"  5/U55V7555"V5ù  55 7[" 5V65+55V7555"V?5?§M5V5 655*["5565#5V7"6(56U55"755(70?5?§M550?5?§M5V65V7"  5#5,6#5&V7&5)\"  5$5%6 U5V]"55 55 ]07!Va"5V6)5!V6*5!V655!V7+6,5!V7-VV7V65V6.V6#5!V^6/V6&U5!5&6"V6UU5/"555!5"V^55"V5,^"V65-VdU5656U555#7'5ù 55'%5%ù %5V565V65V7"  5.U55V7555"V5ù  575![" 5V65*55V7555"V?5?§M55 655!["5!565#5V7"6'56U55"755'7(?5?§M55(?5?§M5V65V7"  5#5+6#5&V7&5)\"  V65VK5VK55 6U5 Va"5 V6U5$5%V7V^UV6#! 565 V7#6U545?Ðµ5?Ðµ5?Ðµ5?!Ðµ645V%65V7"  5U55#V656U545?Ðµ645V65V7"  U5V^UV6! 565 V76U555?Ðµ5?Ðµ5?Ðµ5?!Ðµ655V%65V7"  5Z"55V6U555?Ðµ655V65V7"  555 ÇÐ¸Ë635V_U5$V5%V65V65 Ì6556V6U545?Ð¶6655?Ð6752555455¸Ë535 %71r55K551M516255 65657µ645565575]"  U5Va"55577555_06557V5V_06U5 VaU5864! 5$5%V65 V7ZU58645! 55V6586456U545?Ðµ645V65V7" 55 65V^"55V655$55%6U545?Ðµ5?Ðµ5?Ðµ5?!Ðµ645V%65V7"  55a"55V6555$5%V65 Ì65U545?Ð¶665?Ð6752555455¸Ë535 %71r55K551M5152 625657µ645V65V65V75\"    /$v|zt{zvz@~yFGM`;
+const scalarWasm = String.raw`dynEncode000eo{%nns|{s{}O)q}szosmmvso~mpos±ÛN.0OVO.Oy/N..x08.¡0..x08.¡0¢.8.¡0.8.¡0¢.8.¡0.8.¡0¢.8.¡0 .8.¡0!¢."    /"..¢..¢..¢.!.!¢.    /..¢..¢..¢. . ¢.    /.Ox/.Ox0.V.OyO0.\.O/N.OSN./.O/..O0x8.¡0.¢. /..x8.¡0.¢. /.O.yT..y/..O0x/..x/N.8.¡0.¢.8.¡0.¢.  /.8.¡0.¢.8.¡0.¢.  /.Ox/.Ox/.Oy0.".ÀQÍ 0£É..£É­..£É­°±ÄßR/(N..V/N.OZ.OV.Oy/.O/.O/.O/NO/.OUN./N...x0 8.8 F.. 8.8 F.Ox/.Ox0.U.N..Ox0....zxOx8.8 F..x/.Ox0.U...)/N.OV....V)0OZ.Oy/.O/.O/.O/O/O/NO/.OUN./N...x08.8 F..8.8 F.Ox/.Ox0.U.N..Ox0....zxOx8.8 F..x/.Ox0.UO/.OD.OD..y/N.OZ.O/N.Oy0OWNO/./.O0/N.$.8É®.8É®.8É®.8É®/$.Ox/.Oy0.N..Ox/./N.$.8É®/$.Ox/.Oy0N.OWNO/./.O0/N.%.8É®.8É®.8É®.8É®/%.Ox/.Oy0.S..Ox/N.%.8É®/%.Ox/.Oy0.%.ÀÉ±Ä/#.OXN.O/.O/.Å/%./O/N.$.8É¯/&..x8É/'."...$.%±Ä.#.0!k..D..!F.!/"../.&.'®/$..x/..x0.VN.OZ...z0x0...V)/..y0O.OX)/N.OZN.(/$.Oy/.O0SN.(/$...Ox/.(/$./N.$.8É®/$.Ox/.Oy0..x/.OW..Ox/..x.y/N.$.8É®.8É®.8É®.8É®/$.Ox/.Oy0..\..Ox/...xOx/.Å/%N.$.8É¯/&.8É/'."...$.%±Ä.#.0!k..D..!F.!."/".&.'®/$.Ox/.Ox/.Ox0.U`;
 
 export default class SynAudio {
   constructor(options = {}) {
@@ -45,26 +44,96 @@ export default class SynAudio {
       wasmModule.set(this._module);
     }
 
-    this.SynAudioWorker = function (
+    this.SynAudioWorker = function SynAudioWorker(
       module,
       correlationSampleSize,
       initialGranularity
     ) {
-      this._setAudioDataOnHeap = (i, o, heapPos) => {
-        const bytesPerElement = o.BYTES_PER_ELEMENT;
+      this._sourceCache = new Map();
+
+      this._setAudioDataOnHeap = (input, output, heapPos) => {
+        const bytesPerElement = output.BYTES_PER_ELEMENT;
 
         let floatPos = heapPos / bytesPerElement;
 
-        for (const channel of i) {
-          heapPos += channel.length * bytesPerElement;
-          o.set(channel, floatPos);
-          floatPos += channel.length;
+        for (let i = 0; i < input.length; i++) {
+          heapPos += input[i].length * bytesPerElement;
+          output.set(input[i], floatPos);
+          floatPos += input[i].length;
         }
 
         return heapPos;
       };
 
-      this.sync = (a, b) => {
+      this._executeAsWorker = (functionName, params) => {
+        let source = this._sourceCache.get(functionName);
+
+        if (!source) {
+          const webworkerSourceCode =
+            "'use strict';" +
+            `(${((
+              SynAudioWorker,
+              functionName,
+              correlationSampleSize,
+              initialGranularity
+            ) => {
+              self.onmessage = (msg) => {
+                const worker = new SynAudioWorker(
+                  Promise.resolve(msg.data.module),
+                  correlationSampleSize,
+                  initialGranularity
+                );
+
+                worker._workerMethods
+                  .get(functionName)
+                  .apply(null, msg.data.params)
+                  .then((results) => {
+                    self.postMessage(results);
+                  });
+              };
+            }).toString()})(${SynAudioWorker.toString()}, "${functionName}", ${
+              this._correlationSampleSize
+            }, ${this._initialGranularity})`;
+
+          const type = "text/javascript";
+
+          try {
+            // browser
+            source = URL.createObjectURL(
+              new Blob([webworkerSourceCode], { type })
+            );
+          } catch {
+            // nodejs
+            source = `data:${type};base64,${Buffer.from(
+              webworkerSourceCode
+            ).toString("base64")}`;
+          }
+
+          this._sourceCache.set(functionName, source);
+        }
+
+        const worker = new (globalThis.Worker || Worker)(source, {
+          name: "SynAudio",
+        });
+
+        const result = new Promise((resolve) => {
+          worker.onmessage = (message) => {
+            worker.terminate();
+            resolve(message.data);
+          };
+        });
+
+        this._module.then((module) => {
+          worker.postMessage({
+            module,
+            params,
+          });
+        });
+
+        return result;
+      };
+
+      this._sync = (a, b) => {
         const pageSize = 64 * 1024;
         const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
 
@@ -132,128 +201,107 @@ export default class SynAudio {
           });
       };
 
+      this._syncWorkerConcurrent = (a, b, threads) => {
+        const promises = [];
+        const lengths = [0];
+
+        // |-----------|       |-----------|     "end"
+        // "start"   |-|---------|       |-----------|
+        //           | |
+        //           | |correlationSampleSize
+
+        // split a buffer into equal chunks for threads
+        // overlap at the start of the buffer by correlation sample size
+        // overlap at the end of the buffer by correlation sample size
+
+        // correlation sample size overlap imposes a maximum thread count for small datasets
+        const minProcessingRatio = 4 / 2; // 4 processing / 2 overlap
+        const maxThreads = Math.ceil(
+          a.samplesDecoded / this._correlationSampleSize / minProcessingRatio
+        );
+        threads = Math.min(threads, maxThreads);
+
+        const aLength = Math.ceil(a.samplesDecoded / threads);
+
+        let offset = 0;
+        for (let i = 1; i <= threads; i++) {
+          const aSplit = {
+            channelData: [],
+          };
+
+          for (let i = 0; i < a.channelData.length; i++) {
+            const cutChannel = a.channelData[i].subarray(
+              offset,
+              offset + aLength + this._correlationSampleSize
+            );
+            aSplit.channelData.push(cutChannel);
+            aSplit.samplesDecoded = cutChannel.length;
+          }
+
+          offset += aLength - this._correlationSampleSize;
+          lengths.push(offset);
+
+          promises.push(this._syncWorker(aSplit, b));
+        }
+
+        return Promise.all(promises).then((results) => {
+          // find the result with the highest correlation and calculate the offset relative to the input data
+          let bestResultIdx = 0;
+          let bestCorrelation = -1;
+          for (let i = 0; i < results.length; i++)
+            if (results[i].correlation > bestCorrelation) {
+              bestResultIdx = i;
+              bestCorrelation = results[i].correlation;
+            }
+
+          return {
+            correlation: results[bestResultIdx].correlation,
+            sampleOffset:
+              results[bestResultIdx].sampleOffset + lengths[bestResultIdx],
+          };
+        });
+      };
+
+      this._syncWorker = (a, b) => {
+        return this._executeAsWorker("_sync", [a, b]);
+      };
+
+      this._syncWorkerConcurrentMain = (a, b, threads) => {
+        // can't serialize the webworker polyfill in nodejs
+        return globalThis.Worker
+          ? this._executeAsWorker("_syncWorkerConcurrent", [a, b, threads])
+          : this._syncWorkerConcurrent(a, b, threads);
+      };
+
+      // needed to serialize minified code when methods are refererenced as a string
+      // prettier-ignore
+      this._workerMethods = new Map([
+        ["_sync", this._sync],
+        ["_syncWorker", this._syncWorker],
+        ["_syncWorkerConcurrent", this._syncWorkerConcurrent],
+      ]);
+
       this._module = module;
       this._correlationSampleSize = correlationSampleSize;
       this._initialGranularity = initialGranularity;
     };
-  }
 
-  async syncWorkerConcurrent(a, b, threads = 1) {
-    const promises = [];
-    const lengths = [];
-
-    // split a buffer into equal chunks for threads
-    // overlap at the end of the buffer by correlation sample size
-    let offset = 0;
-    for (let i = 1; i <= threads; i++) {
-      const aBufferLength = Math.ceil(a.samplesDecoded / threads);
-      const correlationSampleOverlap =
-        i === threads ? 0 : this._correlationSampleSize;
-
-      const aSplit = {
-        channelData: [],
-      };
-
-      for (const channel of a.channelData) {
-        const cutChannel = channel.subarray(
-          offset,
-          offset + aBufferLength + correlationSampleOverlap
-        );
-        aSplit.channelData.push(cutChannel);
-        aSplit.samplesDecoded = cutChannel.length;
-      }
-
-      const actualLength =
-        aBufferLength < a.samplesDecoded ? aBufferLength : a.samplesDecoded;
-      lengths.push(actualLength);
-      offset += actualLength;
-
-      promises.push(this.syncWorker(aSplit, b));
-    }
-
-    const results = await Promise.all(promises);
-
-    // find the result with the highest correlation and calculate the offset relative to the input data
-    let bestResultIdx = 0;
-    let bestCorrelation = -1;
-    for (let i = 0; i < results.length; i++)
-      if (results[i].correlation > bestCorrelation) {
-        bestResultIdx = i;
-        bestCorrelation = results[i].correlation;
-      }
-
-    return {
-      correlation: results[bestResultIdx].correlation,
-      sampleOffset:
-        results[bestResultIdx].sampleOffset +
-        lengths.slice(0, bestResultIdx).reduce((acc, len) => acc + len, 0),
-    };
-  }
-
-  async syncWorker(a, b) {
-    let source = webworkerSource.get(this);
-
-    if (!source) {
-      const webworkerSourceCode =
-        "'use strict';" +
-        `(${((SynAudioWorker, correlationSampleSize, initialGranularity) => {
-          self.onmessage = ({ data: { module, a, b } }) => {
-            const worker = new SynAudioWorker(
-              Promise.resolve(module),
-              correlationSampleSize,
-              initialGranularity
-            );
-
-            worker.sync(a, b).then((results) => {
-              self.postMessage(results);
-            });
-          };
-        }).toString()})(${this.SynAudioWorker.toString()}, ${
-          this._correlationSampleSize
-        }, ${this._initialGranularity})`;
-
-      let type = "text/javascript";
-
-      try {
-        // browser
-        source = URL.createObjectURL(new Blob([webworkerSourceCode], { type }));
-      } catch {
-        // nodejs
-        source = `data:${type};base64,${Buffer.from(
-          webworkerSourceCode
-        ).toString("base64")}`;
-      }
-
-      webworkerSource.set(this, source);
-    }
-
-    const worker = new Worker(source, { name: "SynAudio" });
-
-    const result = new Promise((resolve) => {
-      worker.onmessage = (message) => {
-        worker.terminate();
-        resolve(message.data);
-      };
-    });
-
-    this._module.then((module) => {
-      worker.postMessage({
-        module,
-        a,
-        b,
-      });
-    });
-
-    return result;
-  }
-
-  async sync(a, b) {
-    const worker = new this.SynAudioWorker(
+    this._instance = new this.SynAudioWorker(
       this._module,
       this._correlationSampleSize,
       this._initialGranularity
     );
+  }
 
-    return worker.sync(a, b);
+  async syncWorkerConcurrent(a, b, threads = 1) {
+    return this._instance._syncWorkerConcurrentMain(a, b, threads);
+  }
+
+  async syncWorker(a, b) {
+    return this._instance._syncWorker(a, b);
+  }
+
+  async sync(a, b) {
+    return this._instance._sync(a, b);
   }
 }
