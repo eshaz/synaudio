@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import { MPEGDecoderWebWorker } from "mpg123-decoder";
 
-import SynAudio from "../src/SynAudio.js";
+import SynAudio from "synaudio";
 
 const decode = async (audioData) => {
   let decodedAudio;

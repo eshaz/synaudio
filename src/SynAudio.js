@@ -138,7 +138,7 @@ export default class SynAudio {
         const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
 
         const memory = new WebAssembly.Memory({
-          initial:
+          ["initial"]:
             ((a.samplesDecoded * a.channelData.length +
               b.samplesDecoded * b.channelData.length) *
               floatByteLength) /
@@ -149,7 +149,7 @@ export default class SynAudio {
         return this._module
           .then((module) =>
             WebAssembly.instantiate(module, {
-              env: { memory },
+              ["env"]: { memory },
             })
           )
           .then(({ exports }) => {
