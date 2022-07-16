@@ -7,12 +7,14 @@ import { rollup } from "rollup";
 import { minify } from "terser";
 
 const synAudioPath = "src/SynAudio.js";
+const distPath = "dist/";
+const demoPath = "demo/";
 
 const rollupInput = "index.js";
-const rollupOutput = "dist/synaudio.js";
+const rollupOutput = "synaudio.js";
 const rollupConfigPath = "rollup.json";
 
-const terserOutput = "dist/synaudio.min.js";
+const terserOutput = "synaudio.min.js";
 const terserConfigPath = "terser.json";
 
 const build = async (simdPath, scalarPath) => {
@@ -64,7 +66,7 @@ const build = async (simdPath, scalarPath) => {
   rollupInputConfig.plugins = [nodeResolve(), commonjs()];
 
   const rollupOutputConfig = JSON.parse(rollupConfig);
-  rollupOutputConfig.output.file = rollupOutput;
+  rollupOutputConfig.output.file = distPath + rollupOutput;
 
   const bundle = await rollup(rollupInputConfig);
   const bundleOutput = await bundle
@@ -80,8 +82,10 @@ const build = async (simdPath, scalarPath) => {
   // write output files
   await Promise.all([
     bundle.write(rollupOutputConfig),
-    fs.writeFile(terserOutput, minified.code),
-    fs.writeFile(terserOutput + ".map", minified.map),
+    fs.writeFile(distPath + terserOutput, minified.code),
+    fs.writeFile(distPath + terserOutput + ".map", minified.map),
+    fs.writeFile(demoPath + terserOutput, minified.code),
+    fs.writeFile(demoPath + terserOutput + ".map", minified.map),
   ]);
 };
 

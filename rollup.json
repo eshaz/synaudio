@@ -2,7 +2,7 @@
   "external": ["web-worker"],
   "output": {
     "format": "umd",
-    "name": "synaudio",
+    "name": "SynAudio",
     "globals": {
       "web-worker": "Worker"
     }

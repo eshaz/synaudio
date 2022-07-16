@@ -1,7 +1,7 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('web-worker')) :
   typeof define === 'function' && define.amd ? define(['web-worker'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.synaudio = factory(global.Worker));
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.SynAudio = factory(global.Worker));
 })(this, (function (Worker) { 'use strict';
 
   function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }

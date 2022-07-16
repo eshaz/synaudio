@@ -3,7 +3,7 @@
     "url": "synaudio.min.js.map"
   },
   "output": {
-    "preamble": "/* Copyright 2021-2022 Ethan Halsall. This file is part of synaudio. https://github.com/eshaz/synaudio */"
+    "preamble": "/* Copyright 2022 Ethan Halsall. This file is part of synaudio. https://github.com/eshaz/synaudio */"
   },
   "compress": {
     "ecma": 2021,
