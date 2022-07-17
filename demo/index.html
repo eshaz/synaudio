@@ -1,0 +1,297 @@
+<html>
+  <head>
+    <script src="synaudio.min.js"></script>
+  </head>
+  <style></style>
+  <body>
+    <form>
+      <fieldset name="base-upload" class="column">
+        <legend>Base Audio</legend>
+        <div style="width: 100%" class="row center">
+          <input
+            type="file"
+            id="base-file-selector"
+            accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
+          />
+        </div>
+        <legend>Comparison Audio</legend>
+        <div style="width: 100%" class="row center">
+          <input
+            type="file"
+            id="comparison-file-selector"
+            accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
+          />
+        </div>
+      </fieldset>
+      <fieldset id="fft-options">
+        <legend>FFT Options</legend>
+        <label for="fft-bins">Bin Size (height)</label>
+        <select name="fft-bins" id="fft-bins">
+          <option selected value="auto">auto</option>
+        </select>
+        <label for="fft-interval">Interval Size (width)</label>
+        <select name="fft-interval" id="fft-interval">
+          <option selected value="auto">auto</option>
+        </select>
+        <label for="fft-scale">Scale</label>
+        <select name="fft-scale" id="fft-scale">
+          <option selected value="log">logarithmic</option>
+          <option value="lin">linear</option>
+        </select>
+      </fieldset>
+    </form>
+    <div id="base"></div>
+    <div id="comparison"></div>
+  </body>
+  <script>
+    "use strict";
+    const audioCtx = new AudioContext();
+    const fftCanvasInstances = new WeakMap();
+
+    class FFTCanvas {
+      static FFT_BIN_OPTIONS = [
+        32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
+      ];
+
+      static FFT_INTERVAL_OPTIONS = [256, 512, 1024, 2048, 4096, 8192, 16384];
+
+      static async getInstance(data, canvasContainerId) {
+        if (!data)
+          return {
+            buildFFT: () => {},
+          };
+
+        let instance = fftCanvasInstances.get(data);
+
+        if (!instance) {
+          const decoded = await audioCtx.decodeAudioData(data);
+          instance = new FFTCanvas(decoded, canvasContainerId);
+          fftCanvasInstances.set(data, instance);
+        }
+        return instance;
+      }
+
+      constructor(audioBuffer, canvasContainerId) {
+        this.audioBuffer = audioBuffer;
+        this._canvasContainerId = canvasContainerId;
+
+        this._ffts = {};
+      }
+
+      get length() {
+        return this.audioBuffer.length;
+      }
+
+      set displayLength(length) {
+        this._displayLength = length || this.length;
+
+        this.buildFFT();
+      }
+
+      get fftInterval() {
+        const maxWidth = window.innerWidth;
+        const fftInterval = document.getElementById("fft-interval").value;
+
+        return fftInterval === "auto"
+          ? FFTCanvas.FFT_INTERVAL_OPTIONS.reduceRight((acc, val) =>
+              maxWidth > this._displayLength / val ? val : acc
+            )
+          : parseInt(fftInterval);
+      }
+
+      get fftBins() {
+        const maxHeight = window.innerHeight * (1 / 2);
+        const fftBins = document.getElementById("fft-bins").value;
+
+        return fftBins === "auto"
+          ? FFTCanvas.FFT_BIN_OPTIONS.reduceRight((acc, val) =>
+              maxHeight < val ? val : acc
+            )
+          : parseInt(fftBins);
+      }
+
+      get fftScale() {
+        return document.getElementById("fft-scale").value;
+      }
+
+      _drawFFT(canvasCtx, fftData) {
+        for (const bins of fftData) {
+          this._canvasYCursor = 0;
+
+          let canvasYPrevious;
+
+          const logGap =
+            bins.length /
+            ((Math.log10(bins.length - 1) * (bins.length - 1)) /
+              Math.log10(this.audioBuffer.sampleRate / 2));
+
+          for (let binIdx = 0; binIdx < bins.length; binIdx++) {
+            canvasCtx.fillStyle = `rgba(0, ${bins[binIdx]}, ${bins[binIdx]}, 255)`;
+
+            canvasYPrevious = this._canvasYCursor;
+            this._canvasYCursor =
+              this.fftScale === "log"
+                ? Math.round(
+                    ((Math.log10(binIdx) * (bins.length - 1)) /
+                      Math.log10(this.audioBuffer.sampleRate / 2)) *
+                      logGap
+                  )
+                : binIdx;
+
+            canvasCtx.fillRect(
+              this._canvasXCursor,
+              bins.length - this._canvasYCursor,
+              1,
+              this._canvasYCursor - canvasYPrevious
+            );
+          }
+
+          this._canvasXCursor++;
+        }
+      }
+
+      _buildCanvas() {
+        const canvasId = this._canvasContainerId + "-canvas";
+        const oldCanvas = document.getElementById(canvasId);
+        if (oldCanvas)
+          oldCanvas
+            .getContext("2d")
+            .clearRect(0, 0, oldCanvas.width, oldCanvas.height);
+
+        const canvas = document.createElement("CANVAS");
+        canvas.id = canvasId;
+        canvas.width = this.audioBuffer.length / this.fftInterval;
+        canvas.height = this.fftBins / 2;
+
+        const canvasContainer = document.getElementById(
+          this._canvasContainerId
+        );
+        canvasContainer.innerHTML = "";
+        canvasContainer.appendChild(canvas);
+
+        this._canvasXCursor = 0;
+
+        return canvas.getContext("2d");
+      }
+
+      async buildFFT() {
+        const canvasCtx = this._buildCanvas();
+
+        const fftKey = this.fftBins + "-" + this.fftInterval;
+
+        if (this._ffts[fftKey]) {
+          this._drawFFT(canvasCtx, this._ffts[fftKey]);
+        } else {
+          this._ffts[fftKey] = [];
+
+          const offlineAudioCtx = new OfflineAudioContext(this.audioBuffer);
+
+          const source = offlineAudioCtx.createBufferSource(this.audioBuffer);
+          source.buffer = this.audioBuffer;
+
+          const analyzer = offlineAudioCtx.createAnalyser();
+          analyzer.smoothingTimeConstant = 0;
+          analyzer.fftSize = this.fftBins;
+
+          const processor = offlineAudioCtx.createScriptProcessor(
+            this.fftInterval,
+            this.audioBuffer.numberOfChannels,
+            this.audioBuffer.numberOfChannels
+          );
+
+          let fftChunk = [],
+            processCount = 0,
+            drawInterval = 32;
+
+          processor.onaudioprocess = () => {
+            const bins = new Uint8Array(analyzer.frequencyBinCount);
+            analyzer.getByteFrequencyData(bins);
+            this._ffts[fftKey].push(bins);
+            fftChunk.push(bins);
+
+            if (processCount++ % drawInterval === 0) {
+              this._drawFFT(canvasCtx, fftChunk);
+              fftChunk = [];
+            }
+          };
+
+          source.connect(analyzer);
+          analyzer.connect(processor);
+          processor.connect(offlineAudioCtx.destination);
+          source.start(0);
+
+          await offlineAudioCtx.startRendering();
+          // draw any remaining data
+          this._drawFFT(canvasCtx, fftChunk);
+        }
+      }
+    }
+
+    const baseFileSelectorEl = document.getElementById("base-file-selector");
+    const comparisonFileSelectorEl = document.getElementById(
+      "comparison-file-selector"
+    );
+
+    let baseData, comparisonData;
+
+    const rebuildFFTs = async () => {
+      const baseInstance = await FFTCanvas.getInstance(baseData, "base");
+      const comparisonInstance = await FFTCanvas.getInstance(
+        comparisonData,
+        "comparison"
+      );
+
+      const maxLength = Math.max(
+        baseInstance.length,
+        comparisonInstance.length
+      );
+
+      baseInstance.displayLength = maxLength;
+      comparisonInstance.displayLength = maxLength;
+    };
+
+    baseFileSelectorEl.addEventListener("change", async (e) => {
+      if (e.target.files.length) {
+        baseData = await e.target.files[0].arrayBuffer();
+
+        rebuildFFTs();
+      }
+    });
+
+    comparisonFileSelectorEl.addEventListener("change", async (e) => {
+      if (e.target.files.length) {
+        comparisonData = await e.target.files[0].arrayBuffer();
+
+        rebuildFFTs();
+      }
+    });
+
+    fftOptionsEl.addEventListener("change", rebuildFFTs);
+
+    // set FFT options
+    const fftOptionsEl = document.getElementById("fft-options");
+    const addOption = (el) => (value) =>
+      (el.innerHTML += `<option value="${value}">${value}</option>`);
+
+    const fftBinsEl = document.getElementById("fft-bins");
+    const fftIntervalEl = document.getElementById("fft-interval");
+    FFTCanvas.FFT_BIN_OPTIONS.forEach(addOption(fftBinsEl));
+    FFTCanvas.FFT_INTERVAL_OPTIONS.forEach(addOption(fftIntervalEl));
+
+  </script>
+  <script>
+    const findCovariance = async (base, comparison, method) => {};
+
+    const synAudio = new SynAudio();
+
+    /*const mpeg = await fetch("src/mpeg.cbr.mp3")
+      .then((res) => res.arrayBuffer())
+      .then((body) => new Uint8Array(body));
+
+    const cutMpeg = await fetch("src/mpeg.cbr.1601425.mp3")
+      .then((res) => res.arrayBuffer())
+      .then((body) => new Uint8Array(body));
+
+    const covariances = await synAudio.sync(mpeg, cutMpeg);*/
+  </script>
+</html>
