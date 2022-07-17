@@ -114,52 +114,80 @@
         return document.getElementById("fft-scale").value;
       }
 
-      _drawFFT(canvasCtx, fftData) {
-        for (const bins of fftData) {
-          this._canvasYCursor = 0;
+      _newCanvasWorker() {
+        const source = () => {
+          let canvasXCursor = 0,
+            canvasYCursor = 0;
 
-          let canvasYPrevious;
+          let canvas, canvasCtx, fftScale, sampleRate;
 
-          const logGap =
-            bins.length /
-            ((Math.log10(bins.length - 1) * (bins.length - 1)) /
-              Math.log10(this.audioBuffer.sampleRate / 2));
+          self.onmessage = async ({ data: { name, payload } }) => {
+            switch (name) {
+              case "canvas":
+                canvas = payload;
+                canvasCtx = canvas.getContext("2d", { alpha: false });
+                break;
+              case "options":
+                fftScale = payload.fftScale;
+                sampleRate = payload.sampleRate;
+                break;
+              case "clear":
+                canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+                break;
+              case "draw":
+                for (const bins of payload) {
+                  canvasYCursor = 0;
 
-          for (let binIdx = 0; binIdx < bins.length; binIdx++) {
-            canvasCtx.fillStyle = `rgba(0, ${bins[binIdx]}, ${bins[binIdx]}, 255)`;
+                  let canvasYPrevious;
 
-            canvasYPrevious = this._canvasYCursor;
-            this._canvasYCursor =
-              this.fftScale === "log"
-                ? Math.round(
-                    ((Math.log10(binIdx) * (bins.length - 1)) /
-                      Math.log10(this.audioBuffer.sampleRate / 2)) *
-                      logGap
-                  )
-                : binIdx;
+                  const logGap =
+                    bins.length /
+                    ((Math.log10(bins.length - 1) * (bins.length - 1)) /
+                      Math.log10(sampleRate / 2));
 
-            canvasCtx.fillRect(
-              this._canvasXCursor,
-              bins.length - this._canvasYCursor,
-              1,
-              this._canvasYCursor - canvasYPrevious
-            );
-          }
+                  for (let binIdx = 0; binIdx < bins.length; binIdx++) {
+                    canvasCtx.fillStyle = `rgb(0, ${bins[binIdx]}, ${bins[binIdx]})`;
 
-          this._canvasXCursor++;
+                    canvasYPrevious = canvasYCursor;
+                    canvasYCursor =
+                      fftScale === "log"
+                        ? Math.round(
+                            ((Math.log10(binIdx) * (bins.length - 1)) /
+                              Math.log10(sampleRate / 2)) *
+                              logGap
+                          )
+                        : binIdx;
+
+                    canvasCtx.fillRect(
+                      canvasXCursor,
+                      bins.length - canvasYCursor,
+                      1,
+                      canvasYCursor - canvasYPrevious
+                    );
+                  }
+
+                  canvasXCursor++;
+                }
+                break;
+            }
+          };
+        };
+
+        if (this._canvasWorker) {
+          this._clearCanvasWorker();
+          this._terminateCanvasWorker();
         }
-      }
 
-      _buildCanvas() {
-        const canvasId = this._canvasContainerId + "-canvas";
-        const oldCanvas = document.getElementById(canvasId);
-        if (oldCanvas)
-          oldCanvas
-            .getContext("2d")
-            .clearRect(0, 0, oldCanvas.width, oldCanvas.height);
+        this._canvasWorker = new Worker(
+          URL.createObjectURL(
+            new Blob([`"use strict";(${source.toString()})()`], {
+              type: "text/javascript",
+            })
+          )
+        );
 
         const canvas = document.createElement("CANVAS");
-        canvas.id = canvasId;
+        canvas.id = this._canvasContainerId + "-canvas";
         canvas.width = this.audioBuffer.length / this.fftInterval;
         canvas.height = this.fftBins / 2;
 
@@ -169,18 +197,54 @@
         canvasContainer.innerHTML = "";
         canvasContainer.appendChild(canvas);
 
-        this._canvasXCursor = 0;
+        const offscreen = canvas.transferControlToOffscreen();
 
-        return canvas.getContext("2d");
+        this._canvasWorker.postMessage({ name: "canvas", payload: offscreen }, [
+          offscreen,
+        ]);
+        this._canvasWorker.postMessage({
+          name: "options",
+          payload: {
+            fftScale: this.fftScale,
+            sampleRate: this.audioBuffer.sampleRate,
+          },
+        });
+      }
+
+      async _clearCanvasWorker() {
+        let drawResolve, drawReject;
+        const fftPromise = new Promise((resolve, reject) => {
+          drawResolve = resolve;
+          drawReject = reject;
+        });
+
+        this._canvasWorker.postMessage({ name: "clear" });
+      }
+
+      async _drawCanvasWorker(payload) {
+        let drawResolve, drawReject;
+        const fftPromise = new Promise((resolve, reject) => {
+          drawResolve = resolve;
+          drawReject = reject;
+        });
+
+        this._canvasWorker.postMessage({ name: "draw", payload });
+      }
+
+      _terminateCanvasWorker() {
+        this._canvasWorker.terminate();
+        this._canvasWorker = null;
       }
 
       async buildFFT() {
-        const canvasCtx = this._buildCanvas();
+        this._newCanvasWorker();
 
-        const fftKey = this.fftBins + "-" + this.fftInterval;
+        const fftBins = this.fftBins;
+        const fftInterval = this.fftInterval;
+        const fftKey = fftBins + "-" + fftInterval;
 
         if (this._ffts[fftKey]) {
-          this._drawFFT(canvasCtx, this._ffts[fftKey]);
+          this._drawCanvasWorker(this._ffts[fftKey]);
         } else {
           this._ffts[fftKey] = [];
 
@@ -191,10 +255,10 @@
 
           const analyzer = offlineAudioCtx.createAnalyser();
           analyzer.smoothingTimeConstant = 0;
-          analyzer.fftSize = this.fftBins;
+          analyzer.fftSize = fftBins;
 
           const processor = offlineAudioCtx.createScriptProcessor(
-            this.fftInterval,
+            fftInterval,
             this.audioBuffer.numberOfChannels,
             this.audioBuffer.numberOfChannels
           );
@@ -210,7 +274,7 @@
             fftChunk.push(bins);
 
             if (processCount++ % drawInterval === 0) {
-              this._drawFFT(canvasCtx, fftChunk);
+              this._drawCanvasWorker(fftChunk);
               fftChunk = [];
             }
           };
@@ -222,7 +286,7 @@
 
           await offlineAudioCtx.startRendering();
           // draw any remaining data
-          this._drawFFT(canvasCtx, fftChunk);
+          this._drawCanvasWorker(fftChunk);
         }
       }
     }
@@ -266,10 +330,10 @@
       }
     });
 
+    const fftOptionsEl = document.getElementById("fft-options");
     fftOptionsEl.addEventListener("change", rebuildFFTs);
 
     // set FFT options
-    const fftOptionsEl = document.getElementById("fft-options");
     const addOption = (el) => (value) =>
       (el.innerHTML += `<option value="${value}">${value}</option>`);
 
@@ -277,7 +341,6 @@
     const fftIntervalEl = document.getElementById("fft-interval");
     FFTCanvas.FFT_BIN_OPTIONS.forEach(addOption(fftBinsEl));
     FFTCanvas.FFT_INTERVAL_OPTIONS.forEach(addOption(fftIntervalEl));
-
   </script>
   <script>
     const findCovariance = async (base, comparison, method) => {};
