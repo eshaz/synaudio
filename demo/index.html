@@ -4,48 +4,202 @@
   </head>
   <style></style>
   <body>
-    <form>
-      <fieldset name="base-upload" class="column">
-        <legend>Base Audio</legend>
-        <div style="width: 100%" class="row center">
-          <input
-            type="file"
-            id="base-file-selector"
-            accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
-          />
-        </div>
-        <legend>Comparison Audio</legend>
-        <div style="width: 100%" class="row center">
-          <input
-            type="file"
-            id="comparison-file-selector"
-            accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
-          />
-        </div>
-      </fieldset>
-      <fieldset id="fft-options">
-        <legend>FFT Options</legend>
-        <label for="fft-bins">Bin Size (height)</label>
-        <select name="fft-bins" id="fft-bins">
-          <option selected value="auto">auto</option>
-        </select>
-        <label for="fft-interval">Interval Size (width)</label>
-        <select name="fft-interval" id="fft-interval">
-          <option selected value="auto">auto</option>
-        </select>
-        <label for="fft-scale">Scale</label>
-        <select name="fft-scale" id="fft-scale">
-          <option selected value="log">logarithmic</option>
-          <option value="lin">linear</option>
-        </select>
-      </fieldset>
-    </form>
+    <fieldset name="base-upload" class="column">
+      <legend>Audio Clips</legend>
+      <ol>
+        <li>
+          <label>Select a base audio clip.</label>
+          <label for="base-audio-container">Base Audio</label>
+          <div id="base-audio-container" style="width: 100%" class="row center">
+            <input
+              type="file"
+              id="base-file-selector"
+              accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
+            />
+          </div>
+        </li>
+        <li>
+          <label>Select a comparison audio clip.</label>
+          <label for="comparison-audio-container">Comparison Audio</label>
+          <div
+            id="comparison-audio-container"
+            style="width: 100%"
+            class="row center"
+          >
+            <input
+              type="file"
+              disabled
+              id="comparison-file-selector"
+              accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
+            />
+          </div>
+        </li>
+      </ol>
+    </fieldset>
+    <fieldset>
+      <legend>Correlation Options</legend>
+      <ol start="3">
+        <li>
+          <button id="find-correlation" disabled>Find Correlation</button>
+          <label for="correlation-method">Correlation Method</label>
+          <select id="correlation-method">
+            <option value="sync">sync</option>
+            <option value="syncWorker">syncWorker</option>
+            <option selected value="syncWorkerConcurrent">
+              syncWorkerConcurrent
+            </option>
+          </select>
+          <table>
+            <tr>
+              <td>Correlation Coefficient</td>
+              <td id="correlation-coefficient"></td>
+            </tr>
+            <tr>
+              <td>Sample Offset</td>
+              <td id="correlation-sample-offset"></td>
+            </tr>
+            <tr>
+              <td>Time spent</td>
+              <td id="correlation-time-spent"></td>
+            </tr>
+            <tr>
+              <td>Rate (1x is realtime)</td>
+              <td id="correlation-rate"></td>
+            </tr>
+            <tr>
+              <td>Bytes per second</td>
+              <td id="correlation-bytes-per-sec"></td>
+            </tr>
+          </table>
+        </li>
+      </ol>
+    </fieldset>
+    <fieldset id="fft-options">
+      <legend>FFT Options</legend>
+      <label for="fft-bins">Bin Size (height)</label>
+      <select name="fft-bins" id="fft-bins">
+        <option selected value="auto">auto</option>
+      </select>
+      <label for="fft-interval">Interval Size (width)</label>
+      <select name="fft-interval" id="fft-interval">
+        <option selected value="auto">auto</option>
+      </select>
+      <label for="fft-scale">Scale</label>
+      <select name="fft-scale" id="fft-scale">
+        <option selected value="log">logarithmic</option>
+        <option value="lin">linear</option>
+      </select>
+    </fieldset>
     <div id="base"></div>
     <div id="comparison"></div>
   </body>
   <script>
     "use strict";
     const audioCtx = new AudioContext();
+    audioCtx.onstatechange = () => {
+      if (audioCtx !== "running") audioCtx.resume();
+    };
+    audioCtx.destination.channelCount = audioCtx.destination.maxChannelCount;
+
+    const PLAY = "▶";
+    const STOP = "■";
+    const PROGRESS_FACTOR = 100;
+
+    class WebAudioPlayer {
+      constructor(audioBuffer, playbackEl, progressBarEl, timeEl) {
+        this.audioBuffer = audioBuffer;
+        this.playbackEl = playbackEl;
+        this.progressBarEl = progressBarEl;
+        this.timeEl = timeEl;
+
+        this.startProgress = () => {
+          clearInterval(this.progressInterval);
+          this.progressInterval = setInterval(() => {
+            if (this.action === STOP) {
+              const currentTime =
+                this.offset +
+                (audioCtx.currentTime * PROGRESS_FACTOR - this.start);
+              this.progressBarEl.value = currentTime;
+              this.timeEl.innerHTML = this.getTime(
+                currentTime / PROGRESS_FACTOR
+              );
+            }
+          }, 2);
+        };
+        this.stopProgress = () => {
+          clearInterval(this.progressInterval);
+        };
+      }
+
+      get action() {
+        return this.playbackEl.innerHTML;
+      }
+
+      getTime(seconds) {
+        return new Date(seconds * 1000).toISOString().substr(14, 9);
+      }
+
+      seek() {
+        this.stop();
+        this.play(parseFloat(this.progressBarEl.value));
+      }
+
+      play(offset = 0) {
+        // start playing audio
+        audioCtx.resume();
+        this.source = audioCtx.createBufferSource();
+        this.source.buffer = this.audioBuffer;
+        this.source.connect(audioCtx.destination);
+        this.source.start(0, offset / PROGRESS_FACTOR);
+        this.source.onended = () => {
+          this.stop();
+        };
+
+        // setup progress bar
+        this.start = audioCtx.currentTime * PROGRESS_FACTOR;
+        this.offset = offset;
+        this.progressBarEl.min = 0;
+        this.progressBarEl.max = this.audioBuffer.duration * PROGRESS_FACTOR;
+        this.progressBarEl.value = offset;
+
+        // start progress bar and add event listeners
+        this.progressBarEl.addEventListener("pointerup", this.startProgress);
+        this.progressBarEl.addEventListener("pointerdown", this.stopProgress);
+        this.startProgress();
+
+        // update file status and play button
+        this.playbackEl.innerHTML = STOP;
+      }
+
+      stop() {
+        // stop playing audio
+        if (this.source) {
+          this.source.onended = null;
+          this.source.stop();
+          this.source.disconnect();
+        }
+
+        // stop progress bar and clear event listeners
+        this.progressBarEl.removeEventListener("pointerup", this.startProgress);
+        this.progressBarEl.removeEventListener(
+          "pointerdown",
+          this.stopProgress
+        );
+        this.stopProgress();
+
+        // update file status and play button
+        this.playbackEl.innerHTML = PLAY;
+      }
+
+      playPause() {
+        if (this.action === PLAY) {
+          this.play();
+        } else {
+          this.stop();
+        }
+      }
+    }
+
     const fftCanvasInstances = new WeakMap();
 
     class FFTCanvas {
@@ -74,18 +228,37 @@
       constructor(audioBuffer, canvasContainerId) {
         this.audioBuffer = audioBuffer;
         this._canvasContainerId = canvasContainerId;
+        this._translatedSamples = 0;
+
+        this._newPlayer();
+        this._newCanvasWorker();
+        this._newCanvas();
 
         this._ffts = {};
+      }
+
+      destroy() {
+        this._webAudioPlayer.stop();
+        this._terminateCanvas();
       }
 
       get length() {
         return this.audioBuffer.length;
       }
 
+      get displayLength() {
+        return this._displayLength;
+      }
+
       set displayLength(length) {
+        const oldDisplayLength = this._displayLength;
+
         this._displayLength = length || this.length;
 
-        this.buildFFT();
+        if (oldDisplayLength !== this._displayLength) {
+          this._newCanvasWorker();
+          this.buildFFT();
+        }
       }
 
       get fftInterval() {
@@ -114,68 +287,189 @@
         return document.getElementById("fft-scale").value;
       }
 
+      _newPlayer() {
+        this._playerEl = document.createElement("div");
+
+        const progressEl = document.createElement("input");
+        progressEl.value = 0;
+        progressEl.type = "range";
+        progressEl.style = "width: 100%;";
+        progressEl.oninput = () => this._webAudioPlayer.seek();
+
+        const playerControlsEl = document.createElement("div");
+        playerControlsEl.style =
+          "display: flex; flex-direction: row; align-items: center;";
+
+        const playEl = document.createElement("button");
+        playEl.style = "display: flex; justify-content: center; width: 25px;";
+        playEl.onclick = () => this._webAudioPlayer.playPause();
+        playEl.innerHTML = PLAY;
+
+        const timeEl = document.createElement("div");
+        timeEl.style = "display: flex; align-items: center; padding-left: 5px;";
+        timeEl.innerHTML = "00:00.000";
+
+        this._playerEl.appendChild(progressEl);
+        this._playerEl.appendChild(playerControlsEl);
+        playerControlsEl.appendChild(playEl);
+        playerControlsEl.appendChild(timeEl);
+
+        if (this._webAudioPlayer) this._webAudioPlayer.stop();
+
+        this._webAudioPlayer = new WebAudioPlayer(
+          this.audioBuffer,
+          playEl,
+          progressEl,
+          timeEl
+        );
+      }
+
       _newCanvasWorker() {
         const source = () => {
-          let canvasXCursor = 0,
-            canvasYCursor = 0;
+          let fftXCursor,
+            fftYCursor,
+            fftYStart = 0,
+            canvas,
+            canvasCtx,
+            patternCanvas,
+            patternCanvasCtx,
+            logTables,
+            sampleRate,
+            fftScale,
+            fftInterval,
+            fftBins;
 
-          let canvas, canvasCtx, fftScale, sampleRate;
+          const fill = (fillStyle, x, y, width, height) => {
+            canvasCtx.fillStyle = fillStyle;
+            canvasCtx.fillRect(x, y, width, height);
+          };
+
+          const fillPattern = (x, y, width, height) => {
+            fill(
+              canvasCtx.createPattern(patternCanvas, "repeat"),
+              x,
+              y,
+              width,
+              height
+            );
+          };
 
           self.onmessage = async ({ data: { name, payload } }) => {
             switch (name) {
+              case "init":
+                // precalculate logarithmic rectangle heights
+                logTables = {};
+                sampleRate = payload.sampleRate;
+                const sampleRateLog = Math.log10(sampleRate / 2);
+
+                for (const binOption of payload.fftBinOptions) {
+                  logTables[binOption] = [];
+
+                  const logGap =
+                    binOption /
+                    ((Math.log10(binOption - 1) * (binOption - 1)) /
+                      sampleRateLog);
+
+                  for (let i = 0; i < binOption; i++)
+                    logTables[binOption].push(
+                      Math.round(
+                        ((Math.log10(i) * (binOption - 1)) / sampleRateLog) *
+                          logGap
+                      )
+                    );
+                }
+                break;
               case "canvas":
-                canvas = payload;
+                fftXCursor = 0;
+                fftYCursor = 0;
+
+                if (canvas && canvas.width !== payload.canvas.width) {
+                  // scale the fftYStart to match the width of the new canvas
+                  fftYStart = (fftYStart / canvas.width) * payload.canvas.width;
+                }
+
+                canvas = payload.canvas;
                 canvasCtx = canvas.getContext("2d", { alpha: false });
+
+                patternCanvas = payload.patternCanvas;
+                patternCanvasCtx = patternCanvas.getContext("2d", {
+                  alpha: false,
+                });
+
+                patternCanvas.width = 8;
+                patternCanvas.height = 8;
+                patternCanvasCtx.fillStyle = "#333";
+                patternCanvasCtx.fillRect(
+                  0,
+                  0,
+                  patternCanvas.width,
+                  patternCanvas.height
+                );
+                patternCanvasCtx.beginPath();
+                patternCanvasCtx.moveTo(0, 0);
+                patternCanvasCtx.lineTo(8, 8);
+                patternCanvasCtx.moveTo(0, 8);
+                patternCanvasCtx.lineTo(8, 0);
+                patternCanvasCtx.lineWidth = 1;
+                patternCanvasCtx.stroke();
                 break;
               case "options":
                 fftScale = payload.fftScale;
-                sampleRate = payload.sampleRate;
+                fftInterval = payload.fftInterval;
+                fftBins = payload.fftBins;
                 break;
-              case "clear":
-                canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+              case "fill":
+                fill(payload, 0, 0, canvas.width, canvas.height);
+                break;
+              case "fillPattern":
+                fillPattern(0, 0, canvas.width, canvas.height);
                 break;
               case "draw":
-                for (const bins of payload) {
-                  canvasYCursor = 0;
+                if (payload.mode === "full") fftXCursor = 0;
 
-                  let canvasYPrevious;
+                for (const bins of payload.fft) {
+                  fftYCursor = 0;
 
-                  const logGap =
-                    bins.length /
-                    ((Math.log10(bins.length - 1) * (bins.length - 1)) /
-                      Math.log10(sampleRate / 2));
+                  let fftYPrevious;
 
                   for (let binIdx = 0; binIdx < bins.length; binIdx++) {
                     canvasCtx.fillStyle = `rgb(0, ${bins[binIdx]}, ${bins[binIdx]})`;
 
-                    canvasYPrevious = canvasYCursor;
-                    canvasYCursor =
+                    fftYPrevious = fftYCursor;
+                    fftYCursor =
                       fftScale === "log"
-                        ? Math.round(
-                            ((Math.log10(binIdx) * (bins.length - 1)) /
-                              Math.log10(sampleRate / 2)) *
-                              logGap
-                          )
+                        ? logTables[bins.length][binIdx]
                         : binIdx;
 
                     canvasCtx.fillRect(
-                      canvasXCursor,
-                      bins.length - canvasYCursor,
+                      fftYStart + fftXCursor,
+                      bins.length - fftYCursor,
                       1,
-                      canvasYCursor - canvasYPrevious
+                      fftYCursor - fftYPrevious
                     );
                   }
 
-                  canvasXCursor++;
+                  fftXCursor++;
                 }
+                break;
+              case "translateXSamples":
+                const image = canvasCtx.getImageData(
+                  fftYStart,
+                  0,
+                  fftYStart + fftXCursor,
+                  canvas.height
+                );
+
+                fftYStart = Math.round(payload / fftInterval);
+                fillPattern(0, 0, canvas.width, canvas.height);
+                canvasCtx.putImageData(image, fftYStart, 0);
                 break;
             }
           };
         };
 
         if (this._canvasWorker) {
-          this._clearCanvasWorker();
-          this._terminateCanvasWorker();
+          this._terminateCanvas();
         }
 
         this._canvasWorker = new Worker(
@@ -186,67 +480,107 @@
           )
         );
 
-        const canvas = document.createElement("CANVAS");
-        canvas.id = this._canvasContainerId + "-canvas";
-        canvas.width = this.audioBuffer.length / this.fftInterval;
-        canvas.height = this.fftBins / 2;
-
-        const canvasContainer = document.getElementById(
-          this._canvasContainerId
-        );
-        canvasContainer.innerHTML = "";
-        canvasContainer.appendChild(canvas);
-
-        const offscreen = canvas.transferControlToOffscreen();
-
-        this._canvasWorker.postMessage({ name: "canvas", payload: offscreen }, [
-          offscreen,
-        ]);
         this._canvasWorker.postMessage({
-          name: "options",
+          name: "init",
           payload: {
-            fftScale: this.fftScale,
             sampleRate: this.audioBuffer.sampleRate,
+            fftBinOptions: FFTCanvas.FFT_BIN_OPTIONS,
           },
         });
       }
 
-      async _clearCanvasWorker() {
-        let drawResolve, drawReject;
-        const fftPromise = new Promise((resolve, reject) => {
-          drawResolve = resolve;
-          drawReject = reject;
-        });
+      _newCanvas() {
+        const canvas = document.createElement("canvas");
+        canvas.id = this._canvasContainerId + "-canvas";
+        canvas.width = this.displayLength / this.fftInterval;
+        canvas.height = this.fftBins / 2;
 
-        this._canvasWorker.postMessage({ name: "clear" });
+        const offscreenPatternCanvas = document
+          .createElement("canvas")
+          .transferControlToOffscreen();
+        const offscreenCanvas = canvas.transferControlToOffscreen();
+
+        const canvasContainer = document.getElementById(
+          this._canvasContainerId
+        );
+
+        this._playerEl.style.width =
+          this.audioBuffer.length / this.fftInterval + "px";
+        this._playerEl.style.marginLeft =
+          this._translatedSamples / this.fftInterval + "px";
+
+        canvasContainer.innerHTML = "";
+        canvasContainer.appendChild(canvas);
+        canvasContainer.appendChild(this._playerEl);
+
+        this._canvasWorker.postMessage(
+          {
+            name: "canvas",
+            payload: {
+              canvas: offscreenCanvas,
+              patternCanvas: offscreenPatternCanvas,
+            },
+          },
+          [offscreenCanvas, offscreenPatternCanvas]
+        );
       }
 
-      async _drawCanvasWorker(payload) {
-        let drawResolve, drawReject;
-        const fftPromise = new Promise((resolve, reject) => {
-          drawResolve = resolve;
-          drawReject = reject;
-        });
-
-        this._canvasWorker.postMessage({ name: "draw", payload });
+      _fillCanvas(fillStyle) {
+        this._canvasWorker.postMessage({ name: "fill", payload: fillStyle });
       }
 
-      _terminateCanvasWorker() {
+      _fillPatternCanvas(fillStyle) {
+        this._canvasWorker.postMessage({ name: "fillPattern" });
+      }
+
+      _drawCanvas(fft, mode) {
+        this._canvasWorker.postMessage({
+          name: "draw",
+          payload: { fft, mode },
+        });
+      }
+
+      _terminateCanvas() {
+        // clear out the canvas
+        this._fillCanvas("rgb(255, 255, 255)");
         this._canvasWorker.terminate();
         this._canvasWorker = null;
       }
 
-      async buildFFT() {
-        this._newCanvasWorker();
+      translateXSamples(samples) {
+        this._translatedSamples = samples;
+        this._playerEl.style.marginLeft =
+          this._translatedSamples / this.fftInterval + "px";
 
+        this._canvasWorker.postMessage({
+          name: "translateXSamples",
+          payload: samples,
+        });
+      }
+
+      async buildFFT() {
         const fftBins = this.fftBins;
         const fftInterval = this.fftInterval;
-        const fftKey = fftBins + "-" + fftInterval;
+        const previousFFT = this._fftKey;
+        this._fftKey = fftBins + "-" + fftInterval;
 
-        if (this._ffts[fftKey]) {
-          this._drawCanvasWorker(this._ffts[fftKey]);
+        this._canvasWorker.postMessage({
+          name: "options",
+          payload: {
+            fftScale: this.fftScale,
+            fftInterval,
+            fftBins,
+          },
+        });
+
+        if (previousFFT !== this._fftKey) this._newCanvas();
+
+        this._fillPatternCanvas();
+
+        if (this._ffts[this._fftKey]) {
+          this._drawCanvas(this._ffts[this._fftKey], "full");
         } else {
-          this._ffts[fftKey] = [];
+          this._ffts[this._fftKey] = [];
 
           const offlineAudioCtx = new OfflineAudioContext(this.audioBuffer);
 
@@ -265,16 +599,16 @@
 
           let fftChunk = [],
             processCount = 0,
-            drawInterval = 32;
+            drawInterval = 64;
 
           processor.onaudioprocess = () => {
             const bins = new Uint8Array(analyzer.frequencyBinCount);
             analyzer.getByteFrequencyData(bins);
-            this._ffts[fftKey].push(bins);
+            this._ffts[this._fftKey].push(bins);
             fftChunk.push(bins);
 
             if (processCount++ % drawInterval === 0) {
-              this._drawCanvasWorker(fftChunk);
+              this._drawCanvas(fftChunk, "partial");
               fftChunk = [];
             }
           };
@@ -286,7 +620,7 @@
 
           await offlineAudioCtx.startRendering();
           // draw any remaining data
-          this._drawCanvasWorker(fftChunk);
+          this._drawCanvas(fftChunk, "partial");
         }
       }
     }
@@ -295,43 +629,80 @@
     const comparisonFileSelectorEl = document.getElementById(
       "comparison-file-selector"
     );
+    const findCorrelationEl = document.getElementById("find-correlation");
+    // correlation options
+    const correlationMethodEl = document.getElementById("correlation-method");
+    const correlationCoefficientEl = document.getElementById(
+      "correlation-coefficient"
+    );
+    const correlationSampleOffsetEl = document.getElementById(
+      "correlation-sample-offset"
+    );
+    const correlationTimeSpent = document.getElementById(
+      "correlation-time-spent"
+    );
+    const correlationBytesPerSecEl = document.getElementById(
+      "correlation-bytes-per-sec"
+    );
+    const correlationRateEl = document.getElementById("correlation-rate");
 
-    let baseData, comparisonData;
+    const formControl = () => {
+      comparisonFileSelectorEl.disabled = !baseData;
+      findCorrelationEl.disabled = !(baseData && comparisonData);
+    };
+
+    let baseData, comparisonData, baseFFT, comparisonFFT;
 
     const rebuildFFTs = async () => {
-      const baseInstance = await FFTCanvas.getInstance(baseData, "base");
-      const comparisonInstance = await FFTCanvas.getInstance(
-        comparisonData,
-        "comparison"
-      );
-
       const maxLength = Math.max(
-        baseInstance.length,
-        comparisonInstance.length
+        baseFFT && baseFFT.length,
+        comparisonFFT && comparisonFFT.length
       );
 
-      baseInstance.displayLength = maxLength;
-      comparisonInstance.displayLength = maxLength;
+      if (baseFFT) baseFFT.displayLength = maxLength;
+      if (comparisonFFT) comparisonFFT.displayLength = maxLength;
     };
 
     baseFileSelectorEl.addEventListener("change", async (e) => {
+      if (baseFFT) baseFFT.destroy();
+
       if (e.target.files.length) {
         baseData = await e.target.files[0].arrayBuffer();
+        baseFFT = await FFTCanvas.getInstance(baseData, "base");
 
         rebuildFFTs();
+      } else {
+        baseData = null;
+        baseFFT = null;
       }
+
+      formControl();
     });
 
     comparisonFileSelectorEl.addEventListener("change", async (e) => {
+      if (comparisonFFT) comparisonFFT.destroy();
+
       if (e.target.files.length) {
         comparisonData = await e.target.files[0].arrayBuffer();
+        comparisonFFT = await FFTCanvas.getInstance(
+          comparisonData,
+          "comparison"
+        );
 
         rebuildFFTs();
+      } else {
+        comparisonData = null;
+        comparisonFFT = null;
       }
+
+      formControl();
     });
 
     const fftOptionsEl = document.getElementById("fft-options");
-    fftOptionsEl.addEventListener("change", rebuildFFTs);
+    fftOptionsEl.addEventListener("change", () => {
+      if (baseFFT) baseFFT.buildFFT();
+      if (comparisonFFT) comparisonFFT.buildFFT();
+    });
 
     // set FFT options
     const addOption = (el) => (value) =>
@@ -343,18 +714,62 @@
     FFTCanvas.FFT_INTERVAL_OPTIONS.forEach(addOption(fftIntervalEl));
   </script>
   <script>
-    const findCovariance = async (base, comparison, method) => {};
+    const getComparisonAudio = () => {
+      const base = {
+        samplesDecoded: baseFFT.audioBuffer.length,
+        sampleRate: baseFFT.audioBuffer.sampleRate,
+        channelData: [],
+      };
 
-    const synAudio = new SynAudio();
+      for (let i = 0; i < baseFFT.audioBuffer.numberOfChannels; i++)
+        base.channelData.push(baseFFT.audioBuffer.getChannelData(i));
 
-    /*const mpeg = await fetch("src/mpeg.cbr.mp3")
-      .then((res) => res.arrayBuffer())
-      .then((body) => new Uint8Array(body));
+      const comparison = {
+        samplesDecoded: comparisonFFT.audioBuffer.length,
+        sampleRate: comparisonFFT.audioBuffer.sampleRate,
+        channelData: [],
+      };
 
-    const cutMpeg = await fetch("src/mpeg.cbr.1601425.mp3")
-      .then((res) => res.arrayBuffer())
-      .then((body) => new Uint8Array(body));
+      for (let i = 0; i < comparisonFFT.audioBuffer.numberOfChannels; i++)
+        comparison.channelData.push(
+          comparisonFFT.audioBuffer.getChannelData(i)
+        );
 
-    const covariances = await synAudio.sync(mpeg, cutMpeg);*/
+      return [base, comparison];
+    };
+
+    const findCorrelation = async (method) => {
+      const [base, comparison] = getComparisonAudio();
+      const synAudio = new SynAudio();
+
+      const start = performance.now();
+      const result = await synAudio[method](
+        base,
+        comparison,
+        navigator.hardwareConcurrency - 1
+      );
+      const duration = (performance.now() - start) / 1000;
+
+      result.timeSpent = duration;
+      result.rate = base.samplesDecoded / base.sampleRate / duration;
+      result.bytesPerSecond =
+        (base.samplesDecoded * base.channelData.length) / duration;
+
+      comparisonFFT.translateXSamples(result.sampleOffset);
+      return result;
+    };
+
+    findCorrelationEl.addEventListener("click", async () => {
+      findCorrelationEl.disabled = true;
+      const result = await findCorrelation(correlationMethodEl.value);
+      findCorrelationEl.disabled = false;
+
+      correlationCoefficientEl.innerHTML = result.correlation.toFixed(4);
+      correlationSampleOffsetEl.innerHTML = result.sampleOffset;
+      correlationTimeSpent.innerHTML = result.timeSpent.toFixed(4) + " seconds";
+      correlationRateEl.innerHTML = result.rate.toFixed(2) + " X";
+      correlationBytesPerSecEl.innerHTML =
+        Math.round(result.bytesPerSecond / 1024) + " KiB/s";
+    });
   </script>
 </html>
