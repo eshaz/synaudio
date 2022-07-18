@@ -1,8 +1,37 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1300" />
+    <title>SynAudio Demo</title>
+    <meta
+      name="description"
+      content="SynAudio - JavaScript library that finds the synchronization point between two similar audio clips"
+    />
+    <meta name="theme-color" content="#000000" />
+    <meta name="title" content="SynAudio Demo" />
     <script src="synaudio.min.js"></script>
   </head>
-  <style></style>
+  <style>
+    html,
+    body {
+      text-size-adjust: none;
+    }
+    body {
+      background: linear-gradient(
+            217deg,
+            rgba(255, 0, 0, 0.3),
+            rgba(255, 0, 0, 0) 70.71%
+          )
+          fixed,
+        linear-gradient(127deg, rgba(0, 255, 0, 0.3), rgba(0, 255, 0, 0) 70.71%)
+          fixed,
+        linear-gradient(336deg, rgba(0, 0, 255, 0.3), rgba(0, 0, 255, 0) 70.71%)
+          fixed;
+      font-family: monospace;
+      margin: 0 10%;
+    }
+  </style>
   <body>
     <fieldset name="base-upload" class="column">
       <legend>Audio Clips</legend>
@@ -210,11 +239,6 @@
       static FFT_INTERVAL_OPTIONS = [256, 512, 1024, 2048, 4096, 8192, 16384];
 
       static async getInstance(data, canvasContainerId) {
-        if (!data)
-          return {
-            buildFFT: () => {},
-          };
-
         let instance = fftCanvasInstances.get(data);
 
         if (!instance) {
@@ -231,8 +255,6 @@
         this._translatedSamples = 0;
 
         this._newPlayer();
-        this._newCanvasWorker();
-        this._newCanvas();
 
         this._ffts = {};
       }
@@ -261,8 +283,12 @@
         }
       }
 
+      get width() {
+        return document.getElementsByTagName("body")[0].scrollWidth;
+      }
+
       get fftInterval() {
-        const maxWidth = window.innerWidth;
+        const maxWidth = this.width;
         const fftInterval = document.getElementById("fft-interval").value;
 
         return fftInterval === "auto"
@@ -285,6 +311,13 @@
 
       get fftScale() {
         return document.getElementById("fft-scale").value;
+      }
+
+      _sampleToPixel(sample) {
+        const fftInterval = this.fftInterval;
+        const widthScale = this.width / (this.displayLength / fftInterval);
+
+        return Math.round((sample / fftInterval) * widthScale);
       }
 
       _newPlayer() {
@@ -328,7 +361,9 @@
         const source = () => {
           let fftXCursor,
             fftYCursor,
-            fftYStart = 0,
+            fftXStart = 0,
+            widthScale,
+            displayLength,
             canvas,
             canvasCtx,
             patternCanvas,
@@ -383,9 +418,11 @@
                 fftXCursor = 0;
                 fftYCursor = 0;
 
+                displayLength = payload.displayLength;
+
                 if (canvas && canvas.width !== payload.canvas.width) {
                   // scale the fftYStart to match the width of the new canvas
-                  fftYStart = (fftYStart / canvas.width) * payload.canvas.width;
+                  fftXStart = fftXStart * (payload.canvas.width / canvas.width);
                 }
 
                 canvas = payload.canvas;
@@ -417,6 +454,7 @@
                 fftScale = payload.fftScale;
                 fftInterval = payload.fftInterval;
                 fftBins = payload.fftBins;
+                widthScale = canvas.width / (displayLength / fftInterval);
                 break;
               case "fill":
                 fill(payload, 0, 0, canvas.width, canvas.height);
@@ -442,9 +480,9 @@
                         : binIdx;
 
                     canvasCtx.fillRect(
-                      fftYStart + fftXCursor,
+                      (fftXStart + fftXCursor) * widthScale,
                       bins.length - fftYCursor,
-                      1,
+                      widthScale + widthScale / 2,
                       fftYCursor - fftYPrevious
                     );
                   }
@@ -454,15 +492,15 @@
                 break;
               case "translateXSamples":
                 const image = canvasCtx.getImageData(
-                  fftYStart,
+                  fftXStart * widthScale,
                   0,
-                  fftYStart + fftXCursor,
+                  (fftXStart + fftXCursor) * widthScale,
                   canvas.height
                 );
 
-                fftYStart = Math.round(payload / fftInterval);
+                fftXStart = payload / fftInterval;
                 fillPattern(0, 0, canvas.width, canvas.height);
-                canvasCtx.putImageData(image, fftYStart, 0);
+                canvasCtx.putImageData(image, fftXStart * widthScale, 0);
                 break;
             }
           };
@@ -492,7 +530,7 @@
       _newCanvas() {
         const canvas = document.createElement("canvas");
         canvas.id = this._canvasContainerId + "-canvas";
-        canvas.width = this.displayLength / this.fftInterval;
+        canvas.width = this.width;
         canvas.height = this.fftBins / 2;
 
         const offscreenPatternCanvas = document
@@ -505,9 +543,10 @@
         );
 
         this._playerEl.style.width =
-          this.audioBuffer.length / this.fftInterval + "px";
+          this._sampleToPixel(this.audioBuffer.length) + "px";
+
         this._playerEl.style.marginLeft =
-          this._translatedSamples / this.fftInterval + "px";
+          this._sampleToPixel(this._translatedSamples) + "px";
 
         canvasContainer.innerHTML = "";
         canvasContainer.appendChild(canvas);
@@ -517,6 +556,7 @@
           {
             name: "canvas",
             payload: {
+              displayLength: this.displayLength,
               canvas: offscreenCanvas,
               patternCanvas: offscreenPatternCanvas,
             },
@@ -550,7 +590,7 @@
       translateXSamples(samples) {
         this._translatedSamples = samples;
         this._playerEl.style.marginLeft =
-          this._translatedSamples / this.fftInterval + "px";
+          this._sampleToPixel(this._translatedSamples) + "px";
 
         this._canvasWorker.postMessage({
           name: "translateXSamples",
@@ -564,6 +604,8 @@
         const previousFFT = this._fftKey;
         this._fftKey = fftBins + "-" + fftInterval;
 
+        if (previousFFT !== this._fftKey) this._newCanvas();
+
         this._canvasWorker.postMessage({
           name: "options",
           payload: {
@@ -572,8 +614,6 @@
             fftBins,
           },
         });
-
-        if (previousFFT !== this._fftKey) this._newCanvas();
 
         this._fillPatternCanvas();
 
@@ -653,7 +693,7 @@
 
     let baseData, comparisonData, baseFFT, comparisonFFT;
 
-    const rebuildFFTs = async () => {
+    const setDisplayLengths = async () => {
       const maxLength = Math.max(
         baseFFT && baseFFT.length,
         comparisonFFT && comparisonFFT.length
@@ -670,7 +710,7 @@
         baseData = await e.target.files[0].arrayBuffer();
         baseFFT = await FFTCanvas.getInstance(baseData, "base");
 
-        rebuildFFTs();
+        setDisplayLengths();
       } else {
         baseData = null;
         baseFFT = null;
@@ -689,7 +729,7 @@
           "comparison"
         );
 
-        rebuildFFTs();
+        setDisplayLengths();
       } else {
         comparisonData = null;
         comparisonFFT = null;
