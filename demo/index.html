@@ -279,12 +279,16 @@
 
         if (oldDisplayLength !== this._displayLength) {
           this._newCanvasWorker();
-          this.buildFFT();
+          this.drawFFT();
         }
       }
 
+      get height() {
+        return this.fftBins / 2;
+      }
+
       get width() {
-        return document.getElementsByTagName("body")[0].scrollWidth;
+        return document.getElementsByTagName("body")[0].clientWidth;
       }
 
       get fftInterval() {
@@ -389,7 +393,7 @@
             );
           };
 
-          self.onmessage = async ({ data: { name, payload } }) => {
+          self.onmessage = async ({ data: { name, payload, messageId } }) => {
             switch (name) {
               case "init":
                 // precalculate logarithmic rectangle heights
@@ -397,7 +401,9 @@
                 sampleRate = payload.sampleRate;
                 const sampleRateLog = Math.log10(sampleRate / 2);
 
-                for (const binOption of payload.fftBinOptions) {
+                for (let binOption of payload.fftBinOptions) {
+                  binOption /= 2;
+
                   logTables[binOption] = [];
 
                   const logGap =
@@ -413,20 +419,6 @@
                       )
                     );
                 }
-                break;
-              case "canvas":
-                fftXCursor = 0;
-                fftYCursor = 0;
-
-                displayLength = payload.displayLength;
-
-                if (canvas && canvas.width !== payload.canvas.width) {
-                  // scale the fftYStart to match the width of the new canvas
-                  fftXStart = fftXStart * (payload.canvas.width / canvas.width);
-                }
-
-                canvas = payload.canvas;
-                canvasCtx = canvas.getContext("2d", { alpha: false });
 
                 patternCanvas = payload.patternCanvas;
                 patternCanvasCtx = patternCanvas.getContext("2d", {
@@ -442,18 +434,31 @@
                   patternCanvas.width,
                   patternCanvas.height
                 );
-                patternCanvasCtx.beginPath();
+                /*patternCanvasCtx.beginPath();
                 patternCanvasCtx.moveTo(0, 0);
                 patternCanvasCtx.lineTo(8, 8);
                 patternCanvasCtx.moveTo(0, 8);
                 patternCanvasCtx.lineTo(8, 0);
                 patternCanvasCtx.lineWidth = 1;
-                patternCanvasCtx.stroke();
+                patternCanvasCtx.stroke();*/
+                break;
+              case "canvas":
+                fftXCursor = 0;
+                fftYCursor = 0;
+
+                canvas = payload.canvas;
+                canvasCtx = canvas.getContext("2d", { alpha: false });
                 break;
               case "options":
+                if (fftInterval && fftInterval !== payload.fftInterval) {
+                  fftXStart = (fftXStart * fftInterval) / payload.fftInterval;
+                }
+
                 fftScale = payload.fftScale;
                 fftInterval = payload.fftInterval;
                 fftBins = payload.fftBins;
+                displayLength = payload.displayLength;
+
                 widthScale = canvas.width / (displayLength / fftInterval);
                 break;
               case "fill":
@@ -503,6 +508,8 @@
                 canvasCtx.putImageData(image, fftXStart * widthScale, 0);
                 break;
             }
+
+            self.postMessage(messageId);
           };
         };
 
@@ -518,25 +525,51 @@
           )
         );
 
-        this._canvasWorker.postMessage({
-          name: "init",
-          payload: {
-            sampleRate: this.audioBuffer.sampleRate,
-            fftBinOptions: FFTCanvas.FFT_BIN_OPTIONS,
-          },
-        });
-      }
+        this._messageId = Number.MIN_SAFE_INTEGER;
+        this._pendingMessages = new Map();
 
-      _newCanvas() {
-        const canvas = document.createElement("canvas");
-        canvas.id = this._canvasContainerId + "-canvas";
-        canvas.width = this.width;
-        canvas.height = this.fftBins / 2;
+        this._canvasWorker.onmessage = ({ data: messageId }) => {
+          const messagePromise = this._pendingMessages.get(messageId);
+
+          if (messagePromise) {
+            messagePromise();
+            this._pendingMessages.delete(messageId);
+          }
+        };
 
         const offscreenPatternCanvas = document
           .createElement("canvas")
           .transferControlToOffscreen();
-        const offscreenCanvas = canvas.transferControlToOffscreen();
+
+        this._postToWorker(
+          "init",
+          {
+            sampleRate: this.audioBuffer.sampleRate,
+            fftBinOptions: FFTCanvas.FFT_BIN_OPTIONS,
+            patternCanvas: offscreenPatternCanvas,
+          },
+          [offscreenPatternCanvas]
+        );
+      }
+
+      async _postToWorker(name, payload, transferList) {
+        const messageId = this._messageId++;
+
+        return new Promise((resolve, reject) => {
+          this._pendingMessages.set(messageId, resolve);
+          this._canvasWorker.postMessage(
+            { name, payload, messageId },
+            transferList
+          );
+        });
+      }
+
+      async _newCanvas() {
+        this._canvas = document.createElement("canvas");
+        this._canvas.id = this._canvasContainerId + "-canvas";
+        this._canvas.width = this.width;
+        this._canvas.height = this.height;
+        const offscreenCanvas = this._canvas.transferControlToOffscreen();
 
         const canvasContainer = document.getElementById(
           this._canvasContainerId
@@ -549,76 +582,65 @@
           this._sampleToPixel(this._translatedSamples) + "px";
 
         canvasContainer.innerHTML = "";
-        canvasContainer.appendChild(canvas);
+        canvasContainer.appendChild(this._canvas);
         canvasContainer.appendChild(this._playerEl);
 
-        this._canvasWorker.postMessage(
-          {
-            name: "canvas",
-            payload: {
-              displayLength: this.displayLength,
-              canvas: offscreenCanvas,
-              patternCanvas: offscreenPatternCanvas,
-            },
-          },
-          [offscreenCanvas, offscreenPatternCanvas]
-        );
+        await this._postToWorker("canvas", { canvas: offscreenCanvas }, [
+          offscreenCanvas,
+        ]);
       }
 
-      _fillCanvas(fillStyle) {
-        this._canvasWorker.postMessage({ name: "fill", payload: fillStyle });
+      async _fillCanvas(fillStyle) {
+        await this._postToWorker("fill", fillStyle);
       }
 
-      _fillPatternCanvas(fillStyle) {
-        this._canvasWorker.postMessage({ name: "fillPattern" });
+      async _fillPatternCanvas(fillStyle) {
+        await this._postToWorker("fillPattern");
       }
 
-      _drawCanvas(fft, mode) {
-        this._canvasWorker.postMessage({
-          name: "draw",
-          payload: { fft, mode },
-        });
+      async _drawCanvas(fft, mode) {
+        await this._postToWorker("draw", { fft, mode });
       }
 
-      _terminateCanvas() {
+      async _terminateCanvas() {
         // clear out the canvas
-        this._fillCanvas("rgb(255, 255, 255)");
+        await this._fillCanvas("rgb(255, 255, 255)");
         this._canvasWorker.terminate();
         this._canvasWorker = null;
       }
 
-      translateXSamples(samples) {
+      async translateXSamples(samples) {
         this._translatedSamples = samples;
         this._playerEl.style.marginLeft =
           this._sampleToPixel(this._translatedSamples) + "px";
 
-        this._canvasWorker.postMessage({
-          name: "translateXSamples",
-          payload: samples,
-        });
+        await this._postToWorker("translateXSamples", samples);
       }
 
-      async buildFFT() {
+      async drawFFT() {
         const fftBins = this.fftBins;
         const fftInterval = this.fftInterval;
         const previousFFT = this._fftKey;
         this._fftKey = fftBins + "-" + fftInterval;
 
-        if (previousFFT !== this._fftKey) this._newCanvas();
+        if (
+          previousFFT !== this._fftKey ||
+          this._canvas?.width !== this.width ||
+          this._canvas?.height !== this.height
+        )
+          this._newCanvas();
 
-        this._canvasWorker.postMessage({
-          name: "options",
-          payload: {
-            fftScale: this.fftScale,
-            fftInterval,
-            fftBins,
-          },
+        this._postToWorker("options", {
+          displayLength: this.displayLength,
+          fftScale: this.fftScale,
+          fftInterval,
+          fftBins,
         });
 
         this._fillPatternCanvas();
 
         if (this._ffts[this._fftKey]) {
-          this._drawCanvas(this._ffts[this._fftKey], "full");
+          await this._drawCanvas(this._ffts[this._fftKey], "full");
         } else {
           this._ffts[this._fftKey] = [];
 
@@ -648,6 +670,7 @@
             fftChunk.push(bins);
 
             if (processCount++ % drawInterval === 0) {
+              // don't await to process async
               this._drawCanvas(fftChunk, "partial");
               fftChunk = [];
             }
@@ -659,8 +682,8 @@
           source.start(0);
 
           await offlineAudioCtx.startRendering();
-          // draw any remaining data
-          this._drawCanvas(fftChunk, "partial");
+          // draw any remaining data, wait to complete
+          await this._drawCanvas(fftChunk, "partial");
         }
       }
     }
@@ -703,6 +726,11 @@
       if (comparisonFFT) comparisonFFT.displayLength = maxLength;
     };
 
+    const drawFFTs = () => {
+      if (baseFFT) baseFFT.drawFFT();
+      if (comparisonFFT) comparisonFFT.drawFFT();
+    };
+
     baseFileSelectorEl.addEventListener("change", async (e) => {
       if (baseFFT) baseFFT.destroy();
 
@@ -739,9 +767,12 @@
     });
 
     const fftOptionsEl = document.getElementById("fft-options");
-    fftOptionsEl.addEventListener("change", () => {
-      if (baseFFT) baseFFT.buildFFT();
-      if (comparisonFFT) comparisonFFT.buildFFT();
+    fftOptionsEl.addEventListener("change", drawFFTs);
+
+    let resizeTimeout;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(drawFFTs, 100);
     });
 
     // set FFT options
