@@ -73,5 +73,5 @@ correlate-simd:
 embed-wasm: correlate-scalar correlate-simd
 	SIMD=${CORRELATE_SIMD_BUILD} \
 	SCALAR=${CORRELATE_SCALAR_BUILD} \
-	npm run embed-wasm
+	npm run build
 	

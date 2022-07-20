@@ -5,6 +5,8 @@
   * Correlation algorithm implemented as WebAssembly SIMD.
   * Built in Web Worker implementations for concurrency.
 
+## View the live [Demo](https://eshaz.github.io/synaudio)!
+
 ---
 
 * [Installing](#installing)
