@@ -84,9 +84,95 @@
     }
   </style>
   <body>
+    <header>
+      <h1 style="margin-bottom: 0px">
+        <a href="https://github.com/eshaz/synaudio"><b>synaudio</b></a>
+      </h1>
+      <h4>
+        JavaScript library that finds the synchronization point between two
+        similar audio clips.
+      </h4>
+    </header>
+    <hr />
+    <p>
+      The
+      <a href="https://github.com/eshaz/wasm-audio-decoders">synaudio</a>
+      library synchronizes two similar audio clips using the
+      <a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient"
+        >Pearson Correlation Coefficient</a
+      >.
+    </p>
+    <p>
+      This is implemented using Web Assembly SIMD instructions to used
+      significantly increase performance. A single and multi-threaded Web Worker
+      implementation is available as well that further increases performance.
+    </p>
+    <p>
+      This library is used in
+      <a href="https://eshaz.github.io/icecast-metadata-js"
+        >icecast-metadata-player</a
+      >
+      to synchronize Icecast streaming audio between different connections and
+      audio codecs.
+    </p>
+    <hr />
+    <h3>How to use the demo</h3>
+    <ol>
+      <li>Select two audio clips (one base clip, and one comparison clip).</li>
+      <li>
+        Click <b>Find Correlation</b> to find the sample offset withing the base
+        audio where the comparison audio matches with the best correlation.
+      </li>
+      <li>
+        Play the result audio, which is the comparison audio spliced into the
+        base audio at the sample offset, to sonically verify the correlation
+        result.
+      </li>
+    </ol>
+    <h4>SynAudio Options</h4>
+    <ul>
+      <li>
+        <b>Correlation Method</b>
+        <ul>
+          <li><u>sync</u>: Executes on the main thread.</li>
+          <li><u>syncWorker</u>: Executes in a Web Worker.</li>
+          <li>
+            <u>syncWorkerConcurrent</u>: Executes in multiple Web Workers
+            (multi-threaded).
+          </li>
+        </ul>
+      </li>
+      <li>
+        <b>Correlation Sample Size</b>
+        <ul>
+          <li>
+            Controls the size withing the comparison audio to check at the
+            beginning.
+          </li>
+          <li>
+            This value can be increased for better accuracy, at the expense of
+            execution time.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <b>Initial Granularity</b>
+        <ul>
+          <li>
+            Controls the number of samples that are skipped during each
+            iteration while searching for the best correlation.
+          </li>
+          <li>
+            This value can be decreased for better accuracy, at the expense of
+            execution time.
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <hr />
     <div class="row" style="justify-content: center">
       <fieldset name="base-upload" class="row">
-        <legend>Correlation Between Two Clips</legend>
+        <legend>Select Two Audio Clips and Click "Find Correlation"</legend>
         <ol>
           <li>
             <div id="base-audio-container">
@@ -249,6 +335,13 @@
     const PLAY = "▶";
     const STOP = "■";
 
+    const fftPlaceholders = {
+      base: "<i>Select a base audio clip.</i>",
+      comparison: "<i>Select a comparison audio clip.</i>",
+      correlation:
+        "<i>Select a two audio clips and click <b>Find Correlation</b>.</i>",
+    };
+
     class WebAudioPlayer {
       constructor(audioBuffer) {
         this.audioBuffer = audioBuffer;
@@ -387,8 +480,8 @@
 
       static FFT_INTERVAL_OPTIONS = [256, 512, 1024, 2048, 4096, 8192, 16384];
 
-      constructor(canvasContainerId) {
-        this._canvasContainerId = canvasContainerId;
+      constructor(audioKey) {
+        this._audioKey = audioKey;
         this._translatedSamples = 0;
 
         this._sampleRate = audioCtx.sampleRate;
@@ -447,7 +540,7 @@
       destroy() {
         this._webAudioPlayer.stop();
         this._terminateCanvas();
-        this._canvasContainer.innerHTML = "";
+        this._canvasContainer.innerHTML = fftPlaceholders[this._audioKey];
       }
 
       get channelCount() {
@@ -749,13 +842,13 @@
 
       async _newCanvas() {
         this._canvas = document.createElement("canvas");
-        this._canvas.id = this._canvasContainerId + "-canvas";
+        this._canvas.id = this._audioKey + "-fft-canvas";
         this._canvas.width = this.width;
         this._canvas.height = this.height;
         const offscreenCanvas = this._canvas.transferControlToOffscreen();
 
         this._canvasContainer = document.getElementById(
-          this._canvasContainerId
+          this._audioKey + "-fft"
         );
 
         this._playerEl.style.width = this._sampleToPixel(this.length) + "px";
@@ -973,6 +1066,16 @@
     );
     const correlationRateEl = document.getElementById("correlation-rate");
 
+    const baseAudioFFTContainerEl = document.getElementById("base-fft");
+    const comparisonAudioFFTContainerEl =
+      document.getElementById("comparison-fft");
+    const correlationAudioFFTContainerEl =
+      document.getElementById("correlation-fft");
+
+    baseAudioFFTContainerEl.innerHTML = fftPlaceholders.base;
+    comparisonAudioFFTContainerEl.innerHTML = fftPlaceholders.comparison;
+    correlationAudioFFTContainerEl.innerHTML = fftPlaceholders.correlation;
+
     const baseAudioClipKey = "base";
     const comparisonAudioClipKey = "comparison";
     const correlationAudioClipKey = "correlation";
@@ -1012,7 +1115,7 @@
       const newAudioData = {};
 
       audioData[clipType] = newAudioData;
-      newAudioData.fft = new FFTCanvas(`${clipType}-fft`);
+      newAudioData.fft = new FFTCanvas(clipType);
       newAudioData.data = file;
 
       await newAudioData.fft.addAudioBuffer(file, {
@@ -1127,7 +1230,9 @@
       destroyCorrelationFFT();
 
       audioData[correlationAudioClipKey] = {};
-      audioData[correlationAudioClipKey].fft = new FFTCanvas("correlation-fft");
+      audioData[correlationAudioClipKey].fft = new FFTCanvas(
+        correlationAudioClipKey
+      );
       audioData[correlationAudioClipKey].fft.addAudioBuffer(
         baseAudioBuffer,
         baseFFT.getAudioBufferData(baseAudioBuffer)
