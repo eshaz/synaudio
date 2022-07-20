@@ -29,106 +29,212 @@
         linear-gradient(336deg, rgba(0, 0, 255, 0.3), rgba(0, 0, 255, 0) 70.71%)
           fixed;
       font-family: monospace;
-      margin: 0 10%;
+      margin: 0 2%;
+    }
+    header {
+      text-align: center;
+    }
+    .header-links {
+      font-size: 16px;
+      font-family: sans-serif;
+      text-decoration: none;
+      user-select: none;
+    }
+    .header-link {
+      text-decoration: none;
+    }
+    strong {
+      font-family: sans-serif;
+    }
+    input,
+    label,
+    button,
+    select {
+      margin: 5px;
+    }
+    pre {
+      margin: 0px;
+    }
+    label {
+      user-select: none;
+    }
+    button {
+      user-select: none;
+    }
+    hr {
+      margin: 20px 0;
+    }
+    .column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .row {
+      display: flex;
+      flex-direction: row;
+    }
+    .center {
+      align-items: center;
+      justify-content: center;
+    }
+    .grow {
+      display: flex;
+      flex: 1;
     }
   </style>
   <body>
-    <fieldset name="base-upload" class="column">
-      <legend>Audio Clips</legend>
-      <ol>
-        <li>
-          <div id="base-audio-container" style="width: 100%" class="row center">
-            <select id="base-audio-select">
-              <option value="" disabled selected>
-                Select a base audio clip
-              </option>
-            </select>
-            <span>or</span>
-            <input
-              type="file"
-              id="base-file-selector"
-              accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
-            />
-          </div>
-        </li>
-        <li>
-          <div
-            id="comparison-audio-container"
-            style="width: 100%"
-            class="row center"
-          >
-            <select id="comparison-audio-select">
-              <option value="" disabled selected>
-                Select a comparison audio clip
-              </option>
-            </select>
-            <span>or</span>
-            <input
-              type="file"
-              id="comparison-file-selector"
-              accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
-            />
-          </div>
-        </li>
-      </ol>
+    <div class="row" style="justify-content: center">
+      <fieldset name="base-upload" class="row">
+        <legend>Correlation Between Two Clips</legend>
+        <ol>
+          <li>
+            <div id="base-audio-container">
+              <select id="base-audio-select">
+                <option value="" disabled selected>
+                  Select a base audio clip
+                </option>
+              </select>
+              <span>or</span>
+              <input
+                type="file"
+                id="base-file-selector"
+                accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
+              />
+            </div>
+          </li>
+          <li>
+            <div id="comparison-audio-container">
+              <select id="comparison-audio-select">
+                <option value="" disabled selected>
+                  Select a comparison audio clip
+                </option>
+              </select>
+              <span>or</span>
+              <input
+                type="file"
+                id="comparison-file-selector"
+                accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
+              />
+            </div>
+          </li>
+          <li>
+            <button id="find-correlation" disabled>Find Correlation</button>
+          </li>
+        </ol>
+      </fieldset>
+      <fieldset id="synaudio-results" class="row" style="flex-grow: 1">
+        <legend>SynAudio Results</legend>
+        <table style="font-weight: bold; border-spacing: 10px 0; width: 100%">
+          <tr>
+            <td>Correlation Coefficient</td>
+            <td style="color: darkred" id="correlation-coefficient">-</td>
+          </tr>
+          <tr>
+            <td>Sample Offset</td>
+            <td style="color: darkred" id="correlation-sample-offset">-</td>
+          </tr>
+          <tr>
+            <td>Time spent</td>
+            <td style="color: darkred" id="correlation-time-spent">-</td>
+          </tr>
+          <tr>
+            <td>Rate (1x is realtime)</td>
+            <td style="color: darkred" id="correlation-rate">-</td>
+          </tr>
+          <tr>
+            <td>Bytes per second</td>
+            <td style="color: darkred" id="correlation-bytes-per-sec">-</td>
+          </tr>
+        </table>
+      </fieldset>
+      <fieldset id="synaudio-options" class="column">
+        <legend>SynAudio Options</legend>
+        <table>
+          <tr>
+            <td>
+              <label for="correlation-method">Correlation Method</label>
+            </td>
+            <td>
+              <select id="correlation-method">
+                <option value="sync">sync</option>
+                <option value="syncWorker">syncWorker</option>
+                <option selected value="syncWorkerConcurrent">
+                  syncWorkerConcurrent
+                </option>
+              </select>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <label for="correlation-sample-size"
+                >Correlation Sample Size</label
+              >
+            </td>
+            <td>
+              <input id="correlation-sample-size" type="number" value="11025" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label for="initial-granularity">Initial Granularity</label>
+            </td>
+            <td>
+              <input id="initial-granularity" type="number" value="16" />
+            </td>
+          </tr>
+        </table>
+      </fieldset>
+      <fieldset id="fft-options" class="column">
+        <legend>FFT Options</legend>
+        <table>
+          <tr>
+            <td>
+              <label for="fft-bins">Bin Size (height)</label>
+            </td>
+            <td>
+              <select name="fft-bins" id="fft-bins">
+                <option selected value="auto">auto</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label for="fft-interval">Interval Size (width)</label>
+            </td>
+            <td>
+              <select name="fft-interval" id="fft-interval">
+                <option selected value="auto">auto</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label for="fft-scale">Scale</label>
+            </td>
+            <td>
+              <select name="fft-scale" id="fft-scale">
+                <option selected value="log">logarithmic</option>
+                <option value="lin">linear</option>
+              </select>
+            </td>
+          </tr>
+        </table>
+      </fieldset>
+    </div>
+    <fieldset class="column">
+      <legend>Base Audio FFT</legend>
+      <div id="base-fft"></div>
     </fieldset>
-    <fieldset>
-      <legend>Correlation Options</legend>
-      <ol start="3">
-        <li>
-          <button id="find-correlation" disabled>Find Correlation</button>
-          <label for="correlation-method">Correlation Method</label>
-          <select id="correlation-method">
-            <option value="sync">sync</option>
-            <option value="syncWorker">syncWorker</option>
-            <option selected value="syncWorkerConcurrent">
-              syncWorkerConcurrent
-            </option>
-          </select>
-          <table>
-            <tr>
-              <td>Correlation Coefficient</td>
-              <td id="correlation-coefficient"></td>
-            </tr>
-            <tr>
-              <td>Sample Offset</td>
-              <td id="correlation-sample-offset"></td>
-            </tr>
-            <tr>
-              <td>Time spent</td>
-              <td id="correlation-time-spent"></td>
-            </tr>
-            <tr>
-              <td>Rate (1x is realtime)</td>
-              <td id="correlation-rate"></td>
-            </tr>
-            <tr>
-              <td>Bytes per second</td>
-              <td id="correlation-bytes-per-sec"></td>
-            </tr>
-          </table>
-        </li>
-      </ol>
+    <fieldset class="column">
+      <legend>Comparison Audio FFT</legend>
+      <div id="comparison-fft"></div>
     </fieldset>
-    <fieldset id="fft-options">
-      <legend>FFT Options</legend>
-      <label for="fft-bins">Bin Size (height)</label>
-      <select name="fft-bins" id="fft-bins">
-        <option selected value="auto">auto</option>
-      </select>
-      <label for="fft-interval">Interval Size (width)</label>
-      <select name="fft-interval" id="fft-interval">
-        <option selected value="auto">auto</option>
-      </select>
-      <label for="fft-scale">Scale</label>
-      <select name="fft-scale" id="fft-scale">
-        <option selected value="log">logarithmic</option>
-        <option value="lin">linear</option>
-      </select>
+    <fieldset class="column">
+      <legend>SynAudio Result FFT</legend>
+      <div id="correlation-fft"></div>
     </fieldset>
-    <div id="base-fft"></div>
-    <div id="comparison-fft"></div>
-    <div id="correlation-fft"></div>
   </body>
   <script>
     "use strict";
@@ -174,7 +280,7 @@
         this._progressBarEl = document.createElement("input");
         this._progressBarEl.value = 0;
         this._progressBarEl.type = "range";
-        this._progressBarEl.style = "width: 100%;";
+        this._progressBarEl.style = "width: 100%; margin: 0; padding: 0;";
         this._progressBarEl.oninput = () => this.seek();
 
         this._playbackEl = document.createElement("button");
@@ -289,7 +395,7 @@
         this._audioBuffers = [];
         this._audioBufferData = new WeakMap();
 
-        this._heightDivision = 3;
+        this._heightDivision = 6;
 
         this._newCanvasWorker();
       }
@@ -385,7 +491,7 @@
       }
 
       get width() {
-        return window.innerWidth * 0.8; //document.getElementsByTagName("body")[0].clientWidth;
+        return window.innerWidth * 0.94; //document.getElementsByTagName("body")[0].clientWidth;
       }
 
       get fftInterval() {
@@ -883,7 +989,7 @@
         audioData[correlationAudioClipKey].fft.destroy();
 
       delete audioData[correlationAudioClipKey];
-    }
+    };
 
     const fftColors = {
       base: [0, 255, 255],
@@ -898,7 +1004,7 @@
       Object.values(audioData).forEach(({ fft }) => {
         fft.displayLength = maxLength;
       });
-    }
+    };
 
     const setAudioClip = async (file, clipType) => {
       if (audioData[clipType]) audioData[clipType].fft.destroy();
@@ -992,7 +1098,14 @@
       const baseAudioBuffer = baseFFT.audioBuffers[0];
       const comparisonAudioBuffer = comparisonFFT.audioBuffers[0];
 
-      const synAudio = new SynAudio();
+      const synAudio = new SynAudio({
+        correlationSampleSize: parseInt(
+          document.getElementById("correlation-sample-size").value
+        ),
+        initialGranularity: parseInt(
+          document.getElementById("initial-granularity").value
+        ),
+      });
 
       const start = performance.now();
       const result = await synAudio[method](
