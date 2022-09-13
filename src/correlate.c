@@ -143,29 +143,29 @@ float calc_correlation(float *a, float *b, float aMean, float bMean, float bStdF
     return sum_covariance(covarianceRemaining, sampleSize) / (sum_stddev(aStdFloat, sampleSize) * sum_stddev(bStdFloat, sampleSize));;
 }
 
-float calc_b_std(float *b, long bSamples, float bMean) {
+float calc_std(float *data, long dataLength, float dataMean) {
     int loopUnroll = 4*float4_size;
-    float4 bStd = new_float4;
+    float4 stdFloat4 = new_float4;
 
     int i;
     for (
       i = 0;
-      i < bSamples - loopUnroll;
+      i < dataLength - loopUnroll;
       i+=loopUnroll
     ) {
-      calc_stddev_float4(bStd, b[i], bMean);
-      calc_stddev_float4(bStd, b[i + 1 * float4_size], bMean);
-      calc_stddev_float4(bStd, b[i + 2 * float4_size], bMean);
-      calc_stddev_float4(bStd, b[i + 3 * float4_size], bMean);
+      calc_stddev_float4(stdFloat4, data[i], dataMean);
+      calc_stddev_float4(stdFloat4, data[i + 1 * float4_size], dataMean);
+      calc_stddev_float4(stdFloat4, data[i + 2 * float4_size], dataMean);
+      calc_stddev_float4(stdFloat4, data[i + 3 * float4_size], dataMean);
     }
 
-    float bStdFloat = float4_to_float(bStd);
+    float std = float4_to_float(stdFloat4);
 
-    for (; i < bSamples; i++) {
-      calc_stddev(bStdFloat, b[i], bMean);
+    for (; i < dataLength; i++) {
+      calc_stddev(std, data[i], dataMean);
     }
 
-    return bStdFloat;
+    return std;
 }
 
 void sum_channels(float *data, long samples, int channels) {
@@ -220,7 +220,7 @@ void correlate(
     double aSum = sum_for_mean(a, 0, sampleSize);
 
     float bMean = sum_for_mean(b, 0, sampleSize) / (float) sampleSize;
-    float bStd = calc_b_std(b, bSamples, bMean);
+    float bStd = calc_std(b, bSamples, bMean);
 
     for (long aOffset = aOffsetStart; aOffset < aOffsetEnd; aOffset += increment) {
       float aMean = aSum / sampleSize;
