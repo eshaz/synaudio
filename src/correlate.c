@@ -19,11 +19,12 @@
 #define min(a, b) a < b ? a : b
 #define max(a, b) a > b ? a : b
 
-
 #define calc_covariance(cov, a, b, aMean, bMean) cov += (a - aMean) * (b - bMean)
 #define calc_stddev(std, data, dataMean) std += (data - dataMean) * (data - dataMean)
 #define sum_covariance(cov, sampleSize) cov / ((float) sampleSize - 1)
 #define sum_stddev(std, sampleSize) __builtin_sqrt(std / ((float) sampleSize - 1))
+
+#define sum(acc, data) acc += data 
 
 #ifdef WASM_SIMD
 
@@ -65,6 +66,8 @@ typedef float float4 __attribute__((__vector_size__(16)));
 #define sum_covariance_float4(cov, sampleSize) float4_to_float(cov) / ((float) sampleSize - 1)
 #define sum_stddev_float4(std, sampleSize) __builtin_sqrt(float4_to_float(std) / ((float) sampleSize - 1))
 
+#define sum_float4(acc, data) acc = wasm_f32x4_add(acc, wasm_v128_load(&data))
+
 #else
 
 typedef float float4;
@@ -76,6 +79,8 @@ typedef float float4;
 #define calc_stddev_float4 calc_stddev
 #define sum_covariance_float4 sum_covariance
 #define sum_stddev_float4 sum_stddev
+
+#define sum_float4 sum
 
 #endif
 
@@ -143,14 +148,14 @@ float calc_correlation(float *a, float *b, float aMean, float bMean, float bStdF
     return sum_covariance(covarianceRemaining, sampleSize) / (sum_stddev(aStdFloat, sampleSize) * sum_stddev(bStdFloat, sampleSize));;
 }
 
-float calc_std(float *data, long dataLength, float dataMean) {
+float calc_std(float *data, long length, float dataMean) {
     int loopUnroll = 4*float4_size;
     float4 stdFloat4 = new_float4;
 
     int i;
     for (
       i = 0;
-      i < dataLength - loopUnroll;
+      i < length - loopUnroll;
       i+=loopUnroll
     ) {
       calc_stddev_float4(stdFloat4, data[i], dataMean);
@@ -161,7 +166,7 @@ float calc_std(float *data, long dataLength, float dataMean) {
 
     float std = float4_to_float(stdFloat4);
 
-    for (; i < dataLength; i++) {
+    for (; i < length; i++) {
       calc_stddev(std, data[i], dataMean);
     }
 
@@ -174,13 +179,29 @@ void sum_channels(float *data, long samples, int channels) {
         data[j] += data[j+i*samples];
 }
 
-double sum_for_mean(float *data, long offset, long length) {
-    double sum = 0;
+double sum_for_mean(float *data, long length) {
+    int loopUnroll = 4*float4_size;
+    float4 sumFloat4 = new_float4;
 
-    for (int i = offset; i < length; i++)
-      sum += data[i];
+    int i;
+    for (
+      i = 0;
+      i < length - loopUnroll;
+      i+=loopUnroll
+    ) {
+      sum_float4(sumFloat4, data[i]);
+      sum_float4(sumFloat4, data[i + 1 * float4_size]);
+      sum_float4(sumFloat4, data[i + 2 * float4_size]);
+      sum_float4(sumFloat4, data[i + 3 * float4_size]);
+    }
 
-    return sum;
+    float result = float4_to_float(sumFloat4);
+
+    for (; i < length; i++) {
+      sum(result, data[i]);
+    }
+
+    return result;
 }
 
 // finds the best correlation point between two sets of audio data
@@ -217,9 +238,12 @@ void correlate(
     long aOffsetStart = 0;
     long aOffsetEnd = aSamples - sampleSize;
 
-    double aSum = sum_for_mean(a, 0, sampleSize);
+    double aSum = sum_for_mean(a, sampleSize);
 
-    float bMean = sum_for_mean(b, 0, sampleSize) / (float) sampleSize;
+    // calculate standard deviation for all of a
+    // save the rolling sum for each increment
+
+    float bMean = sum_for_mean(b, sampleSize) / (float) sampleSize;
     float bStd = calc_std(b, bSamples, bMean);
 
     for (long aOffset = aOffsetStart; aOffset < aOffsetEnd; aOffset += increment) {
@@ -242,7 +266,7 @@ void correlate(
       aOffsetStart = max(*bestSampleOffset - increment * increment, 0);
       aOffsetEnd = min(*bestSampleOffset + increment * increment, aSamples - sampleSize);
   
-      aSum = sum_for_mean(a, aOffsetStart, aOffsetStart + sampleSize);
+      aSum = sum_for_mean(a + aOffsetStart, sampleSize);
   
       for (long aOffset = aOffsetStart; aOffset < aOffsetEnd; aOffset++) {
         float aMean = aSum / sampleSize;
