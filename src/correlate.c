@@ -36,7 +36,6 @@
 
 typedef float float4 __attribute__((__vector_size__(16)));
 #define float4_size 4
-#define new_float4 wasm_f32x4_splat(0)
 #define float4_to_float(vec) (wasm_f32x4_extract_lane(vec, 0) + wasm_f32x4_extract_lane(vec, 1) + wasm_f32x4_extract_lane(vec, 2) + wasm_f32x4_extract_lane(vec, 3))
 #define float_to_float4(vec) wasm_f32x4_splat(vec)
 
@@ -77,7 +76,6 @@ typedef float float4 __attribute__((__vector_size__(16)));
 
 typedef float float4;
 #define float4_size 1
-#define new_float4 0
 #define float4_to_float(f) (float) f
 #define float_to_float4(f) (float4) f
 
@@ -93,9 +91,11 @@ typedef float float4;
 
 #endif
 
-float calc_correlation(float *a, float *b, float aMean, float bMean, float aStdFloat, float bStdFloat, long sampleSize) {
+float calc_correlation(float *a, float *b, float aMean, float bMean, float bStdFloat, long sampleSize) {
     int loopUnroll = 4*float4_size;
-    float4 covariance = new_float4;
+
+    float4 covariance_4 = float_to_float4(0);
+    float4 aSquare_4 = float_to_float4(0);
     float4 aMean_4 = float_to_float4(aMean);
     float4 bMean_4 = float_to_float4(bMean);
 
@@ -105,27 +105,36 @@ float calc_correlation(float *a, float *b, float aMean, float bMean, float aStdF
       i < sampleSize - loopUnroll;
       i+=loopUnroll
     ) {
-      covariance = calc_covariance_float4(covariance, a[i],                    b[i]                   , aMean_4, bMean_4);
-      covariance = calc_covariance_float4(covariance, a[i + 1  * float4_size], b[i + 1  * float4_size], aMean_4, bMean_4);
-      covariance = calc_covariance_float4(covariance, a[i + 2  * float4_size], b[i + 2  * float4_size], aMean_4, bMean_4);
-      covariance = calc_covariance_float4(covariance, a[i + 3  * float4_size], b[i + 3  * float4_size], aMean_4, bMean_4);
+      // covariance
+      covariance_4 = calc_covariance_float4(covariance_4, a[i],                    b[i]                   , aMean_4, bMean_4);
+      covariance_4 = calc_covariance_float4(covariance_4, a[i + 1  * float4_size], b[i + 1  * float4_size], aMean_4, bMean_4);
+      covariance_4 = calc_covariance_float4(covariance_4, a[i + 2  * float4_size], b[i + 2  * float4_size], aMean_4, bMean_4);
+      covariance_4 = calc_covariance_float4(covariance_4, a[i + 3  * float4_size], b[i + 3  * float4_size], aMean_4, bMean_4);
+
+      // a standard deviation
+      aSquare_4 = add_stddev_square_float4(aSquare_4, calc_stddev_square_float4(a[i]                  , aMean_4));
+      aSquare_4 = add_stddev_square_float4(aSquare_4, calc_stddev_square_float4(a[i + 1 * float4_size], aMean_4));
+      aSquare_4 = add_stddev_square_float4(aSquare_4, calc_stddev_square_float4(a[i + 2 * float4_size], aMean_4));
+      aSquare_4 = add_stddev_square_float4(aSquare_4, calc_stddev_square_float4(a[i + 3 * float4_size], aMean_4));
     }
 
     // calculate any remaining data
-    float covarianceRemaining = float4_to_float(covariance);
+    float covariance = float4_to_float(covariance_4);
+    float aSquare = float4_to_float(aSquare_4);
 
     for (; i < sampleSize; i++) {
-      covarianceRemaining = calc_covariance(covarianceRemaining, a[i], b[i], aMean, bMean);
+      covariance = calc_covariance(covariance, a[i], b[i], aMean, bMean);
+      aSquare = add_stddev_square(aSquare, aMean);
     }
 
-    return sum_covariance(covarianceRemaining, sampleSize) / (aStdFloat * bStdFloat);
+    return sum_covariance(covariance, sampleSize) / (calc_stddev(aSquare, sampleSize) * bStdFloat);
 }
 
 // calculates the standard deviations of data at each offset
-void calc_std(float *in, float *out, float meanSum, long dataLength, long sampleLength) {
+float calc_std(float *in, float meanSum, long dataLength, long sampleLength) {
     int loopUnroll = 4*float4_size;
 
-    float4 square_4 = new_float4;
+    float4 square_4 = float_to_float4(0);
     float4 mean_4 = div_float4(float_to_float4(meanSum), float_to_float4(sampleLength));
 
     // get the first square and use simd
@@ -142,34 +151,15 @@ void calc_std(float *in, float *out, float meanSum, long dataLength, long sample
     }
 
     // calculate remaining elements for first square
-    out[0] = float4_to_float(square_4);
+    float square = float4_to_float(square_4);
     float mean = meanSum / sampleLength;
 
     for (; i < sampleLength; i++) {
-      out[0] = add_stddev_square(out[0], calc_stddev_square(in[i], mean));
-    }
-
-    // calculate the rest of the squares
-    for (i = 1; i + sampleLength < dataLength; i++) {
-      out[i] = out[i - 1];
-
-      // subtract the previous square
-      out[i] = sub_stddev_square(out[i], calc_stddev_square(in[i], mean));
-
-      // increment the mean
-      meanSum -= in[i];
-      meanSum += in[i + sampleLength];
-      mean = meanSum / sampleLength;
-
-      // add the next square
-      out[i] = add_stddev_square(out[i], calc_stddev_square(in[i + sampleLength], mean));
-
-      // finalize the standard deviation for the previous element
-      out[i - 1] = calc_stddev(out[i - 1], sampleLength);
+      square = add_stddev_square(square, calc_stddev_square(in[i], mean));
     }
 
     // finalize the last element's standard deviation
-    out[i - 1] = calc_stddev(out[i - 1], sampleLength);
+    return calc_stddev(square, sampleLength);
 }
 
 void sum_channels(float *data, long samples, int channels) {
@@ -180,7 +170,7 @@ void sum_channels(float *data, long samples, int channels) {
 
 double sum_for_mean(float *data, long length) {
     int loopUnroll = 4*float4_size;
-    float4 sumFloat4 = new_float4;
+    float4 sumFloat4 = float_to_float4(0);
 
     int i;
     for (
@@ -216,13 +206,9 @@ void correlate(
     long sampleSize, // amount of data to compare on b
     long increment, // initial granularity search size
     float *bestCorrelation, // stores best correlation
-    long *bestSampleOffset, // stores sample offset of a where b has the best correlation
-    float *aStdDevArr
+    long *bestSampleOffset // stores sample offset of a where b has the best correlation
   )
 {
-    sampleSize = min(min(aSamples, bSamples), sampleSize); // base data length must be >= sample size
-    sampleSize -= sampleSize % float4_size; // sample size must be divisible by the size of the vector
-
     // sum together to normalize audio with differing channels
     sum_channels(a, aSamples, aChannels);
     sum_channels(b, bSamples, bChannels);
@@ -239,12 +225,10 @@ void correlate(
     // get the standard deviation arrays
     double aSum = sum_for_mean(a, sampleSize);
     float aMean;
-    calc_std(a, aStdDevArr, aSum, aSamples, sampleSize);
 
     float bSum = sum_for_mean(b, sampleSize);
     float bMean = bSum / sampleSize;
-    float bStd;
-    calc_std(b, &bStd, bSum, sampleSize, sampleSize);
+    float bStd = calc_std(b, bSum, sampleSize, sampleSize);
 
     for (long aOffset = aOffsetStart; aOffset < aOffsetEnd; aOffset += increment) {
       aMean = aSum / sampleSize;
@@ -252,7 +236,7 @@ void correlate(
       aSum -= (double) a[aOffset];
       aSum += (double) a[aOffset + sampleSize];
 
-      correlation = calc_correlation(a + aOffset, b, aMean, bMean, aStdDevArr[aOffset], bStd, sampleSize);
+      correlation = calc_correlation(a + aOffset, b, aMean, bMean, bStd, sampleSize);
 
       if (*bestCorrelation < correlation) {
         *bestCorrelation = correlation;
@@ -273,7 +257,7 @@ void correlate(
         aSum -= (double) a[aOffset];
         aSum += (double) a[aOffset + sampleSize];
   
-        correlation = calc_correlation(a + aOffset, b, aMean, bMean, aStdDevArr[aOffset], bStd, sampleSize);
+        correlation = calc_correlation(a + aOffset, b, aMean, bMean, bStd, sampleSize);
   
         if (*bestCorrelation < correlation) {
           *bestCorrelation = correlation;
