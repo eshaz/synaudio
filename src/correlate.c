@@ -131,11 +131,11 @@ float calc_correlation(float *a, float *b, float aMean, float bMean, float bStdF
 }
 
 // calculates the standard deviations of data at each offset
-float calc_std(float *in, float meanSum, long dataLength, long sampleLength) {
+float calc_std(float *in, double meanSum, long dataLength, long sampleLength) {
     int loopUnroll = 4*float4_size;
 
     float4 square_4 = float_to_float4(0);
-    float4 mean_4 = div_float4(float_to_float4(meanSum), float_to_float4(sampleLength));
+    float4 mean_4 = float_to_float4(meanSum / sampleLength);
 
     // get the first square and use simd
     int i = 0;
@@ -144,7 +144,7 @@ float calc_std(float *in, float meanSum, long dataLength, long sampleLength) {
       i < sampleLength - loopUnroll;
       i+=loopUnroll
     ) {
-      square_4 = add_stddev_square_float4(square_4, calc_stddev_square_float4(in[i], mean_4));
+      square_4 = add_stddev_square_float4(square_4, calc_stddev_square_float4(in[i]                  , mean_4));
       square_4 = add_stddev_square_float4(square_4, calc_stddev_square_float4(in[i + 1 * float4_size], mean_4));
       square_4 = add_stddev_square_float4(square_4, calc_stddev_square_float4(in[i + 2 * float4_size], mean_4));
       square_4 = add_stddev_square_float4(square_4, calc_stddev_square_float4(in[i + 3 * float4_size], mean_4));
@@ -169,28 +169,12 @@ void sum_channels(float *data, long samples, int channels) {
 }
 
 double sum_for_mean(float *data, long length) {
-    int loopUnroll = 4*float4_size;
-    float4 sumFloat4 = float_to_float4(0);
+    double meanSum = 0;
 
-    int i;
-    for (
-      i = 0;
-      i < length - loopUnroll;
-      i+=loopUnroll
-    ) {
-      sumFloat4 = sum_float4(sumFloat4, data[i]);
-      sumFloat4 = sum_float4(sumFloat4, data[i + 1 * float4_size]);
-      sumFloat4 = sum_float4(sumFloat4, data[i + 2 * float4_size]);
-      sumFloat4 = sum_float4(sumFloat4, data[i + 3 * float4_size]);
-    }
+    for (int i = 0; i < length; i++)
+      meanSum = sum(meanSum, data[i]);
 
-    float result = float4_to_float(sumFloat4);
-
-    for (; i < length; i++) {
-      result = sum(result, data[i]);
-    }
-
-    return result;
+    return meanSum;
 }
 
 // finds the best correlation point between two sets of audio data
@@ -226,15 +210,15 @@ void correlate(
     double aSum = sum_for_mean(a, sampleSize);
     float aMean;
 
-    float bSum = sum_for_mean(b, sampleSize);
+    double bSum = sum_for_mean(b, sampleSize);
     float bMean = bSum / sampleSize;
     float bStd = calc_std(b, bSum, sampleSize, sampleSize);
 
     for (long aOffset = aOffsetStart; aOffset < aOffsetEnd; aOffset += increment) {
       aMean = aSum / sampleSize;
       // shift mean sum up one increment
-      aSum -= (double) a[aOffset];
-      aSum += (double) a[aOffset + sampleSize];
+      aSum -= a[aOffset];
+      aSum += a[aOffset + sampleSize];
 
       correlation = calc_correlation(a + aOffset, b, aMean, bMean, bStd, sampleSize);
 
@@ -254,8 +238,8 @@ void correlate(
       for (long aOffset = aOffsetStart; aOffset < aOffsetEnd; aOffset++) {
         aMean = aSum / sampleSize;
         // shift mean sum up one element
-        aSum -= (double) a[aOffset];
-        aSum += (double) a[aOffset + sampleSize];
+        aSum -= a[aOffset];
+        aSum += a[aOffset + sampleSize];
   
         correlation = calc_correlation(a + aOffset, b, aMean, bMean, bStd, sampleSize);
   
