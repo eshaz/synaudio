@@ -27,8 +27,8 @@
 #define calc_stddev(squareSums, sampleSize) __builtin_sqrt(squareSums / ((float) sampleSize - 1))
 #define add_stddev_square(squareSums, square) squareSums + square
 
-#define sum(acc, data) acc + data
-#define div(a, b) a / b
+#define sum_and_store(a, b) a += b
+#define sub_and_store(a, b) a -= b
 
 #ifdef WASM_SIMD
 
@@ -63,8 +63,8 @@ typedef float float4 __attribute__((__vector_size__(16)));
     )
 #define add_stddev_square_float4(squareSums, square) wasm_f32x4_add(squareSums, square)
 
-#define sum_float4(acc, data) wasm_f32x4_add(acc, wasm_v128_load(&data))
-#define div_float4(a, b) wasm_f32x4_div(a, b)
+#define sum_and_store_float4(a, b) wasm_v128_store(&a, wasm_f32x4_add(wasm_v128_load(&a), wasm_v128_load(&b)))
+#define sub_and_store_float4(a, b) wasm_v128_store(&a, wasm_f32x4_sub(wasm_v128_load(&a), wasm_v128_load(&b)))
 
 #else
 
@@ -80,8 +80,8 @@ typedef float float4;
 #define calc_stddev_square_float4 calc_stddev_square
 #define add_stddev_square_float4 add_stddev_square
 
-#define sum_float4 sum
-#define div_float4 div
+#define sum_and_store_float4 sum_and_store
+#define sub_and_store_float4 sub_and_store
 
 #endif
 
@@ -156,23 +156,45 @@ float calc_std(float *in, double meanSum, long dataLength, long sampleLength) {
 }
 
 void sum_channels(float *data, long samples, int channels) {
-    for (int i = 0; i < channels - 1; i++)
-      for (long j = 0; j < samples; j++)
-        data[j] += data[j+i*samples];
+    for (int i = 0; i < channels - 1; i++) {
+      int loopUnroll = 4*float4_size;
+
+      long j = 0;
+      for (; j < samples - loopUnroll; j += loopUnroll) {
+        sum_and_store_float4(data[j], data[j+i*samples]);
+        sum_and_store_float4(data[j + 1 * float4_size], data[(j + 1 * float4_size)+i*samples]);
+        sum_and_store_float4(data[j + 2 * float4_size], data[(j + 2 * float4_size)+i*samples]);
+        sum_and_store_float4(data[j + 3 * float4_size], data[(j + 3 * float4_size)+i*samples]);
+      }
+
+      for (; j < samples; j++)
+        sum_and_store(data[j], data[j+i*samples]);
+    }
 }
 
 double sum_for_mean(float *data, long length) {
     double meanSum = 0;
 
     for (long i = 0; i < length; i++)
-      meanSum = sum(meanSum, data[i]);
+      meanSum += data[i];
 
     return meanSum;
 }
 
-void subtract_mean(float* data, float mean, long length) {
-  for (long i = 0; i < length; i++)
-    data[i] = calc_covariance_sub_data_and_mean(data[i], mean);
+void subtract_mean(float* data, float mean, long samples) {
+    int loopUnroll = 4*float4_size;
+    float4 mean_4 = float_to_float4(mean);
+
+    long i = 0;
+    for (; i < samples - loopUnroll; i += loopUnroll) {
+      sub_and_store_float4(data[i],                   mean_4);
+      sub_and_store_float4(data[i + 1 * float4_size], mean_4);
+      sub_and_store_float4(data[i + 2 * float4_size], mean_4);
+      sub_and_store_float4(data[i + 3 * float4_size], mean_4);
+    }
+
+    for (; i < samples; i++)
+      sub_and_store(data[i], mean);
 }
 
 // finds the best correlation point between two sets of audio data
