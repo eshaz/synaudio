@@ -155,7 +155,7 @@ export default class SynAudio {
         const initialGranularity = this._getInitialGranularity(a, b);
 
         const memory = new WebAssembly.Memory({
-          ["initial"]:
+          initial:
             ((a.samplesDecoded * a.channelData.length +
               b.samplesDecoded * b.channelData.length) *
               floatByteLength) /
@@ -166,7 +166,7 @@ export default class SynAudio {
         return this._module
           .then((module) =>
             WebAssembly.instantiate(module, {
-              ["env"]: { memory },
+              env: { memory },
             })
           )
           .then(({ exports }) => {

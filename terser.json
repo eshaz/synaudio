@@ -28,7 +28,9 @@
         "channelData",
         "samplesDecoded",
         "correlation",
-        "sampleOffset"
+        "sampleOffset",
+        "initial",
+        "env"
       ]
     }
   },
