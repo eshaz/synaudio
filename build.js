@@ -84,6 +84,7 @@ const build = async (simdPath, scalarPath) => {
     bundle.write(rollupOutputConfig),
     fs.writeFile(distPath + terserOutput, minified.code),
     fs.writeFile(distPath + terserOutput + ".map", minified.map),
+    fs.writeFile(demoPath + rollupOutput, bundleOutput.code),
     fs.writeFile(demoPath + terserOutput, minified.code),
     fs.writeFile(demoPath + terserOutput + ".map", minified.map),
   ]);

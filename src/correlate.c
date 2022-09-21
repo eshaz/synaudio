@@ -92,17 +92,17 @@ float calc_correlation(float *a, float *b, float aMean, float bStdFloat, long sa
     float4 aSquare_4 = float_to_float4(0);
     float4 aMean_4 = float_to_float4(aMean);
 
-    int i = 0;
+    long i = 0;
     for (
       ;
       i < sampleSize - loopUnroll;
       i+=loopUnroll
     ) {
       // covariance
-      covariance_4 = calc_covariance_float4(covariance_4, a[i],                    b[i]                   , aMean_4);
-      covariance_4 = calc_covariance_float4(covariance_4, a[i + 1  * float4_size], b[i + 1  * float4_size], aMean_4);
-      covariance_4 = calc_covariance_float4(covariance_4, a[i + 2  * float4_size], b[i + 2  * float4_size], aMean_4);
-      covariance_4 = calc_covariance_float4(covariance_4, a[i + 3  * float4_size], b[i + 3  * float4_size], aMean_4);
+      covariance_4 = calc_covariance_float4(covariance_4, a[i],                   b[i]                  , aMean_4);
+      covariance_4 = calc_covariance_float4(covariance_4, a[i + 1 * float4_size], b[i + 1 * float4_size], aMean_4);
+      covariance_4 = calc_covariance_float4(covariance_4, a[i + 2 * float4_size], b[i + 2 * float4_size], aMean_4);
+      covariance_4 = calc_covariance_float4(covariance_4, a[i + 3 * float4_size], b[i + 3 * float4_size], aMean_4);
 
       // a standard deviation
       aSquare_4 = add_stddev_square_float4(aSquare_4, calc_stddev_square_float4(a[i]                  , aMean_4));
@@ -117,7 +117,7 @@ float calc_correlation(float *a, float *b, float aMean, float bStdFloat, long sa
 
     for (; i < sampleSize; i++) {
       covariance = calc_covariance(covariance, a[i], b[i], aMean);
-      aSquare = add_stddev_square(aSquare, aMean);
+      aSquare = add_stddev_square(aSquare, calc_stddev_square(a[i], aMean));
     }
 
     return sum_covariance(covariance, sampleSize) / (calc_stddev(aSquare, sampleSize) * bStdFloat);
@@ -147,9 +147,8 @@ float calc_std(float *in, double meanSum, long dataLength, long sampleLength) {
     float square = float4_to_float(square_4);
     float mean = meanSum / sampleLength;
 
-    for (; i < sampleLength; i++) {
+    for (; i < sampleLength; i++)
       square = add_stddev_square(square, calc_stddev_square(in[i], mean));
-    }
 
     // finalize the last element's standard deviation
     return calc_stddev(square, sampleLength);
