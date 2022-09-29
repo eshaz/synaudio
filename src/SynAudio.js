@@ -355,7 +355,68 @@ export default class SynAudio {
 
     await Promise.all(workers);
 
+    // detect and remove cycles
+    const path = new Map();
+    const visited = new Set();
+    const cycles = [];
+
+    const traverseCycle = (base) => {
+      for (const comp of Object.keys(byBaseAndComparison[base])) {
+        if (path.has(base + comp)) return true;
+
+        if (!visited.has(base + comp)) {
+          visited.add(base + comp);
+
+          path.set(base + comp, [base, comp]);
+
+          const cycleDetected = traverseCycle(comp);
+
+          if (cycleDetected) {
+            const fullPath = [...path.values()];
+            const cycle = fullPath.slice(
+              fullPath.findIndex((val) => val[0] === comp)
+            );
+
+            const baseStart = cycle[0][0];
+            const compStart = cycle[0][1];
+
+            const start = byBaseAndComparison[baseStart][compStart];
+            const end = byBaseAndComparison[base][comp];
+
+            // weighting
+            if (
+              start.correlation < end.correlation ||
+              start.baseSamplesDecoded < end.baseSamplesDecoded ||
+              start.sampleOffset < end.sampleOffset
+            ) {
+              delete byBaseAndComparison[baseStart][compStart];
+            } else {
+              delete byBaseAndComparison[base][comp];
+            }
+
+            cycles.push(cycle);
+            /*
+            if (start.cycles) start.cycles.push(cycle);
+            else start.cycle = [cycle];
+
+            if (end.cycles) end.cycles.push(cycle);
+            else end.cycle = [cycle];
+*/
+          }
+
+          path.delete(base + comp);
+        }
+      }
+    };
+
+    for (const [base, comps] of Object.entries(byBaseAndComparison)) {
+      traverseCycle(base);
+    }
+
     // connect gaps (correlation that is shared among a common base)
+
+    //console.log(JSON.stringify(byBaseAndComparison, null, 2));
+    //console.log(cycles);
 
     // transitive reduction
     // https://stackoverflow.com/questions/1690953/transitive-reduction-algorithm-pseudocode
@@ -383,67 +444,8 @@ export default class SynAudio {
               }
             }
 
-    // detect and remove cycles
-    const path = new Map();
-    const visited = new Set();
-    const cycles = [];
-
-    const traverseCycle = (base) => {
-      Object.entries(byBaseAndComparison[base])
-        .sort((a, b) => a[1].sampleOffset - b[1].sampleOffset)
-        .forEach(([comp, result]) => {
-          if (path.has(base + comp)) return true;
-
-          if (!visited.has(base + comp)) {
-            visited.add(base + comp);
-
-            path.set(base + comp, [base, comp]);
-
-            const cycleDetected = traverseCycle(comp);
-
-            if (cycleDetected) {
-              const fullPath = [...path.values()];
-              const cycle = fullPath.slice(
-                fullPath.findIndex((val) => val[0] === comp)
-              );
-
-              const baseStart = cycle[0][0];
-              const compStart = cycle[0][1];
-
-              const start = byBaseAndComparison[baseStart][compStart];
-              const end = byBaseAndComparison[base][comp];
-
-              // weighting
-              if (
-                start.correlation < end.correlation ||
-                start.baseSamplesDecoded < end.baseSamplesDecoded ||
-                start.sampleOffset < end.sampleOffset
-              ) {
-                delete byBaseAndComparison[baseStart][compStart];
-              } else {
-                delete byBaseAndComparison[base][comp];
-              }
-
-              cycles.push(cycle);
-
-              if (start.cycles) start.cycles.push(cycle);
-              else start.cycle = [cycle];
-
-              if (end.cycles) end.cycles.push(cycle);
-              else end.cycle = [cycle];
-            }
-
-            path.delete(base + comp);
-          }
-        });
-    };
-
-    for (const [base, comps] of Object.entries(byBaseAndComparison)) {
-      traverseCycle(base);
-    }
-
     // traverse and collapse the graph into 2D
-    const visitedNodes = new Set();
+    /*const visitedNodes = new Set();
     const results = {};
     const list = {};
 
@@ -457,15 +459,18 @@ export default class SynAudio {
             sampleOffsetFromRoot: sampleOffsetFromRoot + result.sampleOffset,
           };
 
-          if (results[root][comp]) {
-            results[root][comp].additionalMatches.push(match);
-          } else {
+          if (!results[root][comp]) {
             results[root][comp] = {
-              name: comp,
               samplesDecoded: result.compSamplesDecoded,
               sampleOffset: sampleOffsetFromRoot + result.sampleOffset,
-              additionalMatches: [match],
+              //additionalMatches: [],
             };
+          }
+
+          if (root === base) {
+            results[root][comp].correlation = match.correlation;
+          } else {
+            //results[root][comp].additionalMatches.push(match);
           }
 
           visitedNodes.add(base + comp);
@@ -490,11 +495,50 @@ export default class SynAudio {
         delete list[base];
         //delete results[base];
       }
+    }*/
+
+    const nodes = new Map();
+    const tempMark = new Set();
+    const list = [];
+
+    for (const [base, comps] of Object.entries(byBaseAndComparison))
+      for (const comp of Object.keys(comps))
+        nodes.set(base + comp, [base, comp]);
+
+    const visit = ([base, comp]) => {
+      if (!nodes.has(base + comp)) return;
+      if (tempMark.has(base + comp)) {
+        console.error("cycle detected!!!" + base + " " + comp);
+        return;
+      }
+
+      tempMark.add(base + comp);
+
+      for (const nextComp of Object.keys(byBaseAndComparison[comp]))
+        visit([comp, nextComp]);
+
+      tempMark.delete(base + comp);
+      nodes.delete(base + comp);
+      list.push({
+        base,
+        comp,
+        ...byBaseAndComparison[base][comp],
+      });
+    };
+
+    while (nodes.size) {
+      visit(nodes.values().next().value);
     }
 
+    list.reverse();
+
+    const sorted = list.sort((a, b) => {
+      if (a.base === b.base) return a.sampleOffset - b.sampleOffset;
+      else return 0;
+    });
+
     //console.log(JSON.stringify(byBaseAndComparison, null, 2));
-    console.log(JSON.stringify(list, null, 2));
-    console.log(JSON.stringify(results, null, 2));
-    console.log(JSON.stringify(cycles, null, 2));
+    console.log(JSON.stringify(sorted, null, 2));
+    //console.log(JSON.stringify(results, null, 2));
   }
 }
