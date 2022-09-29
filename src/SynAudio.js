@@ -324,4 +324,177 @@ export default class SynAudio {
   async sync(a, b) {
     return this._instance._sync(a, b);
   }
+
+  async syncMultiple(clips) {
+    // clips {"name of clip": Float32Array[]}
+
+    const correlationThreshold = 0.5;
+
+    const workers = [];
+    const byBaseAndComparison = {};
+
+    for (const [base, baseData] of Object.entries(clips)) {
+      byBaseAndComparison[base] = {};
+
+      for (const [comp, compData] of Object.entries(clips)) {
+        if (base === comp) continue; // prevent reflective reduction
+
+        workers.push(
+          this.syncWorker(baseData, compData).then((correlationResult) => {
+            if (correlationResult.correlation > correlationThreshold) {
+              byBaseAndComparison[base][comp] = {
+                baseSamplesDecoded: baseData.samplesDecoded,
+                compSamplesDecoded: compData.samplesDecoded,
+                ...correlationResult,
+              };
+            }
+          })
+        );
+      }
+    }
+
+    await Promise.all(workers);
+
+    // connect gaps (correlation that is shared among a common base)
+
+    // transitive reduction
+    // https://stackoverflow.com/questions/1690953/transitive-reduction-algorithm-pseudocode
+    // Harry Hsu. "An algorithm for finding a minimal equivalent graph of a digraph.", Journal of the ACM, 22(1):11-16, January 1975.
+    for (const [base, comps] of Object.entries(byBaseAndComparison))
+      for (const [comp] of Object.entries(comps))
+        if (byBaseAndComparison[comp][base])
+          for (const [nextBase] of Object.entries(byBaseAndComparison))
+            if (
+              byBaseAndComparison[comp][nextBase] &&
+              byBaseAndComparison[base][nextBase]
+            ) {
+              const left = byBaseAndComparison[comp][nextBase];
+              const right = byBaseAndComparison[base][nextBase];
+
+              // weighting
+              if (
+                left.correlation < right.correlation ||
+                left.baseSamplesDecoded < right.baseSamplesDecoded ||
+                left.sampleOffset < right.sampleOffset
+              ) {
+                delete byBaseAndComparison[comp][nextBase];
+              } else {
+                delete byBaseAndComparison[base][nextBase];
+              }
+            }
+
+    // detect and remove cycles
+    const path = new Map();
+    const visited = new Set();
+    const cycles = [];
+
+    const traverseCycle = (base) => {
+      Object.entries(byBaseAndComparison[base])
+        .sort((a, b) => a[1].sampleOffset - b[1].sampleOffset)
+        .forEach(([comp, result]) => {
+          if (path.has(base + comp)) return true;
+
+          if (!visited.has(base + comp)) {
+            visited.add(base + comp);
+
+            path.set(base + comp, [base, comp]);
+
+            const cycleDetected = traverseCycle(comp);
+
+            if (cycleDetected) {
+              const fullPath = [...path.values()];
+              const cycle = fullPath.slice(
+                fullPath.findIndex((val) => val[0] === comp)
+              );
+
+              const baseStart = cycle[0][0];
+              const compStart = cycle[0][1];
+
+              const start = byBaseAndComparison[baseStart][compStart];
+              const end = byBaseAndComparison[base][comp];
+
+              // weighting
+              if (
+                start.correlation < end.correlation ||
+                start.baseSamplesDecoded < end.baseSamplesDecoded ||
+                start.sampleOffset < end.sampleOffset
+              ) {
+                delete byBaseAndComparison[baseStart][compStart];
+              } else {
+                delete byBaseAndComparison[base][comp];
+              }
+
+              cycles.push(cycle);
+
+              if (start.cycles) start.cycles.push(cycle);
+              else start.cycle = [cycle];
+
+              if (end.cycles) end.cycles.push(cycle);
+              else end.cycle = [cycle];
+            }
+
+            path.delete(base + comp);
+          }
+        });
+    };
+
+    for (const [base, comps] of Object.entries(byBaseAndComparison)) {
+      traverseCycle(base);
+    }
+
+    // traverse and collapse the graph into 2D
+    const visitedNodes = new Set();
+    const results = {};
+    const list = {};
+
+    const traverseList = (root, base, sampleOffsetFromRoot = 0) => {
+      Object.entries(byBaseAndComparison[base]).forEach(([comp, result]) => {
+        if (!visitedNodes.has(base + comp) && base !== comp) {
+          const match = {
+            name: base,
+            correlation: result.correlation,
+            sampleOffset: result.sampleOffset,
+            sampleOffsetFromRoot: sampleOffsetFromRoot + result.sampleOffset,
+          };
+
+          if (results[root][comp]) {
+            results[root][comp].additionalMatches.push(match);
+          } else {
+            results[root][comp] = {
+              name: comp,
+              samplesDecoded: result.compSamplesDecoded,
+              sampleOffset: sampleOffsetFromRoot + result.sampleOffset,
+              additionalMatches: [match],
+            };
+          }
+
+          visitedNodes.add(base + comp);
+
+          traverseList(root, comp, sampleOffsetFromRoot + result.sampleOffset);
+        }
+      });
+    };
+
+    for (const [base, comps] of Object.entries(byBaseAndComparison)) {
+      list[base] = [];
+      results[base] = {};
+
+      traverseList(base, base);
+
+      list[base] = list[base].sort(
+        (a, b) =>
+          a.sampleOffset - b.sampleOffset || b.samplesDecoded - a.samplesDecoded
+      );
+
+      if (list[base].length === 0) {
+        delete list[base];
+        //delete results[base];
+      }
+    }
+
+    //console.log(JSON.stringify(byBaseAndComparison, null, 2));
+    console.log(JSON.stringify(list, null, 2));
+    console.log(JSON.stringify(results, null, 2));
+    console.log(JSON.stringify(cycles, null, 2));
+  }
 }
