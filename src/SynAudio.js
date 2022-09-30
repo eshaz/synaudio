@@ -331,10 +331,10 @@ export default class SynAudio {
     const correlationThreshold = 0.5;
 
     const workers = [];
-    const byBaseAndComparison = {};
+    const graph = {};
 
     for (const [base, baseData] of Object.entries(clips)) {
-      byBaseAndComparison[base] = {};
+      graph[base] = {};
 
       for (const [comp, compData] of Object.entries(clips)) {
         if (base === comp) continue; // prevent reflective reduction
@@ -342,7 +342,7 @@ export default class SynAudio {
         workers.push(
           this.syncWorker(baseData, compData).then((correlationResult) => {
             if (correlationResult.correlation > correlationThreshold) {
-              byBaseAndComparison[base][comp] = {
+              graph[base][comp] = {
                 baseSamplesDecoded: baseData.samplesDecoded,
                 compSamplesDecoded: compData.samplesDecoded,
                 ...correlationResult,
@@ -355,13 +355,19 @@ export default class SynAudio {
 
     await Promise.all(workers);
 
+    // false for a
+    // true for b
+    const weighResults = (a, b) =>
+      a.correlation < b.correlation ||
+      a.baseSamplesDecoded < b.baseSamplesDecoded ||
+      a.sampleOffset < b.sampleOffset;
+
     // detect and remove cycles
     const path = new Map();
     const visited = new Set();
-    const cycles = [];
 
-    const traverseCycle = (base) => {
-      for (const comp of Object.keys(byBaseAndComparison[base])) {
+    const detectCycle = (base) => {
+      for (const comp of Object.keys(graph[base])) {
         if (path.has(base + comp)) return true;
 
         if (!visited.has(base + comp)) {
@@ -369,9 +375,7 @@ export default class SynAudio {
 
           path.set(base + comp, [base, comp]);
 
-          const cycleDetected = traverseCycle(comp);
-
-          if (cycleDetected) {
+          if (detectCycle(comp)) {
             const fullPath = [...path.values()];
             const cycle = fullPath.slice(
               fullPath.findIndex((val) => val[0] === comp)
@@ -380,28 +384,11 @@ export default class SynAudio {
             const baseStart = cycle[0][0];
             const compStart = cycle[0][1];
 
-            const start = byBaseAndComparison[baseStart][compStart];
-            const end = byBaseAndComparison[base][comp];
-
-            // weighting
-            if (
-              start.correlation < end.correlation ||
-              start.baseSamplesDecoded < end.baseSamplesDecoded ||
-              start.sampleOffset < end.sampleOffset
-            ) {
-              delete byBaseAndComparison[baseStart][compStart];
+            if (weighResults(graph[baseStart][compStart], graph[base][comp])) {
+              delete graph[baseStart][compStart];
             } else {
-              delete byBaseAndComparison[base][comp];
+              delete graph[base][comp];
             }
-
-            cycles.push(cycle);
-            /*
-            if (start.cycles) start.cycles.push(cycle);
-            else start.cycle = [cycle];
-
-            if (end.cycles) end.cycles.push(cycle);
-            else end.cycle = [cycle];
-*/
           }
 
           path.delete(base + comp);
@@ -409,136 +396,87 @@ export default class SynAudio {
       }
     };
 
-    for (const [base, comps] of Object.entries(byBaseAndComparison)) {
-      traverseCycle(base);
-    }
+    for (const [base, comps] of Object.entries(graph)) detectCycle(base);
 
-    // connect gaps (correlation that is shared among a common base)
-
-    //console.log(JSON.stringify(byBaseAndComparison, null, 2));
-    //console.log(cycles);
-
-    // transitive reduction
-    // https://stackoverflow.com/questions/1690953/transitive-reduction-algorithm-pseudocode
-    // Harry Hsu. "An algorithm for finding a minimal equivalent graph of a digraph.", Journal of the ACM, 22(1):11-16, January 1975.
-    for (const [base, comps] of Object.entries(byBaseAndComparison))
-      for (const [comp] of Object.entries(comps))
-        if (byBaseAndComparison[comp][base])
-          for (const [nextBase] of Object.entries(byBaseAndComparison))
-            if (
-              byBaseAndComparison[comp][nextBase] &&
-              byBaseAndComparison[base][nextBase]
-            ) {
-              const left = byBaseAndComparison[comp][nextBase];
-              const right = byBaseAndComparison[base][nextBase];
-
-              // weighting
-              if (
-                left.correlation < right.correlation ||
-                left.baseSamplesDecoded < right.baseSamplesDecoded ||
-                left.sampleOffset < right.sampleOffset
-              ) {
-                delete byBaseAndComparison[comp][nextBase];
-              } else {
-                delete byBaseAndComparison[base][nextBase];
-              }
-            }
-
-    // traverse and collapse the graph into 2D
-    /*const visitedNodes = new Set();
-    const results = {};
-    const list = {};
-
-    const traverseList = (root, base, sampleOffsetFromRoot = 0) => {
-      Object.entries(byBaseAndComparison[base]).forEach(([comp, result]) => {
-        if (!visitedNodes.has(base + comp) && base !== comp) {
-          const match = {
-            name: base,
-            correlation: result.correlation,
-            sampleOffset: result.sampleOffset,
-            sampleOffsetFromRoot: sampleOffsetFromRoot + result.sampleOffset,
-          };
-
-          if (!results[root][comp]) {
-            results[root][comp] = {
-              samplesDecoded: result.compSamplesDecoded,
-              sampleOffset: sampleOffsetFromRoot + result.sampleOffset,
-              //additionalMatches: [],
-            };
-          }
-
-          if (root === base) {
-            results[root][comp].correlation = match.correlation;
-          } else {
-            //results[root][comp].additionalMatches.push(match);
-          }
-
-          visitedNodes.add(base + comp);
-
-          traverseList(root, comp, sampleOffsetFromRoot + result.sampleOffset);
-        }
-      });
-    };
-
-    for (const [base, comps] of Object.entries(byBaseAndComparison)) {
-      list[base] = [];
-      results[base] = {};
-
-      traverseList(base, base);
-
-      list[base] = list[base].sort(
-        (a, b) =>
-          a.sampleOffset - b.sampleOffset || b.samplesDecoded - a.samplesDecoded
-      );
-
-      if (list[base].length === 0) {
-        delete list[base];
-        //delete results[base];
-      }
-    }*/
-
+    // sort the graph
+    // Tarjan, Robert E. (1976), "Edge-disjoint spanning trees and depth-first search", Acta Informatica, 6 (2): 171–185, doi:10.1007/BF00268499, S2CID 12044793
     const nodes = new Map();
     const tempMark = new Set();
-    const list = [];
+    let sorted = [];
 
-    for (const [base, comps] of Object.entries(byBaseAndComparison))
+    for (const [base, comps] of Object.entries(graph))
       for (const comp of Object.keys(comps))
         nodes.set(base + comp, [base, comp]);
 
     const visit = ([base, comp]) => {
       if (!nodes.has(base + comp)) return;
-      if (tempMark.has(base + comp)) {
-        console.error("cycle detected!!!" + base + " " + comp);
-        return;
-      }
+      if (tempMark.has(base + comp)) return; // cycle detected, there is a bug in NodeJS that doesn't immediately delete references
 
       tempMark.add(base + comp);
 
-      for (const nextComp of Object.keys(byBaseAndComparison[comp]))
-        visit([comp, nextComp]);
+      for (const nextComp of Object.keys(graph[comp])) visit([comp, nextComp]);
 
       tempMark.delete(base + comp);
       nodes.delete(base + comp);
-      list.push({
+      sorted.push({
         base,
         comp,
-        ...byBaseAndComparison[base][comp],
+        ...graph[base][comp],
       });
     };
 
-    while (nodes.size) {
-      visit(nodes.values().next().value);
+    while (nodes.size) visit(nodes.values().next().value);
+
+    // calculate the total offset for each linear path
+    const visitedNodes = new Set();
+    const results = [];
+    let idx = 0;
+
+    const buildLinearPath = (root, base, sampleOffsetFromRoot = 0) => {
+      Object.entries(graph[base]).forEach(([comp, result]) => {
+        if (!visitedNodes.has(base + comp) && base !== comp) {
+          visitedNodes.add(base + comp);
+
+          if (!results[idx])
+            results[idx] = {
+              [root]: { ...result, sampleOffsetFromRoot: 0 },
+            };
+
+          if (!(results[idx][comp] && weighResults(results[idx][comp], result)))
+            results[idx][comp] = {
+              ...result,
+              sampleOffsetFromRoot: sampleOffsetFromRoot + result.sampleOffset,
+            };
+
+          buildLinearPath(
+            root,
+            comp,
+            sampleOffsetFromRoot + result.sampleOffset
+          );
+        }
+      });
+    };
+
+    for (let i = sorted.length - 1; i >= 0; i--) {
+      const match = sorted[i];
+
+      buildLinearPath(match.base, match.base);
+      if (results[idx]) {
+        // transform into sorted array
+        results[idx] = Object.entries(results[idx])
+          .map(([clip, result], j) => ({
+            clip,
+            ...(j === 0 ? {} : { correlation: result.correlation }),
+            sampleOffset: result.sampleOffsetFromRoot,
+          }))
+          .sort((a, b) => a.sampleOffset - b.sampleOffset);
+
+        idx++;
+      }
     }
 
-    list.reverse();
+    console.log(JSON.stringify(results, null, 2));
 
-    const sorted = list.sort((a, b) => {
-      if (a.base === b.base) return a.sampleOffset - b.sampleOffset;
-      else return 0;
-    });
-
-    //console.log(JSON.stringify(byBaseAndComparison, null, 2));
-    console.log(JSON.stringify(sorted, null, 2));
-    //console.log(JSON.stringify(results, null, 2));
+    return results;
   }
 }
