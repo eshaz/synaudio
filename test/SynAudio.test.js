@@ -1145,22 +1145,22 @@ describe("SynAudio", () => {
           },
           {
             name: "cut_287549_Mpeg",
-            correlation: 0.9885798096656799,
+            correlation: 0.9897415637969971,
             sampleOffset: 286973,
           },
           {
             name: "cut_312782_32_Mpeg",
-            correlation: 0.9569606184959412,
+            correlation: 0.957695484161377,
             sampleOffset: 312206,
           },
           {
             name: "cut_1601425_Mpeg",
-            correlation: 0.9557035565376282,
+            correlation: 0.9872578382492065,
             sampleOffset: 1600849,
           },
           {
             name: "cut_2450800_Mpeg",
-            correlation: 0.9846370220184326,
+            correlation: 0.9868547916412354,
             sampleOffset: 2450224,
           },
         ],
@@ -1193,18 +1193,13 @@ describe("SynAudio", () => {
       expect(result).toEqual([
         [
           {
-            name: "fullMpeg",
+            name: "fullMpeg2",
             sampleOffset: 0,
           },
           {
-            name: "fullMpeg2",
+            name: "fullMpeg",
             correlation: 1,
             sampleOffset: 0,
-          },
-          {
-            name: "cut_194648_2_Mpeg",
-            correlation: 0.9542577862739563,
-            sampleOffset: 194072,
           },
           {
             name: "cut_194648_32_Mpeg",
@@ -1213,27 +1208,32 @@ describe("SynAudio", () => {
           },
           {
             name: "cut_194648_Mpeg",
-            correlation: 0.9542577862739563,
+            correlation: 0.9937149882316589,
+            sampleOffset: 194072,
+          },
+          {
+            name: "cut_194648_2_Mpeg",
+            correlation: 0.9999999403953552,
             sampleOffset: 194072,
           },
           {
             name: "cut_287549_Mpeg",
-            correlation: 0.9637637734413147,
+            correlation: 0.9897415637969971,
             sampleOffset: 286973,
           },
           {
             name: "cut_312782_32_Mpeg",
-            correlation: 0.9569606184959412,
+            correlation: 0.957695484161377,
             sampleOffset: 312206,
           },
           {
             name: "cut_1601425_Mpeg",
-            correlation: 0.9557035565376282,
+            correlation: 0.9872578382492065,
             sampleOffset: 1600849,
           },
           {
             name: "cut_2450800_Mpeg",
-            correlation: 0.9846370220184326,
+            correlation: 0.9868547916412354,
             sampleOffset: 2450224,
           },
         ],
@@ -1263,17 +1263,6 @@ describe("SynAudio", () => {
       expect(result).toEqual([
         [
           {
-            name: "cut_194648_Mpeg",
-            sampleOffset: 0,
-          },
-          {
-            name: "cut_287549_Mpeg",
-            correlation: 0.9885798096656799,
-            sampleOffset: 92901,
-          },
-        ],
-        [
-          {
             name: "cut_1601425_Mpeg",
             sampleOffset: 0,
           },
@@ -1281,6 +1270,17 @@ describe("SynAudio", () => {
             name: "cut_2450800_Mpeg",
             correlation: 0.9846370220184326,
             sampleOffset: 849375,
+          },
+        ],
+        [
+          {
+            name: "cut_194648_Mpeg",
+            sampleOffset: 0,
+          },
+          {
+            name: "cut_287549_Mpeg",
+            correlation: 0.9885798096656799,
+            sampleOffset: 92901,
           },
         ],
       ]);

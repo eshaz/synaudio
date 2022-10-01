@@ -327,151 +327,134 @@ export default class SynAudio {
 
   async syncMultiple(clips, correlationThreshold = 0.5) {
     const workers = [];
-    const graph = {};
+    const graph = [];
 
-    for (const base of clips) {
-      graph[base.name] = {};
+    for (let i = 0; i < clips.length; i++) graph.push({ vertex: {} });
 
-      for (const comp of clips) {
-        if (base.name === comp.name) continue; // prevent reflective reduction
+    for (let v = 0; v < clips.length; v++) {
+      const vertexClip = clips[v];
+      const vertex = graph[v].vertex;
+
+      vertex.name = vertexClip.name;
+      vertex.samplesDecoded = vertexClip.data.samplesDecoded;
+      vertex.edges = new Set();
+
+      for (let e = 0; e < clips.length; e++) {
+        if (v === e) continue;
+
+        const edgeClip = clips[e];
+        const edge = graph[e];
 
         workers.push(
-          this.syncWorker(base.data, comp.data).then((correlationResult) => {
-            if (correlationResult.correlation > correlationThreshold) {
-              graph[base.name][comp.name] = {
-                baseSamplesDecoded: base.data.samplesDecoded,
-                compSamplesDecoded: comp.data.samplesDecoded,
-                ...correlationResult,
-              };
+          this.syncWorker(vertexClip.data, edgeClip.data).then(
+            (correlationResult) => {
+              if (correlationResult.correlation > correlationThreshold) {
+                vertex.edges.add({
+                  parent: vertex,
+                  vertex: edge.vertex,
+                  samplesDecoded: edgeClip.data.samplesDecoded,
+                  ...correlationResult,
+                });
+              }
             }
-          })
+          )
         );
       }
     }
 
     await Promise.all(workers);
 
-    // false for a
-    // true for b
-    const weighResults = (a, b) =>
-      a.correlation < b.correlation ||
-      a.baseSamplesDecoded < b.baseSamplesDecoded ||
-      a.sampleOffset < b.sampleOffset;
+    const weighResults = (a, b) => {
+      if (a.correlation !== b.correlation) return a.correlation > b.correlation;
+      if (a.samplesDecoded !== b.samplesDecoded)
+        return a.samplesDecoded > b.samplesDecoded;
+      if (a.sampleOffset !== b.sampleOffset)
+        return a.sampleOffset > b.sampleOffset;
+      return a.vertex.name.localeCompare(b.vertex.name) < 0;
+    };
 
-    // detect and remove cycles
+    // detect cycles and weigh for which edge to remove
     const path = new Map();
-    const visited = new Set();
+    const visitedEdgeCycle = new Set();
+    const cycles = new Set();
 
-    const detectCycle = (base) => {
-      for (const comp of Object.keys(graph[base])) {
-        if (path.has(base + comp)) return true;
+    const detectCycle = (vertex) => {
+      for (const edge of vertex.edges.values()) {
+        if (path.has(vertex)) return path.get(vertex);
 
-        if (!visited.has(base + comp)) {
-          visited.add(base + comp);
+        path.set(vertex, edge);
 
-          path.set(base + comp, [base, comp]);
+        const cycleStartEdge = detectCycle(edge.vertex);
 
-          if (detectCycle(comp)) {
-            const fullPath = [...path.values()];
-            const cycle = fullPath.slice(
-              fullPath.findIndex((val) => val[0] === comp)
-            );
-
-            const baseStart = cycle[0][0];
-            const compStart = cycle[0][1];
-
-            if (weighResults(graph[baseStart][compStart], graph[base][comp])) {
-              delete graph[baseStart][compStart];
-            } else {
-              delete graph[base][comp];
-            }
+        if (cycleStartEdge) {
+          const cycleEndEdge = edge;
+          if (weighResults(cycleStartEdge, cycleEndEdge)) {
+            cycles.add(cycleEndEdge);
+            cycleEndEdge.cycle = true;
+          } else {
+            cycles.add(cycleStartEdge);
+            cycleStartEdge.cycle = true;
           }
-
-          path.delete(base + comp);
         }
+
+        path.delete(vertex);
       }
     };
 
-    for (const [base, comps] of Object.entries(graph)) detectCycle(base);
+    for (const { vertex } of graph) {
+      detectCycle(vertex);
+    }
 
-    // sort the graph
-    // Tarjan, Robert E. (1976), "Edge-disjoint spanning trees and depth-first search", Acta Informatica, 6 (2): 171–185, doi:10.1007/BF00268499, S2CID 12044793
-    const nodes = new Map();
-    const tempMark = new Set();
-    let sorted = [];
+    // delete any cycles
+    for (const edge of cycles) edge.parent.edges.delete(edge);
 
-    for (const [base, comps] of Object.entries(graph))
-      for (const comp of Object.keys(comps))
-        nodes.set(base + comp, [base, comp]);
+    // find the root elements
+    const roots = new Set();
 
-    const visit = ([base, comp]) => {
-      if (!nodes.has(base + comp)) return;
-      if (tempMark.has(base + comp)) return; // cycle detected, there is a bug in NodeJS that doesn't immediately delete references
+    for (const v of graph) roots.add(v.vertex);
 
-      tempMark.add(base + comp);
+    for (const v of graph) {
+      for (const edge of v.vertex.edges) {
+        roots.delete(edge.vertex);
+      }
+    }
 
-      for (const nextComp of Object.keys(graph[comp])) visit([comp, nextComp]);
-
-      tempMark.delete(base + comp);
-      nodes.delete(base + comp);
-      sorted.push({
-        base,
-        comp,
-        ...graph[base][comp],
-      });
-    };
-
-    while (nodes.size) visit(nodes.values().next().value);
-
-    // calculate the total offset for each linear path
-    const visitedNodes = new Set();
     const results = [];
-    let idx = 0;
 
-    const buildLinearPath = (root, base, sampleOffsetFromRoot = 0) => {
-      Object.entries(graph[base]).forEach(([comp, result]) => {
-        if (!visitedNodes.has(base + comp) && base !== comp) {
-          visitedNodes.add(base + comp);
+    const traverseRoot = (path, root, edges, sampleOffsetFromRoot = 0) => {
+      for (const edge of edges) {
+        if (
+          !(path.has(edge.vertex) && weighResults(path.get(edge.vertex), edge))
+        )
+          path.set(edge.vertex, {
+            name: edge.vertex.name,
+            correlation: edge.correlation,
+            sampleOffset: sampleOffsetFromRoot + edge.sampleOffset,
+          });
 
-          if (!results[idx])
-            results[idx] = {
-              [root]: { ...result, sampleOffsetFromRoot: 0 },
-            };
-
-          if (!(results[idx][comp] && weighResults(results[idx][comp], result)))
-            results[idx][comp] = {
-              ...result,
-              sampleOffsetFromRoot: sampleOffsetFromRoot + result.sampleOffset,
-            };
-
-          buildLinearPath(
-            root,
-            comp,
-            sampleOffsetFromRoot + result.sampleOffset
-          );
-        }
-      });
+        traverseRoot(
+          path,
+          root,
+          edge.vertex.edges,
+          sampleOffsetFromRoot + edge.sampleOffset
+        );
+      }
     };
 
-    for (let i = sorted.length - 1; i >= 0; i--) {
-      const match = sorted[i];
+    for (const root of roots) {
+      const path = new Map();
+      path.set(root, {
+        name: root.name,
+        sampleOffset: 0,
+      });
+      traverseRoot(path, root, root.edges);
 
-      buildLinearPath(match.base, match.base);
-      if (results[idx]) {
-        // transform into sorted array
-        results[idx] = Object.entries(results[idx])
-          .map(([name, result], j) => ({
-            name,
-            ...(j === 0 ? {} : { correlation: result.correlation }),
-            sampleOffset: result.sampleOffsetFromRoot,
-          }))
-          .sort(
-            (a, b) =>
-              a.sampleOffset - b.sampleOffset || a.name.localeCompare(b.name)
-          );
-
-        idx++;
-      }
+      results.push(
+        [...path.values()].sort(
+          (a, b) =>
+            a.sampleOffset - b.sampleOffset || a.correlation - b.correlation
+        )
+      );
     }
 
     return results;
