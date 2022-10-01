@@ -325,26 +325,22 @@ export default class SynAudio {
     return this._instance._sync(a, b);
   }
 
-  async syncMultiple(clips) {
-    // clips {"name of clip": Float32Array[]}
-
-    const correlationThreshold = 0.5;
-
+  async syncMultiple(clips, correlationThreshold = 0.5) {
     const workers = [];
     const graph = {};
 
-    for (const [base, baseData] of Object.entries(clips)) {
-      graph[base] = {};
+    for (const base of clips) {
+      graph[base.name] = {};
 
-      for (const [comp, compData] of Object.entries(clips)) {
-        if (base === comp) continue; // prevent reflective reduction
+      for (const comp of clips) {
+        if (base.name === comp.name) continue; // prevent reflective reduction
 
         workers.push(
-          this.syncWorker(baseData, compData).then((correlationResult) => {
+          this.syncWorker(base.data, comp.data).then((correlationResult) => {
             if (correlationResult.correlation > correlationThreshold) {
-              graph[base][comp] = {
-                baseSamplesDecoded: baseData.samplesDecoded,
-                compSamplesDecoded: compData.samplesDecoded,
+              graph[base.name][comp.name] = {
+                baseSamplesDecoded: base.data.samplesDecoded,
+                compSamplesDecoded: comp.data.samplesDecoded,
                 ...correlationResult,
               };
             }
@@ -464,18 +460,19 @@ export default class SynAudio {
       if (results[idx]) {
         // transform into sorted array
         results[idx] = Object.entries(results[idx])
-          .map(([clip, result], j) => ({
-            clip,
+          .map(([name, result], j) => ({
+            name,
             ...(j === 0 ? {} : { correlation: result.correlation }),
             sampleOffset: result.sampleOffsetFromRoot,
           }))
-          .sort((a, b) => a.sampleOffset - b.sampleOffset);
+          .sort(
+            (a, b) =>
+              a.sampleOffset - b.sampleOffset || a.name.localeCompare(b.name)
+          );
 
         idx++;
       }
     }
-
-    console.log(JSON.stringify(results, null, 2));
 
     return results;
   }

@@ -1110,54 +1110,233 @@ describe("SynAudio", () => {
   */
 
   describe("syncMultiple", () => {
-    it("offset at 2450800, correlationSampleSize 1219", async () => {
+    it("should sync multiple clips in order of connection", async () => {
       const synAudio = new SynAudio({
         correlationSampleSize: 44100,
         initialGranularity: 16,
       });
 
       const result = await testData.then((data) =>
-        synAudio.syncMultiple({
-          fullMpeg: data.fullMpeg,
-          fullMpeg2: data.fullMpeg, // should detect and prevent cyc,
-          cut_2450800_Mpeg: data.cut_2450800_Mpeg,
-          cut_287549_Mpeg: data.cut_287549_Mpeg,
-          cut_1601425_Mpeg: data.cut_1601425_Mpeg,
-          cut_312782_32_Mpeg: data.cut_312782_32_Mpeg,
-          cut_194648_Mpeg: data.cut_194648_Mpeg,
-          cut_194648_2_Mpeg: data.cut_194648_Mpeg,
-          //cut_194648_32_Mpeg: data.cut_194648_32_Mpeg,
-          //cut_194648_32_gen2_Mpeg: data.cut_194648_32_gen2_Mpeg,
-          //cut_194648_32_gen3_Mpeg: data.cut_194648_32_gen3_Mpeg,
-          //cut_194648_32_gen4_Mpeg: data.cut_194648_32_gen4_Mpeg,
-          //cut_194648_32_gen5_Mpeg: data.cut_194648_32_gen5_Mpeg,
-          //cut_194648_32_gen6_Mpeg: data.cut_194648_32_gen6_Mpeg,
-          //cut_194648_32_gen7_Mpeg: data.cut_194648_32_gen7_Mpeg,
-          //cut_194648_32_gen8_Mpeg: data.cut_194648_32_gen8_Mpeg,
-          //cut_194648_32_gen9_Mpeg: data.cut_194648_32_gen9_Mpeg,
-          //cut_194648_32_gen10_Mpeg: data.cut_194648_32_gen10_Mpeg,
-          //cut_194648_32_gen11_Mpeg: data.cut_194648_32_gen11_Mpeg,
-          //cut_194648_32_gen12_Mpeg: data.cut_194648_32_gen12_Mpeg,
-          //cut_194648_32_gen13_Mpeg: data.cut_194648_32_gen13_Mpeg,
-          //cut_194648_32_gen14_Mpeg: data.cut_194648_32_gen14_Mpeg,
-          //cut_194648_32_gen15_Mpeg: data.cut_194648_32_gen15_Mpeg,
-          //cut_194648_32_gen16_Mpeg: data.cut_194648_32_gen16_Mpeg,
-          //cut_194648_32_gen17_Mpeg: data.cut_194648_32_gen17_Mpeg,
-          //cut_194648_32_gen18_Mpeg: data.cut_194648_32_gen18_Mpeg,
-          //cut_194648_32_gen19_Mpeg: data.cut_194648_32_gen19_Mpeg,
-          //cut_194648_32_gen20_Mpeg: data.cut_194648_32_gen20_Mpeg,
-        })
+        synAudio.syncMultiple([
+          { name: "fullMpeg", data: data.fullMpeg },
+          { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
+          { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
+          { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
+          { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
+          { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
+        ])
       );
 
       process.stdout.write(
-        "\n" + "offset at 2450800, correlationSampleSize 1200" + "\n"
+        "\n" + "should sync multiple clips in order of connection" + "\n"
       );
-      process.stdout.write("\t" + JSON.stringify(result) + "\n");
+      process.stdout.write(JSON.stringify(result, null, 2) + "\n");
 
-      expect(true).toBeTruthy();
-      // first rendered MPEG frame is less similar
-      //expect(result.trim).toBeGreaterThanOrEqual(576);
-      //expect(result.trim).toBeLessThanOrEqual(576 * 2);
-    }, 100000);
+      expect(result).toEqual([
+        [
+          {
+            name: "fullMpeg",
+            sampleOffset: 0,
+          },
+          {
+            name: "cut_194648_Mpeg",
+            correlation: 0.9937149882316589,
+            sampleOffset: 194072,
+          },
+          {
+            name: "cut_287549_Mpeg",
+            correlation: 0.9885798096656799,
+            sampleOffset: 286973,
+          },
+          {
+            name: "cut_312782_32_Mpeg",
+            correlation: 0.9569606184959412,
+            sampleOffset: 312206,
+          },
+          {
+            name: "cut_1601425_Mpeg",
+            correlation: 0.9557035565376282,
+            sampleOffset: 1600849,
+          },
+          {
+            name: "cut_2450800_Mpeg",
+            correlation: 0.9846370220184326,
+            sampleOffset: 2450224,
+          },
+        ],
+      ]);
+    }, 10000);
+
+    it("should prevent cyclic relationships", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 44100,
+        initialGranularity: 16,
+      });
+
+      const result = await testData.then((data) =>
+        synAudio.syncMultiple([
+          { name: "fullMpeg", data: data.fullMpeg },
+          { name: "fullMpeg2", data: data.fullMpeg },
+          { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
+          { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
+          { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
+          { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
+          { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
+          { name: "cut_194648_2_Mpeg", data: data.cut_194648_Mpeg },
+          { name: "cut_194648_32_Mpeg", data: data.cut_194648_32_Mpeg },
+        ])
+      );
+
+      process.stdout.write("\n" + "should prevent cyclic relationships" + "\n");
+      process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+
+      expect(result).toEqual([
+        [
+          {
+            name: "fullMpeg",
+            sampleOffset: 0,
+          },
+          {
+            name: "fullMpeg2",
+            correlation: 1,
+            sampleOffset: 0,
+          },
+          {
+            name: "cut_194648_2_Mpeg",
+            correlation: 0.9542577862739563,
+            sampleOffset: 194072,
+          },
+          {
+            name: "cut_194648_32_Mpeg",
+            correlation: 0.9513630270957947,
+            sampleOffset: 194072,
+          },
+          {
+            name: "cut_194648_Mpeg",
+            correlation: 0.9542577862739563,
+            sampleOffset: 194072,
+          },
+          {
+            name: "cut_287549_Mpeg",
+            correlation: 0.9637637734413147,
+            sampleOffset: 286973,
+          },
+          {
+            name: "cut_312782_32_Mpeg",
+            correlation: 0.9569606184959412,
+            sampleOffset: 312206,
+          },
+          {
+            name: "cut_1601425_Mpeg",
+            correlation: 0.9557035565376282,
+            sampleOffset: 1600849,
+          },
+          {
+            name: "cut_2450800_Mpeg",
+            correlation: 0.9846370220184326,
+            sampleOffset: 2450224,
+          },
+        ],
+      ]);
+    }, 10000);
+
+    it("should add multiple nodes for unrelated matches", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 44100,
+        initialGranularity: 16,
+      });
+
+      const result = await testData.then((data) =>
+        synAudio.syncMultiple([
+          { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
+          { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
+          { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
+          { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
+        ])
+      );
+
+      process.stdout.write(
+        "\n" + "should add multiple nodes for unrelated matches" + "\n"
+      );
+      process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+
+      expect(result).toEqual([
+        [
+          {
+            name: "cut_194648_Mpeg",
+            sampleOffset: 0,
+          },
+          {
+            name: "cut_287549_Mpeg",
+            correlation: 0.9885798096656799,
+            sampleOffset: 92901,
+          },
+        ],
+        [
+          {
+            name: "cut_1601425_Mpeg",
+            sampleOffset: 0,
+          },
+          {
+            name: "cut_2450800_Mpeg",
+            correlation: 0.9846370220184326,
+            sampleOffset: 849375,
+          },
+        ],
+      ]);
+    }, 10000);
+
+    it("should sync multiple clips when there is no underlying clip", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 44100,
+        initialGranularity: 16,
+      });
+
+      const result = await testData.then((data) =>
+        synAudio.syncMultiple([
+          { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
+          { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
+          { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
+          { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
+          { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
+        ])
+      );
+
+      process.stdout.write(
+        "\n" +
+          "should sync multiple clips when there is no underlying clip" +
+          "\n"
+      );
+      process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+
+      expect(result).toEqual([
+        [
+          {
+            name: "cut_194648_Mpeg",
+            sampleOffset: 0,
+          },
+          {
+            name: "cut_287549_Mpeg",
+            correlation: 0.9885798096656799,
+            sampleOffset: 92901,
+          },
+          {
+            name: "cut_312782_32_Mpeg",
+            correlation: 0.9569606184959412,
+            sampleOffset: 118134,
+          },
+          {
+            name: "cut_1601425_Mpeg",
+            correlation: 0.9557035565376282,
+            sampleOffset: 1406777,
+          },
+          {
+            name: "cut_2450800_Mpeg",
+            correlation: 0.9846370220184326,
+            sampleOffset: 2256152,
+          },
+        ],
+      ]);
+    }, 10000);
   });
 });
