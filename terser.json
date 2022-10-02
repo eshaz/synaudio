@@ -25,6 +25,7 @@
         "sync",
         "syncWorker",
         "syncWorkerConcurrent",
+        "syncMultiple",
         "channelData",
         "samplesDecoded",
         "correlation",

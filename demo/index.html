@@ -78,11 +78,82 @@
       align-items: center;
       justify-content: center;
     }
+    .start {
+      align-items: flex-start;
+    }
     .grow {
       display: flex;
       flex: 1;
     }
   </style>
+  <script>
+    let audioFormData, optionsFormData;
+
+    // prettier-ignore
+    const audioClips = {
+      ["Flight of the Bumblebee"]: {
+        ["Full Audio (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.mp3",
+        ["Clip @ 1601425 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.1601425.mp3",
+        ["Clip @ 287549 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.287549.mp3",
+        ["Clip @ 2450800 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.2450800.mp3",
+        ["Clip @ 194648 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 64kb/s)"]: "clips/bumblebee/mpeg.64.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s)"]: "clips/bumblebee/mpeg.32.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen2)"]: "clips/bumblebee/mpeg.32.gen2.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen3)"]: "clips/bumblebee/mpeg.32.gen3.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen4)"]: "clips/bumblebee/mpeg.32.gen4.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen5)"]: "clips/bumblebee/mpeg.32.gen5.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen6)"]: "clips/bumblebee/mpeg.32.gen6.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen7)"]: "clips/bumblebee/mpeg.32.gen7.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen8)"]: "clips/bumblebee/mpeg.32.gen8.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen9)"]: "clips/bumblebee/mpeg.32.gen9.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen10)"]: "clips/bumblebee/mpeg.32.gen10.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen11)"]: "clips/bumblebee/mpeg.32.gen11.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen12)"]: "clips/bumblebee/mpeg.32.gen12.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen13)"]: "clips/bumblebee/mpeg.32.gen13.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen14)"]: "clips/bumblebee/mpeg.32.gen14.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen15)"]: "clips/bumblebee/mpeg.32.gen15.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen16)"]: "clips/bumblebee/mpeg.32.gen16.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen17)"]: "clips/bumblebee/mpeg.32.gen17.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen18)"]: "clips/bumblebee/mpeg.32.gen18.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen19)"]: "clips/bumblebee/mpeg.32.gen19.194648.mp3",
+        ["Clip @ 194648 Samples (MP3 32kb/s gen20)"]: "clips/bumblebee/mpeg.32.gen20.194648.mp3",
+      }
+    }
+
+    const setSelectOptions = (el) => {
+      let html = "";
+      for (const [optgroup, options] of Object.entries(audioClips)) {
+        html += `<optgroup label="${optgroup}">`;
+
+        for (const [name, value] of Object.entries(options))
+          html += `<option value="${value}">${name}</option>`;
+
+        html += "</optgroup>";
+      }
+      el.innerHTML += html;
+    };
+
+    const handleFileOrSelect = (file, select) => {
+      select.addEventListener("change", (e) => {
+        if (e.target.value) file.value = "";
+      });
+      file.addEventListener("change", (e) => {
+        if (e.target.value) select.value = "";
+      });
+    };
+
+    const mapSelectedOptions = (e) =>
+      [...e.selectedOptions].map((o) => o.value).filter((s) => s !== "");
+    const mapSelectedFiles = (e) => [...e.files];
+
+    const mapClipInput = (select, file, prevSelect, prevFile) => {
+      const selectedOptions = mapSelectedOptions(select);
+      const selectedFiles = mapSelectedFiles(file);
+
+      return selectedOptions.length ? selectedOptions : selectedFiles;
+    };
+  </script>
   <body>
     <header>
       <h1 style="margin-bottom: 0px">
@@ -172,159 +243,234 @@
     </ul>
     <hr />
     <div class="row" style="justify-content: center">
-      <fieldset name="base-upload" class="row">
-        <legend>Select Two Audio Clips and Click "Find Correlation"</legend>
-        <ol>
-          <li>
-            <div id="base-audio-container">
-              <select id="base-audio-select">
-                <option value="" disabled selected>
-                  Select a base audio clip
-                </option>
-              </select>
-              <span>or</span>
+      <form
+        name="audioForm"
+        id="audioForm"
+        onsubmit="return false;"
+        class="row"
+      >
+        <fieldset>
+          <legend>Select Audio Clips</legend>
+          <ol>
+            <li style="margin-bottom: 5px">
               <input
-                type="file"
-                id="base-file-selector"
-                accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
+                type="radio"
+                id="two-clips-mode"
+                name="correlationMode"
+                value="two-clips-mode"
+                checked
               />
-            </div>
-          </li>
-          <li>
-            <div id="comparison-audio-container">
-              <select id="comparison-audio-select">
-                <option value="" disabled selected>
-                  Select a comparison audio clip
-                </option>
-              </select>
-              <span>or</span>
+              <label for="two-clips-mode">Two Clips</label>
               <input
-                type="file"
-                id="comparison-file-selector"
-                accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
+                type="radio"
+                id="multiple-clips-mode"
+                name="correlationMode"
+                value="multiple-clips-mode"
               />
+              <label for="multiple-clips-mode">Multiple Clips</label>
+            </li>
+            <div id="two-clips-fieldset" class="column start">
+              <li>
+                <div id="base-audio-container">
+                  <select id="base-audio-select" name="baseAudioSelect">
+                    <option value="" disabled selected>
+                      Select a base audio clip
+                    </option>
+                  </select>
+                  <span>or</span>
+                  <input
+                    type="file"
+                    id="base-audio-file"
+                    name="baseAudioFile"
+                    accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
+                  />
+                </div>
+              </li>
+              <li>
+                <div id="comparison-audio-container">
+                  <select
+                    id="comparison-audio-select"
+                    name="comparisonAudioSelect"
+                  >
+                    <option value="" disabled selected>
+                      Select a comparison audio clip
+                    </option>
+                  </select>
+                  <span>or</span>
+                  <input
+                    type="file"
+                    id="comparison-audio-file"
+                    name="comparisonAudioFile"
+                    accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
+                  />
+                </div>
+              </li>
             </div>
-          </li>
-          <li>
-            <button id="find-correlation" disabled>Find Correlation</button>
-          </li>
-        </ol>
-      </fieldset>
-      <fieldset id="synaudio-results" class="row" style="flex-grow: 1">
-        <legend>SynAudio Results</legend>
-        <table style="font-weight: bold; border-spacing: 10px 0; width: 100%">
-          <tr>
-            <td>Correlation Coefficient</td>
-            <td style="color: darkred" id="correlation-coefficient">-</td>
-          </tr>
-          <tr>
-            <td>Sample Offset</td>
-            <td style="color: darkred" id="correlation-sample-offset">-</td>
-          </tr>
-          <tr>
-            <td>Time spent</td>
-            <td style="color: darkred" id="correlation-time-spent">-</td>
-          </tr>
-          <tr>
-            <td>Rate (1x is realtime)</td>
-            <td style="color: darkred" id="correlation-rate">-</td>
-          </tr>
-          <tr>
-            <td>Bytes per second</td>
-            <td style="color: darkred" id="correlation-bytes-per-sec">-</td>
-          </tr>
-        </table>
-      </fieldset>
-      <fieldset id="synaudio-options" class="column">
-        <legend>SynAudio Options</legend>
-        <table>
-          <tr>
-            <td>
-              <label for="correlation-method">Correlation Method</label>
-            </td>
-            <td>
-              <select id="correlation-method">
-                <option value="sync">sync</option>
-                <option value="syncWorker">syncWorker</option>
-                <option selected value="syncWorkerConcurrent">
-                  syncWorkerConcurrent
-                </option>
-              </select>
-            </td>
-          </tr>
-
-          <tr>
-            <td>
-              <label for="correlation-sample-size"
-                >Correlation Sample Size</label
+            <div
+              name="multiple-clips-fieldset"
+              id="multiple-clips-fieldset"
+              style="display: none"
+            >
+              <li>
+                <div id="multiple-audio-container">
+                  <select
+                    id="multiple-audio-select"
+                    name="multipleAudioSelect"
+                    multiple
+                    style="height: 200px"
+                  >
+                    <option value="" disabled selected>
+                      Select Two or More Audio Clips
+                    </option>
+                  </select>
+                  <span>or</span>
+                  <input
+                    type="file"
+                    id="multiple-audio-file"
+                    name="multipleAudioFile"
+                    accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
+                    multiple
+                  />
+                </div>
+              </li>
+            </div>
+            <li>
+              <button id="find-correlation" disabled>Find Correlation</button>
+            </li>
+          </ol>
+        </fieldset>
+        <fieldset id="synaudio-results" class="row" style="flex-grow: 1">
+          <legend>SynAudio Results</legend>
+          <table style="font-weight: bold; border-spacing: 10px 0; width: 100%">
+            <tr>
+              <td>Correlation Coefficient</td>
+              <td style="color: darkred" id="correlation-coefficient">-</td>
+            </tr>
+            <tr>
+              <td>Sample Offset</td>
+              <td
+                style="color: rgb(211, 164, 164)"
+                id="correlation-sample-offset"
               >
-            </td>
-            <td>
-              <input id="correlation-sample-size" type="number" value="11025" />
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label for="initial-granularity">Initial Granularity</label>
-            </td>
-            <td>
-              <input id="initial-granularity" type="number" value="16" />
-            </td>
-          </tr>
-        </table>
-      </fieldset>
-      <fieldset id="fft-options" class="column">
-        <legend>FFT Options</legend>
-        <table>
-          <tr>
-            <td>
-              <label for="fft-bins">Bin Size (height)</label>
-            </td>
-            <td>
-              <select name="fft-bins" id="fft-bins">
-                <option selected value="auto">auto</option>
-              </select>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label for="fft-interval">Interval Size (width)</label>
-            </td>
-            <td>
-              <select name="fft-interval" id="fft-interval">
-                <option selected value="auto">auto</option>
-              </select>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label for="fft-scale">Scale</label>
-            </td>
-            <td>
-              <select name="fft-scale" id="fft-scale">
-                <option selected value="log">logarithmic</option>
-                <option value="lin">linear</option>
-              </select>
-            </td>
-          </tr>
-        </table>
-      </fieldset>
+                -
+              </td>
+            </tr>
+            <tr>
+              <td>Time spent</td>
+              <td style="color: darkred" id="correlation-time-spent">-</td>
+            </tr>
+            <tr>
+              <td>Rate (1x is realtime)</td>
+              <td style="color: darkred" id="correlation-rate">-</td>
+            </tr>
+            <tr>
+              <td>Bytes per second</td>
+              <td style="color: darkred" id="correlation-bytes-per-sec">-</td>
+            </tr>
+          </table>
+        </fieldset>
+      </form>
+      <form
+        name="optionsForm"
+        id="optionsForm"
+        onsubmit="return false;"
+        class="row"
+      >
+        <fieldset id="synaudio-options" class="column">
+          <legend>SynAudio Options</legend>
+          <table>
+            <tr>
+              <td>
+                <label for="correlation-method">Correlation Method</label>
+              </td>
+              <td>
+                <select id="correlation-method" name="correlationMethod">
+                  <option value="sync">sync</option>
+                  <option value="syncWorker">syncWorker</option>
+                  <option selected value="syncWorkerConcurrent">
+                    syncWorkerConcurrent
+                  </option>
+                </select>
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <label for="correlation-sample-size"
+                  >Correlation Sample Size</label
+                >
+              </td>
+              <td>
+                <input
+                  id="correlation-sample-size"
+                  name="correlationSampleSize"
+                  type="number"
+                  value="11025"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label for="initial-granularity">Initial Granularity</label>
+              </td>
+              <td>
+                <input
+                  id="initial-granularity"
+                  name="initialGranularity"
+                  type="number"
+                  value="16"
+                />
+              </td>
+            </tr>
+          </table>
+        </fieldset>
+        <fieldset id="fft-options" class="column">
+          <legend>FFT Options</legend>
+          <table>
+            <tr>
+              <td>
+                <label for="fft-bins">Bin Size (height)</label>
+              </td>
+              <td>
+                <select name="fftBins" id="fft-bins">
+                  <option selected value="auto">auto</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label for="fft-interval">Interval Size (width)</label>
+              </td>
+              <td>
+                <select name="fftInterval" id="fft-interval">
+                  <option selected value="auto">auto</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label for="fft-scale">Scale</label>
+              </td>
+              <td>
+                <select name="fftScale" id="fft-scale">
+                  <option selected value="log">logarithmic</option>
+                  <option value="lin">linear</option>
+                </select>
+              </td>
+            </tr>
+          </table>
+        </fieldset>
+      </form>
     </div>
-    <fieldset class="column">
-      <legend>Base Audio FFT</legend>
-      <div id="base-fft"></div>
-    </fieldset>
-    <fieldset class="column">
-      <legend>Comparison Audio FFT</legend>
-      <div id="comparison-fft"></div>
-    </fieldset>
-    <fieldset class="column">
-      <legend>SynAudio Result FFT</legend>
-      <div id="correlation-fft"></div>
-    </fieldset>
+    <div id="fft-container"></div>
+    <div id="result-fft-container"></div>
   </body>
   <script>
-    "use strict";
+    ("use strict");
+    const baseAudioClipKey = "base";
+    const comparisonAudioClipKey = "comparison";
+    const correlationAudioClipKey = "correlation";
+
     const audioCtx = new AudioContext();
     audioCtx.onstatechange = () => {
       if (audioCtx !== "running") audioCtx.resume();
@@ -337,9 +483,10 @@
     const STOP = "■";
 
     const fftPlaceholders = {
-      base: "<i>Select a base audio clip.</i>",
-      comparison: "<i>Select a comparison audio clip.</i>",
-      correlation:
+      addAClip: "<i>Select two or more audio clips.</i>",
+      [baseAudioClipKey]: "<i>Select a base audio clip.</i>",
+      [comparisonAudioClipKey]: "<i>Select a comparison audio clip.</i>",
+      [correlationAudioClipKey]:
         "<i>Select two audio clips and click <b>Find Correlation</b>.</i>",
     };
 
@@ -541,7 +688,8 @@
       destroy() {
         this._webAudioPlayer.stop();
         this._terminateCanvas();
-        this._canvasContainer.innerHTML = fftPlaceholders[this._audioKey];
+        this._canvasContainer.innerHTML =
+          fftPlaceholders[this._audioKey] || fftPlaceholders.addAClip;
       }
 
       get channelCount() {
@@ -993,64 +1141,73 @@
     }
   </script>
   <script>
-    const baseSelectEl = document.getElementById("base-audio-select");
-    const comparisonSelectEl = document.getElementById(
+    const baseAudioSelect = document.getElementById("base-audio-select");
+    const comparisonAudioSelect = document.getElementById(
       "comparison-audio-select"
     );
+    const multipleAudioSelect = document.getElementById(
+      "multiple-audio-select"
+    );
 
-    // prettier-ignore
-    const audioClips = {
-      ["Flight of the Bumblebee"]: {
-        ["Full Audio (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.mp3",
-        ["Clip @ 1601425 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.1601425.mp3",
-        ["Clip @ 287549 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.287549.mp3",
-        ["Clip @ 2450800 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.2450800.mp3",
-        ["Clip @ 194648 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 64kb/s)"]: "clips/bumblebee/mpeg.64.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s)"]: "clips/bumblebee/mpeg.32.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen2)"]: "clips/bumblebee/mpeg.32.gen2.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen3)"]: "clips/bumblebee/mpeg.32.gen3.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen4)"]: "clips/bumblebee/mpeg.32.gen4.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen5)"]: "clips/bumblebee/mpeg.32.gen5.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen6)"]: "clips/bumblebee/mpeg.32.gen6.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen7)"]: "clips/bumblebee/mpeg.32.gen7.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen8)"]: "clips/bumblebee/mpeg.32.gen8.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen9)"]: "clips/bumblebee/mpeg.32.gen9.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen10)"]: "clips/bumblebee/mpeg.32.gen10.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen11)"]: "clips/bumblebee/mpeg.32.gen11.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen12)"]: "clips/bumblebee/mpeg.32.gen12.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen13)"]: "clips/bumblebee/mpeg.32.gen13.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen14)"]: "clips/bumblebee/mpeg.32.gen14.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen15)"]: "clips/bumblebee/mpeg.32.gen15.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen16)"]: "clips/bumblebee/mpeg.32.gen16.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen17)"]: "clips/bumblebee/mpeg.32.gen17.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen18)"]: "clips/bumblebee/mpeg.32.gen18.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen19)"]: "clips/bumblebee/mpeg.32.gen19.194648.mp3",
-        ["Clip @ 194648 Samples (MP3 32kb/s gen20)"]: "clips/bumblebee/mpeg.32.gen20.194648.mp3",
-      }
-    }
+    const baseAudioFile = document.getElementById("base-audio-file");
+    const comparisonAudioFile = document.getElementById(
+      "comparison-audio-file"
+    );
+    const multipleAudioFile = document.getElementById("multiple-audio-file");
 
-    const setAudioClips = (el) => {
-      let html = "";
-      for (const [optgroup, options] of Object.entries(audioClips)) {
-        html += `<optgroup label="${optgroup}">`;
+    setSelectOptions(baseAudioSelect);
+    setSelectOptions(comparisonAudioSelect);
+    setSelectOptions(multipleAudioSelect);
 
-        for (const [name, value] of Object.entries(options))
-          html += `<option value="${value}">${name}</option>`;
+    handleFileOrSelect(baseAudioSelect, baseAudioFile);
+    handleFileOrSelect(comparisonAudioSelect, comparisonAudioFile);
+    handleFileOrSelect(multipleAudioSelect, multipleAudioFile);
 
-        html += "</optgroup>";
-      }
-      el.innerHTML += html;
+    const setAudioFormData = () => {
+      const formData = Object.fromEntries(
+        new FormData(document.audioForm).entries()
+      );
+      audioFormData = {
+        audio: {
+          base: mapClipInput(baseAudioSelect, baseAudioFile),
+          comparison: mapClipInput(comparisonAudioSelect, comparisonAudioFile),
+          multiple: mapClipInput(multipleAudioSelect, multipleAudioFile),
+        },
+        correlationMode: formData.correlationMode,
+      };
+
+      console.log(audioFormData);
     };
 
-    setAudioClips(baseSelectEl);
-    setAudioClips(comparisonSelectEl);
+    const setOptionsFormData = () => {
+      optionsFormData = Object.fromEntries(
+        new FormData(document.optionsForm).entries()
+      );
 
-    const baseFileInputEl = document.getElementById("base-file-selector");
-    const comparisonFileInputEl = document.getElementById(
-      "comparison-file-selector"
+      console.log(optionsFormData);
+    };
+
+    document.audioForm.addEventListener("change", setAudioFormData);
+    document.audioForm.reset();
+    setAudioFormData();
+
+    document.optionsForm.addEventListener("change", setOptionsFormData);
+    document.optionsForm.reset();
+    setOptionsFormData();
+
+    // mode select
+    const twoClipsModeEl = document.getElementById("two-clips-mode");
+    const multipleClipsModeEl = document.getElementById("multiple-clips-mode");
+
+    // two clip select
+    const twoClipsFieldsetEl = document.getElementById("two-clips-fieldset");
+    // multiple clip select
+    const multipleClipsFieldsetEl = document.getElementById(
+      "multiple-clips-fieldset"
     );
+
     const findCorrelationEl = document.getElementById("find-correlation");
+
     // correlation options
     const correlationMethodEl = document.getElementById("correlation-method");
     const correlationCoefficientEl = document.getElementById(
@@ -1067,25 +1224,124 @@
     );
     const correlationRateEl = document.getElementById("correlation-rate");
 
-    const baseAudioFFTContainerEl = document.getElementById("base-fft");
-    const comparisonAudioFFTContainerEl =
-      document.getElementById("comparison-fft");
-    const correlationAudioFFTContainerEl =
-      document.getElementById("correlation-fft");
+    document.getElementById("result-fft-container").innerHTML = `
+    <fieldset id="${correlationAudioClipKey}-fieldset" class="column">
+      <legend>SynAudio Result FFT</legend>
+      <div id="${correlationAudioClipKey}-fft"></div>
+    </fieldset>
+    `;
 
-    baseAudioFFTContainerEl.innerHTML = fftPlaceholders.base;
-    comparisonAudioFFTContainerEl.innerHTML = fftPlaceholders.comparison;
-    correlationAudioFFTContainerEl.innerHTML = fftPlaceholders.correlation;
+    const twoClipsFFT = () => `
+    <fieldset id="${baseAudioClipKey}-fieldset" class="column">
+      <legend>Base Audio FFT</legend>
+      <div id="${baseAudioClipKey}-fft"></div>
+    </fieldset>
+    <fieldset id="${comparisonAudioClipKey}-fieldset" class="column">
+      <legend>Comparison Audio FFT</legend>
+      <div id="${comparisonAudioClipKey}-fft"></div>
+    </fieldset>
+    `;
 
-    const baseAudioClipKey = "base";
-    const comparisonAudioClipKey = "comparison";
-    const correlationAudioClipKey = "correlation";
-    const audioData = {};
+    const multipleClipsFFT = (id, name) => `
+    <fieldset id="${id}-fieldset" class="column">
+      <legend>${name ? `${name} ` : ""}Audio FFT</legend>
+      <div id="${id}-fft"></div>
+    </fieldset>
+    `;
+
+    const multipleClipsFFTPlaceholder = multipleClipsFFT("placeholder");
+    const fftContainer = document.getElementById("fft-container");
+
+    const selectedClips = new Map();
+    let audioData = {};
+
+    const reset = () => {
+      // destroy all FFTs
+      Object.entries(audioData).forEach(([clip, fft]) => {
+        fft.fft.destroy();
+      });
+
+      audioData = {};
+      document.audioForm.reset();
+    };
+
+    const twoClipsMode = "two-clips-mode";
+    const multipleClipsMode = "multiple-clips-mode";
+
+    let mode = twoClipsMode;
+    const setTwoClipsMode = () => {
+      mode = twoClipsMode;
+
+      // destroy the multiple clip ffts
+      multipleClipsFieldsetEl.style = "display: none;";
+      reset();
+      twoClipsModeEl.checked = true;
+      multipleClipsModeEl.checked = false;
+
+      // show the two clip ffts
+      twoClipsFieldsetEl.style = "";
+
+      // FFT setup
+      fftContainer.innerHTML = twoClipsFFT();
+
+      const baseAudioFFTContainerEl = document.getElementById(
+        baseAudioClipKey + "-fft"
+      );
+      const comparisonAudioFFTContainerEl = document.getElementById(
+        comparisonAudioClipKey + "-fft"
+      );
+      const correlationAudioFFTContainerEl = document.getElementById(
+        correlationAudioClipKey + "-fft"
+      );
+
+      baseAudioFFTContainerEl.innerHTML = fftPlaceholders[baseAudioClipKey];
+      comparisonAudioFFTContainerEl.innerHTML =
+        fftPlaceholders[comparisonAudioClipKey];
+      correlationAudioFFTContainerEl.innerHTML =
+        fftPlaceholders[correlationAudioClipKey];
+    };
+
+    const setMultipleClipsMode = () => {
+      mode = multipleClipsMode;
+
+      // destroy the two clip ffts
+      twoClipsFieldsetEl.style = "display: none;";
+      reset();
+      multipleClipsModeEl.checked = true;
+      twoClipsModeEl.checked = false;
+
+      // show the multiple clip ffts
+      multipleClipsFieldsetEl.style = "";
+
+      // FFT setup
+      fftContainer.innerHTML = multipleClipsFFTPlaceholder;
+      const placeholderFFTContainerEl =
+        document.getElementById("placeholder-fft");
+      placeholderFFTContainerEl.innerHTML = fftPlaceholders.addAClip;
+    };
+
+    const selectAudioFieldControl = (newMode) => {
+      if (mode !== newMode) {
+        if (newMode === twoClipsMode) {
+          setTwoClipsMode();
+        } else if (newMode === multipleClipsMode) {
+          setMultipleClipsMode();
+        }
+      }
+    };
+
+    setTwoClipsMode();
 
     const correlationButtonControl = () => {
-      findCorrelationEl.disabled = !(
-        audioData[baseAudioClipKey] && audioData[comparisonAudioClipKey]
-      );
+      if (mode === twoClipsMode) {
+        findCorrelationEl.disabled = !(
+          audioData[baseAudioClipKey] && audioData[comparisonAudioClipKey]
+        );
+      } else if (mode === multipleClipsMode) {
+        console.log(audioData);
+
+        findCorrelationEl.disabled = Object.keys(audioData).length < 2;
+      }
     };
 
     const destroyCorrelationFFT = () => {
@@ -1093,11 +1349,6 @@
         audioData[correlationAudioClipKey].fft.destroy();
 
       delete audioData[correlationAudioClipKey];
-    };
-
-    const fftColors = {
-      base: [0, 255, 255],
-      comparison: [255, 255, 0],
     };
 
     const updateFFTCanvasSize = () => {
@@ -1110,55 +1361,107 @@
       });
     };
 
-    const setAudioClip = async (file, clipType) => {
-      if (audioData[clipType]) audioData[clipType].fft.destroy();
+    const fftColors = {
+      0: [0, 255, 255],
+      1: [255, 255, 0],
+      2: [0, 0, 255],
+      3: [0, 255, 0],
+      base: [0, 255, 255],
+      4: [255, 0, 0],
+      5: [255, 0, 255],
+      comparison: [255, 255, 0],
+      6: [255, 255, 255],
+    };
 
-      const newAudioData = {};
+    const getAudioFFT = async (key, data) => {
+      const files = Object.keys(audioData).length;
+      console.log(files);
 
-      audioData[clipType] = newAudioData;
-      newAudioData.fft = new FFTCanvas(clipType);
-      newAudioData.data = file;
+      const fft = new FFTCanvas(key);
 
-      await newAudioData.fft.addAudioBuffer(file, {
-        color: fftColors[clipType],
+      await fft.addAudioBuffer(data, {
+        color: fftColors[key] || fftColors[files] || [255, 255, 0],
       });
+
+      return fft;
+    };
+
+    const getAudioKey = (audio) => {
+      if (audio instanceof File) {
+        return audio.name;
+      } else {
+        return audio;
+      }
+    };
+
+    const downloadAudio = async (audio) => {
+      if (audio instanceof File) {
+        return audio.arrayBuffer();
+      } else {
+        return fetch(audio).then((res) => res.arrayBuffer());
+      }
+    };
+
+    const replaceAudioData = async (audio, audioKey) => {
+      const audioName = getAudioKey(audio);
+      const previousAudioData = audioData[audioKey];
+
+      if (previousAudioData?.name !== audioName) {
+        previousAudioData && previousAudioData.fft.destroy();
+
+        audioData[audioKey] = {
+          fft: await getAudioFFT(audioKey, await downloadAudio(audio)),
+          name: audioName,
+        };
+      }
+    };
+
+    const updateSelectedAudio = async (audio) => {
+      if (mode === twoClipsMode) {
+        if (audioData.multipleClips) {
+          for (const { fft } of audioData.multipleClips) {
+            fft.destroy();
+          }
+          delete audioData.multipleClips;
+        }
+
+        await replaceAudioData(audio.base[0], baseAudioClipKey);
+        await replaceAudioData(audio.comparison[0], comparisonAudioClipKey);
+      } else if (mode === multipleClipsMode) {
+        const newKeys = audio.multiple.map((v) => getAudioKey(v));
+
+        for (const key in audioData) {
+          if (!newKeys.includes(key)) {
+            audioData[key].fft.destroy();
+            delete audioData[key];
+
+            document.getElementById(key + "-fieldset").remove();
+          }
+        }
+
+        for await (const clip of audio.multiple) {
+          const key = getAudioKey(clip);
+
+          if (!audioData[key]) {
+            const node = document.createElement("div");
+            node.innerHTML = multipleClipsFFT(key, key);
+
+            document.getElementById("fft-container").appendChild(node);
+          }
+
+          await replaceAudioData(clip, key);
+        }
+      }
 
       updateFFTCanvasSize();
-      destroyCorrelationFFT();
       correlationButtonControl();
+      destroyCorrelationFFT();
     };
 
-    const setAudioSelectionElements = (audioClipKey, selectEl, fileInputEl) => {
-      selectEl.addEventListener("change", async (e) => {
-        if (e.target.value) {
-          const data = await fetch(e.target.value).then((res) =>
-            res.arrayBuffer()
-          );
-          setAudioClip(data, audioClipKey);
-
-          fileInputEl.value = "";
-        } else if (!fileInputEl.value) {
-          delete audioClips[audioClipKey];
-        }
-      });
-
-      fileInputEl.addEventListener("change", async (e) => {
-        if (e.target.files.length) {
-          setAudioClip(await e.target.files[0].arrayBuffer(), audioClipKey);
-
-          selectEl.selectedIndex = 0;
-        } else if (fileInputEl.selectedIndex < 1) {
-          delete audioClips[audioClipKey];
-        }
-      });
-    };
-
-    setAudioSelectionElements(baseAudioClipKey, baseSelectEl, baseFileInputEl);
-    setAudioSelectionElements(
-      comparisonAudioClipKey,
-      comparisonSelectEl,
-      comparisonFileInputEl
-    );
+    document.audioForm.addEventListener("change", () => {
+      selectAudioFieldControl(audioFormData.correlationMode);
+      updateSelectedAudio(audioFormData.audio);
+    });
 
     const drawFFTs = () => {
       Object.values(audioData).forEach(({ fft }) => fft.drawFFT());
@@ -1194,6 +1497,63 @@
         synAudioParam.channelData.push(audioBuffer.getChannelData(i));
 
       return synAudioParam;
+    };
+
+    const findCorrelationMultiple = async () => {
+      const params = Object.entries(audioData).map(([k, v]) => ({
+        name: k,
+        data: audioBufferToSynAudioParameter(v.fft.audioBuffers[0]),
+      }));
+
+      const synAudio = new SynAudio({
+        correlationSampleSize: parseInt(
+          document.getElementById("correlation-sample-size").value
+        ),
+        initialGranularity: parseInt(
+          document.getElementById("initial-granularity").value
+        ),
+      });
+
+      const start = performance.now();
+      const results = await synAudio.syncMultiple(params);
+      const duration = (performance.now() - start) / 1000;
+
+      //result.timeSpent = duration;
+      //result.rate =
+      //  baseAudioBuffer.length / baseAudioBuffer.sampleRate / duration;
+      //result.sampleRate = baseAudioBuffer.sampleRate;
+      //result.bytesPerSecond =
+      //  (baseAudioBuffer.length * baseAudioBuffer.numberOfChannels) / duration;
+
+      for (const stem of results) {
+        for (const matches of stem) {
+          console.log(matches);
+          audioData[matches.name].fft.translateXSamples(matches.sampleOffset);
+        }
+      }
+
+      destroyCorrelationFFT();
+
+      audioData[correlationAudioClipKey] = {};
+      audioData[correlationAudioClipKey].fft = new FFTCanvas(
+        correlationAudioClipKey
+      );
+
+      for (const stem of results) {
+        for (const match of stem) {
+          const fft = audioData[match.name].fft;
+          const audioBuffer = fft.audioBuffers[0];
+
+          audioData[correlationAudioClipKey].fft.addAudioBuffer(audioBuffer, {
+            ...fft.getAudioBufferData(audioBuffer),
+            offset: match.sampleOffset,
+          });
+        }
+      }
+
+      updateFFTCanvasSize();
+
+      return results;
     };
 
     const findCorrelation = async (method) => {
@@ -1253,15 +1613,18 @@
 
     findCorrelationEl.addEventListener("click", async () => {
       findCorrelationEl.disabled = true;
-      const result = await findCorrelation(correlationMethodEl.value);
+      const result =
+        mode === twoClipsMode
+          ? await findCorrelation(correlationMethodEl.value)
+          : await findCorrelationMultiple();
       findCorrelationEl.disabled = false;
 
-      correlationCoefficientEl.innerHTML = result.correlation.toFixed(4);
-      correlationSampleOffsetEl.innerHTML = `${result.sampleOffset} @ ${result.sampleRate} Hz`;
-      correlationTimeSpent.innerHTML = result.timeSpent.toFixed(4) + " seconds";
-      correlationRateEl.innerHTML = result.rate.toFixed(2) + " X";
-      correlationBytesPerSecEl.innerHTML =
-        Math.round(result.bytesPerSecond / 1024) + " KiB/s";
+      //correlationCoefficientEl.innerHTML = result.correlation.toFixed(4);
+      //correlationSampleOffsetEl.innerHTML = `${result.sampleOffset} @ ${result.sampleRate} Hz`;
+      //correlationTimeSpent.innerHTML = result.timeSpent.toFixed(4) + " seconds";
+      //correlationRateEl.innerHTML = result.rate.toFixed(2) + " X";
+      //correlationBytesPerSecEl.innerHTML =
+      //  Math.round(result.bytesPerSecond / 1024) + " KiB/s";
     });
   </script>
 </html>
