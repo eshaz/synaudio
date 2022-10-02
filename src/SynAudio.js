@@ -364,18 +364,16 @@ export default class SynAudio {
 
     await Promise.all(workers);
 
+    // prettier-ignore
     const weighResults = (a, b) => {
+      if (a.parent && b.parent && a.parent.samplesDecoded !== b.parent.samplesDecoded) return a.parent.samplesDecoded > b.parent.samplesDecoded;
       if (a.correlation !== b.correlation) return a.correlation > b.correlation;
-      if (a.samplesDecoded !== b.samplesDecoded)
-        return a.samplesDecoded > b.samplesDecoded;
-      if (a.sampleOffset !== b.sampleOffset)
-        return a.sampleOffset > b.sampleOffset;
-      return a.vertex.name.localeCompare(b.vertex.name) < 0;
+      if (a.sampleOffset !== b.sampleOffset) return a.sampleOffset > b.sampleOffset;
+      return a.vertex && b.vertex && a.vertex.name.localeCompare(b.vertex.name) < 0;
     };
 
     // detect cycles and weigh for which edge to remove
     const path = new Map();
-    const visitedEdgeCycle = new Set();
     const cycles = new Set();
 
     const detectCycle = (vertex) => {
@@ -385,15 +383,27 @@ export default class SynAudio {
         path.set(vertex, edge);
 
         const cycleStartEdge = detectCycle(edge.vertex);
+        const cycleEndEdge = edge;
 
         if (cycleStartEdge) {
-          const cycleEndEdge = edge;
+          let keep, remove;
           if (weighResults(cycleStartEdge, cycleEndEdge)) {
-            cycles.add(cycleEndEdge);
-            cycleEndEdge.cycle = true;
+            keep = cycleStartEdge;
+            remove = cycleEndEdge;
           } else {
-            cycles.add(cycleStartEdge);
-            cycleStartEdge.cycle = true;
+            keep = cycleEndEdge;
+            remove = cycleStartEdge;
+          }
+
+          if (!remove.cycleWith) {
+            remove.cycleWith = new Set();
+            cycles.add(remove);
+          }
+
+          remove.cycleWith.add(keep);
+
+          if (keep.cycleWith) {
+            keep.cycleWith.delete(remove);
           }
         }
 
@@ -401,26 +411,19 @@ export default class SynAudio {
       }
     };
 
-    for (const { vertex } of graph) {
-      detectCycle(vertex);
-    }
+    for (const { vertex } of graph) detectCycle(vertex);
 
     // delete any cycles
-    for (const edge of cycles) edge.parent.edges.delete(edge);
+    for (const edge of cycles)
+      if (edge.cycleWith.size) edge.parent.edges.delete(edge);
 
     // find the root elements
     const roots = new Set();
-
     for (const v of graph) roots.add(v.vertex);
+    for (const v of graph)
+      for (const edge of v.vertex.edges) roots.delete(edge.vertex);
 
-    for (const v of graph) {
-      for (const edge of v.vertex.edges) {
-        roots.delete(edge.vertex);
-      }
-    }
-
-    const results = [];
-
+    // build a unique sequence of matches for each root
     const traverseRoot = (path, root, edges, sampleOffsetFromRoot = 0) => {
       for (const edge of edges) {
         if (
@@ -441,6 +444,8 @@ export default class SynAudio {
       }
     };
 
+    const results = [];
+
     for (const root of roots) {
       const path = new Map();
       path.set(root, {
@@ -452,7 +457,9 @@ export default class SynAudio {
       results.push(
         [...path.values()].sort(
           (a, b) =>
-            a.sampleOffset - b.sampleOffset || a.correlation - b.correlation
+            a.sampleOffset - b.sampleOffset ||
+            (a.correlation || 0) - (b.correlation || 0) ||
+            b.name.localeCompare(a.name)
         )
       );
     }

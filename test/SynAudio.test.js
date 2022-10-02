@@ -753,7 +753,6 @@ describe("SynAudio", () => {
     cut_194648_32_gen20_Mpeg: data[26]
   }));
 
-  /*
   describe("sync", () => {
     runTestSuite(testData, it.concurrent, "sync");
   });
@@ -1107,7 +1106,6 @@ describe("SynAudio", () => {
       //expect(roundedTrim_194648).toBeLessThanOrEqual(576 * 2);
     });
   });
-  */
 
   describe("syncMultiple", () => {
     it("should sync multiple clips in order of connection", async () => {
@@ -1117,18 +1115,83 @@ describe("SynAudio", () => {
       });
 
       const result = await testData.then((data) =>
-        synAudio.syncMultiple([
-          { name: "fullMpeg", data: data.fullMpeg },
-          { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
-          { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
-          { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
-          { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
-          { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
-        ])
+        synAudio.syncMultiple(
+          [
+            { name: "fullMpeg", data: data.fullMpeg },
+            { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
+            { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
+            { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
+            { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
+            { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
+          ],
+          0.5
+        )
       );
 
       process.stdout.write(
         "\n" + "should sync multiple clips in order of connection" + "\n"
+      );
+      process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+
+      expect(result).toEqual([
+        [
+          {
+            name: "fullMpeg",
+            sampleOffset: 0,
+          },
+          {
+            name: "cut_194648_Mpeg",
+            correlation: 0.9937149882316589,
+            sampleOffset: 194072,
+          },
+          {
+            name: "cut_287549_Mpeg",
+            correlation: 0.9897415637969971,
+            sampleOffset: 286973,
+          },
+          {
+            name: "cut_312782_32_Mpeg",
+            correlation: 0.957695484161377,
+            sampleOffset: 312206,
+          },
+          {
+            name: "cut_1601425_Mpeg",
+            correlation: 0.9872578382492065,
+            sampleOffset: 1600849,
+          },
+          {
+            name: "cut_2450800_Mpeg",
+            correlation: 0.9868547916412354,
+            sampleOffset: 2450224,
+          },
+        ],
+      ]);
+    }, 10000);
+
+    it("should sync multiple clips in order of connection when correlation threshold is set to 0", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 44100,
+        initialGranularity: 16,
+      });
+
+      const result = await testData.then((data) =>
+        synAudio.syncMultiple(
+          [
+            { name: "fullMpeg", data: data.fullMpeg },
+            { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
+            { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
+            { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
+            { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
+            { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
+          ],
+          0
+        )
+      );
+
+      process.stdout.write(
+        "\n" +
+          "should sync multiple clips in order of connection when correlation threshold is set to 0" +
+          "\n"
       );
       process.stdout.write(JSON.stringify(result, null, 2) + "\n");
 
@@ -1174,17 +1237,20 @@ describe("SynAudio", () => {
       });
 
       const result = await testData.then((data) =>
-        synAudio.syncMultiple([
-          { name: "fullMpeg", data: data.fullMpeg },
-          { name: "fullMpeg2", data: data.fullMpeg },
-          { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
-          { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
-          { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
-          { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
-          { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
-          { name: "cut_194648_2_Mpeg", data: data.cut_194648_Mpeg },
-          { name: "cut_194648_32_Mpeg", data: data.cut_194648_32_Mpeg },
-        ])
+        synAudio.syncMultiple(
+          [
+            { name: "fullMpeg", data: data.fullMpeg },
+            { name: "fullMpeg2", data: data.fullMpeg },
+            { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
+            { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
+            { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
+            { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
+            { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
+            { name: "cut_194648_2_Mpeg", data: data.cut_194648_Mpeg },
+            { name: "cut_194648_32_Mpeg", data: data.cut_194648_32_Mpeg },
+          ],
+          0.5
+        )
       );
 
       process.stdout.write("\n" + "should prevent cyclic relationships" + "\n");
@@ -1240,6 +1306,76 @@ describe("SynAudio", () => {
       ]);
     }, 10000);
 
+    it("should prevent cyclic relationships when correlation threshold is set to 0", async () => {
+      const synAudio = new SynAudio({
+        correlationSampleSize: 44100,
+        initialGranularity: 16,
+      });
+
+      const result = await testData.then((data) =>
+        synAudio.syncMultiple(
+          [
+            { name: "fullMpeg", data: data.fullMpeg },
+            { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
+            { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
+            { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
+            { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
+            { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
+            { name: "cut_194648_2_Mpeg", data: data.cut_194648_Mpeg },
+            { name: "cut_194648_32_Mpeg", data: data.cut_194648_32_Mpeg },
+          ],
+          0
+        )
+      );
+
+      process.stdout.write("\n" + "should prevent cyclic relationships" + "\n");
+      process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+
+      expect(result).toEqual([
+        [
+          {
+            name: "fullMpeg",
+            sampleOffset: 0,
+          },
+          {
+            name: "cut_194648_32_Mpeg",
+            correlation: 0.9513630270957947,
+            sampleOffset: 194072,
+          },
+          {
+            name: "cut_194648_Mpeg",
+            correlation: 0.9937149882316589,
+            sampleOffset: 194072,
+          },
+          {
+            name: "cut_194648_2_Mpeg",
+            correlation: 0.9937149882316589,
+            sampleOffset: 194072,
+          },
+          {
+            name: "cut_287549_Mpeg",
+            correlation: 0.9897415637969971,
+            sampleOffset: 286973,
+          },
+          {
+            name: "cut_312782_32_Mpeg",
+            correlation: 0.957695484161377,
+            sampleOffset: 312206,
+          },
+          {
+            name: "cut_1601425_Mpeg",
+            correlation: 0.9872578382492065,
+            sampleOffset: 1600849,
+          },
+          {
+            name: "cut_2450800_Mpeg",
+            correlation: 0.9868547916412354,
+            sampleOffset: 2450224,
+          },
+        ],
+      ]);
+    }, 10000);
+
     it("should add multiple nodes for unrelated matches", async () => {
       const synAudio = new SynAudio({
         correlationSampleSize: 44100,
@@ -1247,12 +1383,15 @@ describe("SynAudio", () => {
       });
 
       const result = await testData.then((data) =>
-        synAudio.syncMultiple([
-          { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
-          { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
-          { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
-          { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
-        ])
+        synAudio.syncMultiple(
+          [
+            { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
+            { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
+            { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
+            { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
+          ],
+          0.5
+        )
       );
 
       process.stdout.write(
@@ -1293,13 +1432,16 @@ describe("SynAudio", () => {
       });
 
       const result = await testData.then((data) =>
-        synAudio.syncMultiple([
-          { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
-          { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
-          { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
-          { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
-          { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
-        ])
+        synAudio.syncMultiple(
+          [
+            { name: "cut_2450800_Mpeg", data: data.cut_2450800_Mpeg },
+            { name: "cut_287549_Mpeg", data: data.cut_287549_Mpeg },
+            { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
+            { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
+            { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
+          ],
+          0.5
+        )
       );
 
       process.stdout.write(
