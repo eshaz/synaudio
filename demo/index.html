@@ -85,6 +85,28 @@
       display: flex;
       flex: 1;
     }
+    .popover-wrapper {
+      position: relative;
+    }
+    .popover-content {
+      opacity: 0;
+      visibility: hidden;
+      position: absolute;
+      color: rgb(0, 0, 0);
+      background-color: #cacaca;
+      padding: 1.5rem;
+      width: auto;
+      border-width: 2px;
+      border-color: #000;
+      border-style: solid;
+      border-radius: 10px;
+    }
+    .popover-wrapper:hover .popover-content {
+      z-index: 10;
+      opacity: 1;
+      visibility: visible;
+      transition: all 0.5s cubic-bezier(0.75, -0.02, 0.2, 0.97);
+    }
   </style>
   <script>
     let audioFormData, optionsFormData;
@@ -93,12 +115,13 @@
     const audioClips = {
       ["Flight of the Bumblebee"]: {
         ["Full Audio (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.mp3",
-        ["Clip @ 1601425 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.1601425.mp3",
-        ["Clip @ 287549 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.287549.mp3",
-        ["Clip @ 2450800 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.2450800.mp3",
         ["Clip @ 194648 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.194648.mp3",
         ["Clip @ 194648 Samples (MP3 64kb/s)"]: "clips/bumblebee/mpeg.64.194648.mp3",
         ["Clip @ 194648 Samples (MP3 32kb/s)"]: "clips/bumblebee/mpeg.32.194648.mp3",
+        ["Clip @ 287549 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.287549.mp3",
+        ["Clip @ 312782 Samples (MP3 32kb/s)"]: "clips/bumblebee/mpeg.32.312782.mp3",
+        ["Clip @ 1601425 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.1601425.mp3",
+        ["Clip @ 2450800 Samples (MP3 128kb/s)"]: "clips/bumblebee/mpeg.cbr.2450800.mp3",
         ["Clip @ 194648 Samples (MP3 32kb/s gen2)"]: "clips/bumblebee/mpeg.32.gen2.194648.mp3",
         ["Clip @ 194648 Samples (MP3 32kb/s gen3)"]: "clips/bumblebee/mpeg.32.gen3.194648.mp3",
         ["Clip @ 194648 Samples (MP3 32kb/s gen4)"]: "clips/bumblebee/mpeg.32.gen4.194648.mp3",
@@ -242,14 +265,15 @@
       </li>
     </ul>
     <hr />
-    <div class="row" style="justify-content: center">
+    <div class="row">
       <form
         name="audioForm"
         id="audioForm"
         onsubmit="return false;"
         class="row"
+        style="flex-grow: 1"
       >
-        <fieldset>
+        <fieldset style="flex-grow: 1">
           <legend>Select Audio Clips</legend>
           <ol>
             <li style="margin-bottom: 5px">
@@ -342,17 +366,19 @@
         <fieldset id="synaudio-results" class="row" style="flex-grow: 1">
           <legend>SynAudio Results</legend>
           <table style="font-weight: bold; border-spacing: 10px 0; width: 100%">
-            <tr>
+            <tr id="correlation-coefficient-row">
               <td>Correlation Coefficient</td>
               <td style="color: darkred" id="correlation-coefficient">-</td>
             </tr>
-            <tr>
+            <tr id="correlation-sample-offset-row">
               <td>Sample Offset</td>
-              <td
-                style="color: rgb(211, 164, 164)"
-                id="correlation-sample-offset"
-              >
-                -
+              <td style="color: darkred" id="correlation-sample-offset">-</td>
+            </tr>
+            <tr id="correlation-results-json-row" style="display: none">
+              <td>Results</td>
+              <td class="popover-wrapper">
+                <i>Hover to see</i>
+                <div id="correlation-results-json"></div>
               </td>
             </tr>
             <tr>
@@ -375,8 +401,9 @@
         id="optionsForm"
         onsubmit="return false;"
         class="row"
+        style="flex-grow: 1"
       >
-        <fieldset id="synaudio-options" class="column">
+        <fieldset id="synaudio-options" class="column" style="flex-grow: 1">
           <legend>SynAudio Options</legend>
           <table>
             <tr>
@@ -424,7 +451,7 @@
             </tr>
           </table>
         </fieldset>
-        <fieldset id="fft-options" class="column">
+        <fieldset id="fft-options" class="column" style="flex-grow: 1">
           <legend>FFT Options</legend>
           <table>
             <tr>
@@ -462,8 +489,8 @@
         </fieldset>
       </form>
     </div>
-    <div id="fft-container"></div>
     <div id="result-fft-container"></div>
+    <div id="fft-container"></div>
   </body>
   <script>
     ("use strict");
@@ -487,7 +514,7 @@
       [baseAudioClipKey]: "<i>Select a base audio clip.</i>",
       [comparisonAudioClipKey]: "<i>Select a comparison audio clip.</i>",
       [correlationAudioClipKey]:
-        "<i>Select two audio clips and click <b>Find Correlation</b>.</i>",
+        "<i>Select audio clips and click <b>Find Correlation</b>.</i>",
     };
 
     class WebAudioPlayer {
@@ -1175,16 +1202,12 @@
         },
         correlationMode: formData.correlationMode,
       };
-
-      console.log(audioFormData);
     };
 
     const setOptionsFormData = () => {
       optionsFormData = Object.fromEntries(
         new FormData(document.optionsForm).entries()
       );
-
-      console.log(optionsFormData);
     };
 
     document.audioForm.addEventListener("change", setAudioFormData);
@@ -1199,9 +1222,7 @@
     const twoClipsModeEl = document.getElementById("two-clips-mode");
     const multipleClipsModeEl = document.getElementById("multiple-clips-mode");
 
-    // two clip select
     const twoClipsFieldsetEl = document.getElementById("two-clips-fieldset");
-    // multiple clip select
     const multipleClipsFieldsetEl = document.getElementById(
       "multiple-clips-fieldset"
     );
@@ -1210,6 +1231,22 @@
 
     // correlation options
     const correlationMethodEl = document.getElementById("correlation-method");
+
+    // correlation results
+    const correlationCoefficientRowEl = document.getElementById(
+      "correlation-coefficient-row"
+    );
+    const correlationSampleOffsetRowEl = document.getElementById(
+      "correlation-sample-offset-row"
+    );
+
+    const correlationResultsJsonRowEl = document.getElementById(
+      "correlation-results-json-row"
+    );
+
+    const correlationResultsJsonEl = document.getElementById(
+      "correlation-results-json"
+    );
     const correlationCoefficientEl = document.getElementById(
       "correlation-coefficient"
     );
@@ -1249,7 +1286,6 @@
     </fieldset>
     `;
 
-    const multipleClipsFFTPlaceholder = multipleClipsFFT("placeholder");
     const fftContainer = document.getElementById("fft-container");
 
     const selectedClips = new Map();
@@ -1274,12 +1310,15 @@
 
       // destroy the multiple clip ffts
       multipleClipsFieldsetEl.style = "display: none;";
+      correlationResultsJsonRowEl.style = "display: none;";
       reset();
       twoClipsModeEl.checked = true;
       multipleClipsModeEl.checked = false;
 
       // show the two clip ffts
       twoClipsFieldsetEl.style = "";
+      correlationCoefficientRowEl.style = "";
+      correlationSampleOffsetRowEl.style = "";
 
       // FFT setup
       fftContainer.innerHTML = twoClipsFFT();
@@ -1306,18 +1345,19 @@
 
       // destroy the two clip ffts
       twoClipsFieldsetEl.style = "display: none;";
+      // hide single match results
+      correlationCoefficientRowEl.style = "display: none;";
+      correlationSampleOffsetRowEl.style = "display: none;";
       reset();
       multipleClipsModeEl.checked = true;
       twoClipsModeEl.checked = false;
 
       // show the multiple clip ffts
       multipleClipsFieldsetEl.style = "";
+      correlationResultsJsonRowEl.style = "";
 
       // FFT setup
-      fftContainer.innerHTML = multipleClipsFFTPlaceholder;
-      const placeholderFFTContainerEl =
-        document.getElementById("placeholder-fft");
-      placeholderFFTContainerEl.innerHTML = fftPlaceholders.addAClip;
+      fftContainer.innerHTML = "";
     };
 
     const selectAudioFieldControl = (newMode) => {
@@ -1338,8 +1378,6 @@
           audioData[baseAudioClipKey] && audioData[comparisonAudioClipKey]
         );
       } else if (mode === multipleClipsMode) {
-        console.log(audioData);
-
         findCorrelationEl.disabled = Object.keys(audioData).length < 2;
       }
     };
@@ -1375,7 +1413,6 @@
 
     const getAudioFFT = async (key, data) => {
       const files = Object.keys(audioData).length;
-      console.log(files);
 
       const fft = new FFTCanvas(key);
 
@@ -1431,7 +1468,7 @@
         const newKeys = audio.multiple.map((v) => getAudioKey(v));
 
         for (const key in audioData) {
-          if (!newKeys.includes(key)) {
+          if (!newKeys.includes(key) && key !== correlationAudioClipKey) {
             audioData[key].fft.destroy();
             delete audioData[key];
 
@@ -1500,10 +1537,12 @@
     };
 
     const findCorrelationMultiple = async () => {
-      const params = Object.entries(audioData).map(([k, v]) => ({
-        name: k,
-        data: audioBufferToSynAudioParameter(v.fft.audioBuffers[0]),
-      }));
+      const params = Object.entries(audioData)
+        .filter(([k]) => k !== correlationAudioClipKey)
+        .map(([k, v]) => ({
+          name: k,
+          data: audioBufferToSynAudioParameter(v.fft.audioBuffers[0]),
+        }));
 
       const synAudio = new SynAudio({
         correlationSampleSize: parseInt(
@@ -1518,16 +1557,8 @@
       const results = await synAudio.syncMultiple(params);
       const duration = (performance.now() - start) / 1000;
 
-      //result.timeSpent = duration;
-      //result.rate =
-      //  baseAudioBuffer.length / baseAudioBuffer.sampleRate / duration;
-      //result.sampleRate = baseAudioBuffer.sampleRate;
-      //result.bytesPerSecond =
-      //  (baseAudioBuffer.length * baseAudioBuffer.numberOfChannels) / duration;
-
       for (const stem of results) {
         for (const matches of stem) {
-          console.log(matches);
           audioData[matches.name].fft.translateXSamples(matches.sampleOffset);
         }
       }
@@ -1539,10 +1570,19 @@
         correlationAudioClipKey
       );
 
+      let totalLength = 0,
+        averageSampleRate = 0,
+        averageChannelCount = 0,
+        bufferCount = 0;
+
       for (const stem of results) {
         for (const match of stem) {
           const fft = audioData[match.name].fft;
           const audioBuffer = fft.audioBuffers[0];
+          totalLength += audioBuffer.length;
+          averageSampleRate += audioBuffer.sampleRate;
+          averageChannelCount += audioBuffer.numberOfChannels;
+          bufferCount++;
 
           audioData[correlationAudioClipKey].fft.addAudioBuffer(audioBuffer, {
             ...fft.getAudioBufferData(audioBuffer),
@@ -1551,9 +1591,26 @@
         }
       }
 
+      averageSampleRate /= bufferCount;
+      averageChannelCount /= bufferCount;
+
+      const result = {
+        timeSpent: duration,
+        rate: totalLength / averageSampleRate / duration,
+        sampleRate: averageSampleRate,
+        bytesPerSecond: (totalLength * averageChannelCount) / duration,
+        matches: results,
+      };
+
       updateFFTCanvasSize();
 
-      return results;
+      correlationResultsJsonEl.innerHTML = `<pre class="popover-content">${JSON.stringify(
+        results,
+        null,
+        2
+      )}</pre>`;
+
+      return result;
     };
 
     const findCorrelation = async (method) => {
@@ -1608,23 +1665,36 @@
       updateFFTCanvasSize();
       await comparisonFFT.drawFFT();
 
+      correlationCoefficientEl.innerHTML = result.correlation.toFixed(4);
+      correlationSampleOffsetEl.innerHTML = `${result.sampleOffset} @ ${result.sampleRate} Hz`;
+
       return result;
     };
 
     findCorrelationEl.addEventListener("click", async () => {
       findCorrelationEl.disabled = true;
-      const result =
-        mode === twoClipsMode
-          ? await findCorrelation(correlationMethodEl.value)
-          : await findCorrelationMultiple();
-      findCorrelationEl.disabled = false;
 
-      //correlationCoefficientEl.innerHTML = result.correlation.toFixed(4);
-      //correlationSampleOffsetEl.innerHTML = `${result.sampleOffset} @ ${result.sampleRate} Hz`;
-      //correlationTimeSpent.innerHTML = result.timeSpent.toFixed(4) + " seconds";
-      //correlationRateEl.innerHTML = result.rate.toFixed(2) + " X";
-      //correlationBytesPerSecEl.innerHTML =
-      //  Math.round(result.bytesPerSecond / 1024) + " KiB/s";
+      if (mode === twoClipsMode) {
+        const result = await findCorrelation(correlationMethodEl.value);
+
+        correlationCoefficientEl.innerHTML = result.correlation.toFixed(4);
+        correlationSampleOffsetEl.innerHTML = `${result.sampleOffset} @ ${result.sampleRate} Hz`;
+        correlationTimeSpent.innerHTML =
+          result.timeSpent.toFixed(4) + " seconds";
+        correlationRateEl.innerHTML = result.rate.toFixed(2) + " X";
+        correlationBytesPerSecEl.innerHTML =
+          Math.round(result.bytesPerSecond / 1024) + " KiB/s";
+      } else {
+        const result = await findCorrelationMultiple();
+
+        correlationTimeSpent.innerHTML =
+          result.timeSpent.toFixed(4) + " seconds";
+        correlationRateEl.innerHTML = result.rate.toFixed(2) + " X";
+        correlationBytesPerSecEl.innerHTML =
+          Math.round(result.bytesPerSecond / 1024) + " KiB/s";
+      }
+
+      findCorrelationEl.disabled = false;
     });
   </script>
 </html>
