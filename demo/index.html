@@ -1572,7 +1572,11 @@
       });
 
       const start = performance.now();
-      const results = await synAudio.syncMultiple(params);
+      const results = await synAudio.syncMultiple(
+        params,
+        0.5,
+        window.hardwareConcurrency
+      );
       const duration = (performance.now() - start) / 1000;
 
       for (const stem of results) {

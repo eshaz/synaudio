@@ -524,9 +524,19 @@
       return this._instance._sync(a, b);
     }
 
-    async syncMultiple(clips, correlationThreshold = 0.5) {
+    async syncMultiple(clips, correlationThreshold = 0.5, threads = 8) {
       const workers = [];
       const graph = [];
+
+      let notify = () => {},
+        wait = Promise.resolve(),
+        runningThreads = 0;
+
+      const resetNotify = () => {
+        wait = new Promise((resolve) => {
+          notify = resolve;
+        });
+      };
 
       for (let i = 0; i < clips.length; i++) graph.push({ vertex: {} });
 
@@ -544,6 +554,7 @@
           const edgeClip = clips[e];
           const edge = graph[e];
 
+          runningThreads++;
           workers.push(
             this.syncWorker(vertexClip.data, edgeClip.data).then(
               (correlationResult) => {
@@ -555,9 +566,16 @@
                     ...correlationResult,
                   });
                 }
+                runningThreads--;
+                notify();
               }
             )
           );
+
+          if (runningThreads >= threads) {
+            resetNotify();
+            await wait;
+          }
         }
       }
 
