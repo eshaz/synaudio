@@ -100,12 +100,13 @@
       border-color: #000;
       border-style: solid;
       border-radius: 10px;
+      transition: all 0.25s cubic-bezier(0.75, -0.02, 0.2, 0.97);
     }
     .popover-wrapper:hover .popover-content {
       z-index: 10;
       opacity: 1;
       visibility: visible;
-      transition: all 0.5s cubic-bezier(0.75, -0.02, 0.2, 0.97);
+      transition: all 0.25s cubic-bezier(0.75, -0.02, 0.2, 0.97);
     }
   </style>
   <script>
@@ -211,7 +212,8 @@
     </p>
     <hr />
     <h3>How to use the demo</h3>
-    <ol>
+    <h4>Sync Two Clips</h4>
+    <ul>
       <li>Select two audio clips (one base clip, and one comparison clip).</li>
       <li>
         Click <b>Find Correlation</b> to find the sample offset within the base
@@ -221,45 +223,35 @@
         Play the result audio, which is the comparison audio spliced into the
         base audio at the sample offset, to sonically verify the correlation
         result.
+        <ul>
+          <li>
+            When the <i>correlation coefficient</i> is high (over 50%) the match
+            will likely align with sample accurate results.
+          </li>
+          <li>
+            When the <i>correlation coefficient</i> is low (under 50%) there is
+            likely not a match between the base and comparison audio clips.
+          </li>
+        </ul>
       </li>
-    </ol>
-    <h4>SynAudio Options</h4>
+    </ul>
+    <h4>Sync Multiple Clips</h4>
     <ul>
+      <li>Select two or more audio clips.</li>
       <li>
-        <b>Correlation Method</b>
-        <ul>
-          <li><u>sync</u>: Executes on the main thread.</li>
-          <li><u>syncWorker</u>: Executes in a Web Worker.</li>
-          <li>
-            <u>syncWorkerConcurrent</u>: Executes in multiple Web Workers
-            (multi-threaded).
-          </li>
-        </ul>
+        Click <b>Find Correlation</b> to find the best match between all the
+        clips.
       </li>
       <li>
-        <b>Correlation Sample Size</b>
+        Play the resulting audio clips(s), which represents the best match(es)
+        between all the clips, to sonically verify the correlation results.
         <ul>
           <li>
-            Controls the number of samples from the beginning of the the
-            comparison audio to check against the base audio while searching for
-            the best correlation.
+            Hover over the <i>Results</i> area to see the list of matches.
           </li>
           <li>
-            This value can be increased for better accuracy, at the expense of
-            execution time.
-          </li>
-        </ul>
-      </li>
-      <li>
-        <b>Initial Granularity</b>
-        <ul>
-          <li>
-            Controls the number of samples that are skipped during each
-            iteration while searching for the best correlation.
-          </li>
-          <li>
-            This value can be decreased for better accuracy, at the expense of
-            execution time.
+            Each match within <i>Results</i> is a nested array representing a
+            chain of matching audio clips.
           </li>
         </ul>
       </li>
@@ -341,20 +333,22 @@
                     id="multiple-audio-select"
                     name="multipleAudioSelect"
                     multiple
-                    style="height: 200px"
+                    style="height: 200px; width: 95%"
                   >
                     <option value="" disabled selected>
                       Select Two or More Audio Clips
                     </option>
                   </select>
-                  <span>or</span>
-                  <input
-                    type="file"
-                    id="multiple-audio-file"
-                    name="multipleAudioFile"
-                    accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
-                    multiple
-                  />
+                  <div style="margin-left: 5px">
+                    <span>or</span>
+                    <input
+                      type="file"
+                      id="multiple-audio-file"
+                      name="multipleAudioFile"
+                      accept=".mp3, .mp2, .mp1, .mpg, .ogg, .opus"
+                      multiple
+                    />
+                  </div>
                 </div>
               </li>
             </div>
@@ -375,11 +369,11 @@
               <td style="color: darkred" id="correlation-sample-offset">-</td>
             </tr>
             <tr id="correlation-results-json-row" style="display: none">
-              <td>Results</td>
-              <td class="popover-wrapper">
-                <i>Hover to see</i>
+              <td class="popover-wrapper" style="padding-bottom: 65%">
+                <i>Hover to see results</i>
                 <div id="correlation-results-json"></div>
               </td>
+              <td></td>
             </tr>
             <tr>
               <td>Time spent</td>
@@ -406,7 +400,13 @@
         <fieldset id="synaudio-options" class="column" style="flex-grow: 1">
           <legend>SynAudio Options</legend>
           <table>
-            <tr>
+            <tr
+              title="Selects the method on the SynAudio instance to execute.
+* sync: Executes on the main thread.
+* syncWorker: Executes in a Web Worker.
+* syncWorkerConcurrent: Executes in multiple Web Workers (multi-threaded).
+          "
+            >
               <td>
                 <label for="correlation-method">Correlation Method</label>
               </td>
@@ -420,8 +420,10 @@
                 </select>
               </td>
             </tr>
-
-            <tr>
+            <tr
+              title="Selects the sample size in audio samples to compare when determining the best correlation.
+* This value can be increased for better accuracy, at the expense of execution time."
+            >
               <td>
                 <label for="correlation-sample-size"
                   >Correlation Sample Size</label
@@ -436,7 +438,10 @@
                 />
               </td>
             </tr>
-            <tr>
+            <tr
+              title="Selects the number of samples that are skipped during each iteration while searching for the best correlation.
+* This value can be decreased for better accuracy, at the expense of execution time."
+            >
               <td>
                 <label for="initial-granularity">Initial Granularity</label>
               </td>
@@ -578,6 +583,10 @@
 
       get playerEl() {
         return this._playerEl;
+      }
+
+      get length() {
+        return this.audioBuffer.length;
       }
 
       getTime(seconds) {
@@ -734,11 +743,12 @@
       }
 
       get length() {
-        return this.audioBuffers.reduce(
-          (acc, audioBuffer) =>
-            acc > audioBuffer.length ? acc : audioBuffer.length,
-          0
-        );
+        return this.audioBuffers.reduce((acc, audioBuffer) => {
+          const totalLength =
+            this._audioBufferData.get(audioBuffer).offset + audioBuffer.length;
+
+          return acc > totalLength ? acc : totalLength;
+        }, 0);
       }
 
       get displayLength() {
@@ -961,7 +971,7 @@
                 break;
             }
 
-            self.postMessage(messageId);
+            requestAnimationFrame(() => self.postMessage(messageId));
           };
         };
 
@@ -1027,7 +1037,8 @@
           this._audioKey + "-fft"
         );
 
-        this._playerEl.style.width = this._sampleToPixel(this.length) + "px";
+        this._playerEl.style.width =
+          this._sampleToPixel(this._webAudioPlayer.length) + "px";
 
         this._playerEl.style.marginLeft =
           this._sampleToPixel(this._translatedSamples) + "px";
@@ -1261,32 +1272,15 @@
     );
     const correlationRateEl = document.getElementById("correlation-rate");
 
-    document.getElementById("result-fft-container").innerHTML = `
-    <fieldset id="${correlationAudioClipKey}-fieldset" class="column">
-      <legend>SynAudio Result FFT</legend>
-      <div id="${correlationAudioClipKey}-fft"></div>
-    </fieldset>
-    `;
-
-    const twoClipsFFT = () => `
-    <fieldset id="${baseAudioClipKey}-fieldset" class="column">
-      <legend>Base Audio FFT</legend>
-      <div id="${baseAudioClipKey}-fft"></div>
-    </fieldset>
-    <fieldset id="${comparisonAudioClipKey}-fieldset" class="column">
-      <legend>Comparison Audio FFT</legend>
-      <div id="${comparisonAudioClipKey}-fft"></div>
-    </fieldset>
-    `;
-
-    const multipleClipsFFT = (id, name) => `
-    <fieldset id="${id}-fieldset" class="column">
-      <legend>${name ? `${name} ` : ""}Audio FFT</legend>
+    const getFFTContainer = (id, name, title = "") => `
+    <fieldset id="${id}-fieldset" title='${title}' class="column">
+      <legend>${name ? `${name} ` : ""}Audio</legend>
       <div id="${id}-fft"></div>
     </fieldset>
     `;
 
     const fftContainer = document.getElementById("fft-container");
+    const resultContainer = document.getElementById("result-fft-container");
 
     const selectedClips = new Map();
     let audioData = {};
@@ -1299,6 +1293,12 @@
 
       audioData = {};
       document.audioForm.reset();
+      correlationResultsJsonEl.innerHTML = "";
+      correlationCoefficientEl.innerHTML = "-";
+      correlationSampleOffsetEl.innerHTML = "-";
+      correlationTimeSpent.innerHTML = "-";
+      correlationBytesPerSecEl.innerHTML = "-";
+      correlationRateEl.innerHTML = "-";
     };
 
     const twoClipsMode = "two-clips-mode";
@@ -1311,6 +1311,7 @@
       // destroy the multiple clip ffts
       multipleClipsFieldsetEl.style = "display: none;";
       correlationResultsJsonRowEl.style = "display: none;";
+      correlationMethodEl.disabled = false;
       reset();
       twoClipsModeEl.checked = true;
       multipleClipsModeEl.checked = false;
@@ -1321,7 +1322,13 @@
       correlationSampleOffsetRowEl.style = "";
 
       // FFT setup
-      fftContainer.innerHTML = twoClipsFFT();
+      fftContainer.innerHTML =
+        getFFTContainer(baseAudioClipKey, "Base") +
+        getFFTContainer(comparisonAudioClipKey, "Comparison");
+      resultContainer.innerHTML = getFFTContainer(
+        correlationAudioClipKey,
+        "Correlation"
+      );
 
       const baseAudioFFTContainerEl = document.getElementById(
         baseAudioClipKey + "-fft"
@@ -1345,6 +1352,7 @@
 
       // destroy the two clip ffts
       twoClipsFieldsetEl.style = "display: none;";
+      correlationMethodEl.disabled = true;
       // hide single match results
       correlationCoefficientRowEl.style = "display: none;";
       correlationSampleOffsetRowEl.style = "display: none;";
@@ -1358,6 +1366,7 @@
 
       // FFT setup
       fftContainer.innerHTML = "";
+      resultContainer.innerHTML = "";
     };
 
     const selectAudioFieldControl = (newMode) => {
@@ -1387,6 +1396,15 @@
         audioData[correlationAudioClipKey].fft.destroy();
 
       delete audioData[correlationAudioClipKey];
+
+      if (mode === twoClipsMode) {
+        resultContainer.innerHTML = getFFTContainer(
+          correlationAudioClipKey,
+          "Correlation"
+        );
+      } else if (mode === multipleClipsMode) {
+        resultContainer.innerHTML = "";
+      }
     };
 
     const updateFFTCanvasSize = () => {
@@ -1481,7 +1499,7 @@
 
           if (!audioData[key]) {
             const node = document.createElement("div");
-            node.innerHTML = multipleClipsFFT(key, key);
+            node.innerHTML = getFFTContainer(key, key);
 
             document.getElementById("fft-container").appendChild(node);
           }
@@ -1538,7 +1556,7 @@
 
     const findCorrelationMultiple = async () => {
       const params = Object.entries(audioData)
-        .filter(([k]) => k !== correlationAudioClipKey)
+        .filter(([k]) => !k.includes("correlation"))
         .map(([k, v]) => ({
           name: k,
           data: audioBufferToSynAudioParameter(v.fft.audioBuffers[0]),
@@ -1565,17 +1583,26 @@
 
       destroyCorrelationFFT();
 
-      audioData[correlationAudioClipKey] = {};
-      audioData[correlationAudioClipKey].fft = new FFTCanvas(
-        correlationAudioClipKey
-      );
-
       let totalLength = 0,
         averageSampleRate = 0,
         averageChannelCount = 0,
         bufferCount = 0;
 
-      for (const stem of results) {
+      for (let i = 0; i < results.length; i++) {
+        const stem = results[i];
+        const correlationKey = "correlation" + i;
+
+        const node = document.createElement("div");
+        node.innerHTML = getFFTContainer(
+          correlationKey,
+          "Match Group " + (i + 1) + " ",
+          JSON.stringify(stem, null, 2)
+        );
+        resultContainer.appendChild(node);
+
+        audioData[correlationKey] = {};
+        audioData[correlationKey].fft = new FFTCanvas(correlationKey);
+
         for (const match of stem) {
           const fft = audioData[match.name].fft;
           const audioBuffer = fft.audioBuffers[0];
@@ -1584,7 +1611,7 @@
           averageChannelCount += audioBuffer.numberOfChannels;
           bufferCount++;
 
-          audioData[correlationAudioClipKey].fft.addAudioBuffer(audioBuffer, {
+          audioData[correlationKey].fft.addAudioBuffer(audioBuffer, {
             ...fft.getAudioBufferData(audioBuffer),
             offset: match.sampleOffset,
           });
@@ -1663,7 +1690,6 @@
         }
       );
       updateFFTCanvasSize();
-      await comparisonFFT.drawFFT();
 
       correlationCoefficientEl.innerHTML = result.correlation.toFixed(4);
       correlationSampleOffsetEl.innerHTML = `${result.sampleOffset} @ ${result.sampleRate} Hz`;
