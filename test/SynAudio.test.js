@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import os from "os";
 import { MPEGDecoderWebWorker } from "mpg123-decoder";
 
 import SynAudio from "synaudio";
@@ -1108,10 +1109,13 @@ describe("SynAudio", () => {
   });
 
   describe("syncMultiple", () => {
+    const threads = os.cpus().length;
+
     it("should sync multiple clips in order of connection", async () => {
       const synAudio = new SynAudio({
         correlationSampleSize: 44100,
         initialGranularity: 16,
+        correlationThreshold: 0.5,
       });
 
       const result = await testData.then((data) =>
@@ -1124,7 +1128,7 @@ describe("SynAudio", () => {
             { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
             { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
           ],
-          0.5
+          threads
         )
       );
 
@@ -1172,6 +1176,7 @@ describe("SynAudio", () => {
       const synAudio = new SynAudio({
         correlationSampleSize: 44100,
         initialGranularity: 16,
+        correlationThreshold: 0,
       });
 
       const result = await testData.then((data) =>
@@ -1184,7 +1189,7 @@ describe("SynAudio", () => {
             { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
             { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
           ],
-          0
+          threads
         )
       );
 
@@ -1234,6 +1239,7 @@ describe("SynAudio", () => {
       const synAudio = new SynAudio({
         correlationSampleSize: 44100,
         initialGranularity: 16,
+        correlationThreshold: 0.5,
       });
 
       const result = await testData.then((data) =>
@@ -1249,7 +1255,7 @@ describe("SynAudio", () => {
             { name: "cut_194648_2_Mpeg", data: data.cut_194648_Mpeg },
             { name: "cut_194648_32_Mpeg", data: data.cut_194648_32_Mpeg },
           ],
-          0.5
+          threads
         )
       );
 
@@ -1310,6 +1316,7 @@ describe("SynAudio", () => {
       const synAudio = new SynAudio({
         correlationSampleSize: 44100,
         initialGranularity: 16,
+        correlationThreshold: 0,
       });
 
       const result = await testData.then((data) =>
@@ -1324,7 +1331,7 @@ describe("SynAudio", () => {
             { name: "cut_194648_2_Mpeg", data: data.cut_194648_Mpeg },
             { name: "cut_194648_32_Mpeg", data: data.cut_194648_32_Mpeg },
           ],
-          0
+          threads
         )
       );
 
@@ -1380,6 +1387,7 @@ describe("SynAudio", () => {
       const synAudio = new SynAudio({
         correlationSampleSize: 44100,
         initialGranularity: 16,
+        correlationThreshold: 0.5,
       });
 
       const result = await testData.then((data) =>
@@ -1390,7 +1398,7 @@ describe("SynAudio", () => {
             { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
             { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
           ],
-          0.5
+          threads
         )
       );
 
@@ -1429,6 +1437,7 @@ describe("SynAudio", () => {
       const synAudio = new SynAudio({
         correlationSampleSize: 44100,
         initialGranularity: 16,
+        correlationThreshold: 0.5,
       });
 
       const result = await testData.then((data) =>
@@ -1440,7 +1449,7 @@ describe("SynAudio", () => {
             { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
             { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
           ],
-          0.5
+          threads
         )
       );
 

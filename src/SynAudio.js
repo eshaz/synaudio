@@ -34,6 +34,8 @@ export default class SynAudio {
       options.correlationSampleSize > 0 ? options.correlationSampleSize : 11025;
     this._initialGranularity =
       options.initialGranularity > 0 ? options.initialGranularity : 16;
+    this._correlationThreshold =
+      options.correlationThreshold >= 0 ? options.correlationThreshold : 0.5;
 
     this._module = wasmModule.get(SynAudio);
 
@@ -325,7 +327,7 @@ export default class SynAudio {
     return this._instance._sync(a, b);
   }
 
-  async syncMultiple(clips, correlationThreshold = 0.5, threads = 8) {
+  async syncMultiple(clips, threads = 8) {
     const workers = [];
     const graph = [];
 
@@ -359,7 +361,7 @@ export default class SynAudio {
         workers.push(
           this.syncWorker(vertexClip.data, edgeClip.data).then(
             (correlationResult) => {
-              if (correlationResult.correlation > correlationThreshold) {
+              if (correlationResult.correlation > this._correlationThreshold) {
                 vertex.edges.add({
                   parent: vertex,
                   vertex: edge.vertex,
