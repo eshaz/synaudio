@@ -34,6 +34,8 @@ export default class SynAudio {
       options.correlationSampleSize > 0 ? options.correlationSampleSize : 11025;
     this._initialGranularity =
       options.initialGranularity > 0 ? options.initialGranularity : 16;
+    this._correlationThreshold =
+      options.correlationThreshold >= 0 ? options.correlationThreshold : 0.5;
 
     this._module = wasmModule.get(SynAudio);
 
@@ -323,5 +325,165 @@ export default class SynAudio {
 
   async sync(a, b) {
     return this._instance._sync(a, b);
+  }
+
+  async syncMultiple(clips, threads = 8) {
+    const workers = [];
+    const graph = [];
+
+    let notify = () => {},
+      wait = Promise.resolve(),
+      runningThreads = 0;
+
+    const resetNotify = () => {
+      wait = new Promise((resolve) => {
+        notify = resolve;
+      });
+    };
+
+    for (let i = 0; i < clips.length; i++) graph.push({ vertex: {} });
+
+    for (let v = 0; v < clips.length; v++) {
+      const vertexClip = clips[v];
+      const vertex = graph[v].vertex;
+
+      vertex.name = vertexClip.name;
+      vertex.samplesDecoded = vertexClip.data.samplesDecoded;
+      vertex.edges = new Set();
+
+      for (let e = 0; e < clips.length; e++) {
+        if (v === e) continue;
+
+        const edgeClip = clips[e];
+        const edge = graph[e];
+
+        runningThreads++;
+        workers.push(
+          this.syncWorker(vertexClip.data, edgeClip.data).then(
+            (correlationResult) => {
+              if (correlationResult.correlation > this._correlationThreshold) {
+                vertex.edges.add({
+                  parent: vertex,
+                  vertex: edge.vertex,
+                  samplesDecoded: edgeClip.data.samplesDecoded,
+                  ...correlationResult,
+                });
+              }
+              runningThreads--;
+              notify();
+            }
+          )
+        );
+
+        if (runningThreads >= threads) {
+          resetNotify();
+          await wait;
+        }
+      }
+    }
+
+    await Promise.all(workers);
+
+    // prettier-ignore
+    const weighResults = (a, b) => {
+      if (a.parent && b.parent && a.parent.samplesDecoded !== b.parent.samplesDecoded) return a.parent.samplesDecoded > b.parent.samplesDecoded;
+      if (a.correlation !== b.correlation) return a.correlation > b.correlation;
+      if (a.sampleOffset !== b.sampleOffset) return a.sampleOffset > b.sampleOffset;
+      return a.vertex && b.vertex && a.vertex.name.localeCompare(b.vertex.name) < 0;
+    };
+
+    // detect cycles and weigh for which edge to remove
+    const path = new Map();
+    const cycles = new Set();
+
+    const detectCycle = (vertex) => {
+      for (const edge of vertex.edges.values()) {
+        if (path.has(vertex)) return path.get(vertex);
+
+        path.set(vertex, edge);
+
+        const cycleStartEdge = detectCycle(edge.vertex);
+        const cycleEndEdge = edge;
+
+        if (cycleStartEdge) {
+          let keep, remove;
+          if (weighResults(cycleStartEdge, cycleEndEdge)) {
+            keep = cycleStartEdge;
+            remove = cycleEndEdge;
+          } else {
+            keep = cycleEndEdge;
+            remove = cycleStartEdge;
+          }
+
+          if (!remove.cycleWith) {
+            remove.cycleWith = new Set();
+            cycles.add(remove);
+          }
+
+          remove.cycleWith.add(keep);
+
+          if (keep.cycleWith) {
+            keep.cycleWith.delete(remove);
+          }
+        }
+
+        path.delete(vertex);
+      }
+    };
+
+    for (const { vertex } of graph) detectCycle(vertex);
+
+    // delete any cycles
+    for (const edge of cycles)
+      if (edge.cycleWith.size) edge.parent.edges.delete(edge);
+
+    // find the root elements
+    const roots = new Set();
+    for (const v of graph) roots.add(v.vertex);
+    for (const v of graph)
+      for (const edge of v.vertex.edges) roots.delete(edge.vertex);
+
+    // build a unique sequence of matches for each root
+    const traverseRoot = (path, root, edges, sampleOffsetFromRoot = 0) => {
+      for (const edge of edges) {
+        if (
+          !(path.has(edge.vertex) && weighResults(path.get(edge.vertex), edge))
+        )
+          path.set(edge.vertex, {
+            name: edge.vertex.name,
+            correlation: edge.correlation,
+            sampleOffset: sampleOffsetFromRoot + edge.sampleOffset,
+          });
+
+        traverseRoot(
+          path,
+          root,
+          edge.vertex.edges,
+          sampleOffsetFromRoot + edge.sampleOffset
+        );
+      }
+    };
+
+    const results = [];
+
+    for (const root of roots) {
+      const path = new Map();
+      path.set(root, {
+        name: root.name,
+        sampleOffset: 0,
+      });
+      traverseRoot(path, root, root.edges);
+
+      results.push(
+        [...path.values()].sort(
+          (a, b) =>
+            a.sampleOffset - b.sampleOffset ||
+            (a.correlation || 0) - (b.correlation || 0) ||
+            b.name.localeCompare(a.name)
+        )
+      );
+    }
+
+    return results;
   }
 }
