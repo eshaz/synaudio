@@ -1,6 +1,6 @@
 {
   "name": "synaudio",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Library that finds the synchronization point between two or more audio clips.",
   "files": [
     "index.js",
@@ -50,7 +50,7 @@
     "mpg123-decoder": "^0.3.16",
     "opus-decoder": "^0.5.2",
     "prettier": "^2.7.1",
-    "rollup": "^2.79.0",
+    "rollup": "^2.79.1",
     "synaudio": "file:./",
     "terser": "^5.15.0"
   },
