@@ -1,7 +1,7 @@
 {
   "name": "synaudio",
   "version": "0.2.2",
-  "description": "Library that finds the synchronization point between two similar audio clips.",
+  "description": "Library that finds the synchronization point between two or more audio clips.",
   "files": [
     "index.js",
     "index.d.ts",
