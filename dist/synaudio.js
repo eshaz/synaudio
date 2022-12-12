@@ -1,12 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('web-worker')) :
-  typeof define === 'function' && define.amd ? define(['web-worker'], factory) :
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('@eshaz/web-worker')) :
+  typeof define === 'function' && define.amd ? define(['@eshaz/web-worker'], factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.SynAudio = factory(global.Worker));
 })(this, (function (Worker) { 'use strict';
-
-  function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
-
-  var Worker__default = /*#__PURE__*/_interopDefaultLegacy(Worker);
 
   const encode = (byteArray) => {
     const charArray = [];
@@ -146,6 +142,7 @@
         byte1 === 61 || // =
         byte1 === 13 || // CR
         byte1 === 96 || // `
+        (byte1 === 92 && (byte2 === 85 || byte2 === 117)) || // \u or \U
         (byte1 === 36 && byte2 === 123); // ${
 
     // search for the byte offset with the least amount of escape characters
@@ -166,6 +163,9 @@
       }
     }
 
+    const escapeCharacter = (byte1, charArray) =>
+      charArray.push("=", String.fromCharCode((byte1 + 64) % 256));
+
     const charArray = [
       "dynEncode", // magic signature
       "00", // version 0x00 - 0xfe (0xff reserved)
@@ -177,10 +177,16 @@
       const byte2 = (byteArray[i + 1] + offset) % 256;
 
       if (shouldEscape(byte1, byte2)) {
-        charArray.push("=", String.fromCharCode((byte1 + 64) % 256));
+        escapeCharacter(byte1, charArray);
       } else {
         charArray.push(String.fromCharCode(byte1));
       }
+    }
+
+    // correct edge case where escape character is at end of string
+    if (charArray[charArray.length - 1] === "\\") {
+      charArray.pop();
+      escapeCharacter("\\", charArray);
     }
 
     return charArray.join("");
@@ -327,7 +333,7 @@
             this._sourceCache.set(functionName, source);
           }
 
-          const worker = new (globalThis.Worker || Worker__default["default"])(source, {
+          const worker = new (globalThis.Worker || Worker)(source, {
             name: "SynAudio",
           });
 

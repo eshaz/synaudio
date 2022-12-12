@@ -42,20 +42,20 @@
     "url": "https://github.com/sponsors/eshaz"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^22.0.2",
-    "@rollup/plugin-node-resolve": "^14.1.0",
+    "@rollup/plugin-commonjs": "^23.0.4",
+    "@rollup/plugin-node-resolve": "^15.0.1",
     "@types/jest": "^27.5.1",
     "gh-pages": "^4.0.0",
     "jest": "^27.5.1",
-    "mpg123-decoder": "^0.3.16",
-    "opus-decoder": "^0.5.2",
-    "prettier": "^2.7.1",
-    "rollup": "^2.79.1",
+    "mpg123-decoder": "^0.3.18",
+    "opus-decoder": "^0.5.4",
+    "prettier": "^2.8.1",
+    "rollup": "^3.7.3",
     "synaudio": "file:./",
-    "terser": "^5.15.0"
+    "terser": "^5.16.1"
   },
   "dependencies": {
-    "simple-yenc": "^0.2.1",
+    "simple-yenc": "^0.2.3",
     "@eshaz/web-worker": "1.2.0"
   }
 }

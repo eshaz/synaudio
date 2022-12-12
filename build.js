@@ -65,8 +65,8 @@ const build = async (simdPath, scalarPath) => {
   rollupInputConfig.input = rollupInput;
   rollupInputConfig.plugins = [nodeResolve(), commonjs()];
 
-  const rollupOutputConfig = JSON.parse(rollupConfig);
-  rollupOutputConfig.output.file = distPath + rollupOutput;
+  const rollupOutputConfig = JSON.parse(rollupConfig).output;
+  rollupOutputConfig.file = distPath + rollupOutput;
 
   const bundle = await rollup(rollupInputConfig);
   const bundleOutput = await bundle
