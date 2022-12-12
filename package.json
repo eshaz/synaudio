@@ -56,6 +56,6 @@
   },
   "dependencies": {
     "simple-yenc": "^0.2.1",
-    "web-worker": "^1.2.0"
+    "@eshaz/web-worker": "1.2.0"
   }
 }
