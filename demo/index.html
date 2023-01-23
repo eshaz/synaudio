@@ -406,6 +406,7 @@
 * syncWorker: Executes in a Web Worker.
 * syncWorkerConcurrent: Executes in multiple Web Workers (multi-threaded).
           "
+              id="correlation-method-row"
             >
               <td>
                 <label for="correlation-method">Correlation Method</label>
@@ -418,6 +419,23 @@
                     syncWorkerConcurrent
                   </option>
                 </select>
+              </td>
+            </tr>
+            <tr
+              title="Selects number of threads to spawn when running concurrent operations"
+              id="correlation-threads-row"
+            >
+              <td>
+                <label for="correlation-threads">Correlation Threads</label>
+              </td>
+              <td>
+                <input
+                  id="correlation-threads"
+                  name="correlationThreads"
+                  type="number"
+                  min="1"
+                  value="1"
+                />
               </td>
             </tr>
             <tr
@@ -451,6 +469,26 @@
                   name="initialGranularity"
                   type="number"
                   value="16"
+                />
+              </td>
+            </tr>
+            <tr
+              title="Threshold that will filter out any low correlation matches.
+* Only applicable to Multiple Clips (`syncMultiple`)"
+              id="correlation-threshold-row"
+              style="display: none"
+            >
+              <td>
+                <label for="correlation-threshold">Correlation Threshold</label>
+              </td>
+              <td>
+                <input
+                  id="correlation-threshold"
+                  name="correlationThreshold"
+                  type="number"
+                  value="0.5"
+                  min="0"
+                  max="1"
                 />
               </td>
             </tr>
@@ -503,11 +541,47 @@
     const comparisonAudioClipKey = "comparison";
     const correlationAudioClipKey = "correlation";
 
-    const audioCtx = new AudioContext();
-    audioCtx.onstatechange = () => {
-      if (audioCtx !== "running") audioCtx.resume();
-    };
-    audioCtx.destination.channelCount = audioCtx.destination.maxChannelCount;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    // statically initialize audio context and start using a DOM event
+    if (AudioContext) {
+      const audioCtxErrorHandler = (e) => {
+        console.error(
+          "Failed to start the AudioContext. WebAudio playback will not be possible.",
+          e
+        );
+      };
+
+      // hack for iOS Audio element controls support
+      // iOS will only enable AudioContext.resume() when called directly from a UI event
+      // https://stackoverflow.com/questions/57510426
+      const events = ["touchstart", "touchend", "mousedown", "keydown"];
+
+      const unlock = () => {
+        events.forEach((e) => document.removeEventListener(e, unlock));
+
+        audioCtx = new AudioContext({
+          latencyHint: "interactive",
+        });
+
+        audioCtx
+          .resume()
+          .then(() => {
+            // hack for iOS to continue playing while locked
+            audioCtx.onstatechange = () => {
+              if (audioCtx.state !== "running")
+                audioCtx.resume().catch(audioCtxErrorHandler);
+            };
+          })
+          .catch(audioCtxErrorHandler);
+
+        audioCtx.destination.channelCount =
+          audioCtx.destination.maxChannelCount;
+      };
+
+      events.forEach((e) => document.addEventListener(e, unlock));
+    }
 
     const PROGRESS_FACTOR = 100;
 
@@ -1243,6 +1317,18 @@
     // correlation options
     const correlationMethodEl = document.getElementById("correlation-method");
 
+    const correlationMethodRowEl = document.getElementById(
+      "correlation-method-row"
+    );
+
+    const correlationThreadsRowEl = document.getElementById(
+      "correlation-threads-row"
+    );
+
+    const correlationThresholdRowEl = document.getElementById(
+      "correlation-threshold-row"
+    );
+
     // correlation results
     const correlationCoefficientRowEl = document.getElementById(
       "correlation-coefficient-row"
@@ -1304,14 +1390,34 @@
     const twoClipsMode = "two-clips-mode";
     const multipleClipsMode = "multiple-clips-mode";
 
-    let mode = twoClipsMode;
+    let mode;
+
+    // thread option control
+    document.getElementById("correlation-threads").value =
+      navigator.hardwareConcurrency - 1;
+
+    const correlationThreadControl = () => {
+      if (
+        correlationMethodEl.value === "syncWorkerConcurrent" ||
+        mode === multipleClipsMode
+      ) {
+        correlationThreadsRowEl.style = "";
+      } else {
+        correlationThreadsRowEl.style = "display: none;";
+      }
+    };
+
+    correlationMethodEl.addEventListener("change", correlationThreadControl);
+
     const setTwoClipsMode = () => {
       mode = twoClipsMode;
 
       // destroy the multiple clip ffts
       multipleClipsFieldsetEl.style = "display: none;";
       correlationResultsJsonRowEl.style = "display: none;";
-      correlationMethodEl.disabled = false;
+      correlationThresholdRowEl.style = "display: none;";
+      correlationMethodRowEl.style = "";
+      correlationThreadControl();
       reset();
       twoClipsModeEl.checked = true;
       multipleClipsModeEl.checked = false;
@@ -1352,10 +1458,12 @@
 
       // destroy the two clip ffts
       twoClipsFieldsetEl.style = "display: none;";
-      correlationMethodEl.disabled = true;
       // hide single match results
       correlationCoefficientRowEl.style = "display: none;";
       correlationSampleOffsetRowEl.style = "display: none;";
+      correlationThresholdRowEl.style = "";
+      correlationMethodRowEl.style = "display: none;";
+      correlationThreadControl();
       reset();
       multipleClipsModeEl.checked = true;
       twoClipsModeEl.checked = false;
@@ -1392,10 +1500,12 @@
     };
 
     const destroyCorrelationFFT = () => {
-      if (audioData[correlationAudioClipKey])
-        audioData[correlationAudioClipKey].fft.destroy();
-
-      delete audioData[correlationAudioClipKey];
+      for (const key in audioData) {
+        if (key.match(/correlation/)) {
+          audioData[key].fft.destroy();
+          delete audioData[key];
+        }
+      }
 
       if (mode === twoClipsMode) {
         resultContainer.innerHTML = getFFTContainer(
@@ -1569,13 +1679,15 @@
         initialGranularity: parseInt(
           document.getElementById("initial-granularity").value
         ),
-        correlationThreshold: 0.5,
+        correlationThreshold: parseFloat(
+          document.getElementById("correlation-threshold")
+        ),
       });
 
       const start = performance.now();
       const results = await synAudio.syncMultiple(
         params,
-        window.hardwareConcurrency
+        parseInt(document.getElementById("correlation-threads").value)
       );
       const duration = (performance.now() - start) / 1000;
 
@@ -1663,7 +1775,7 @@
       const result = await synAudio[method](
         audioBufferToSynAudioParameter(baseAudioBuffer),
         audioBufferToSynAudioParameter(comparisonAudioBuffer),
-        navigator.hardwareConcurrency - 1
+        parseInt(document.getElementById("correlation-threads").value)
       );
       const duration = (performance.now() - start) / 1000;
 
