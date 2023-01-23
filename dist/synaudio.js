@@ -438,18 +438,33 @@
           // overlap at the start of the buffer by correlation sample size
           // overlap at the end of the buffer by correlation sample size
 
-          // correlation sample size overlap imposes a maximum thread count for small datasets
-          const minProcessingRatio = 4 / 1; // unique date / overlap
+          // initial granularity  low -> high, more -> less threads
+          // correlation sample   low -> high, less -> more threads
+          // file size            low -> high, less -> more threads
+
           const correlationSampleSize = this._getCorrelationSampleSize(a, b);
-          const maxThreads = Math.ceil(
-            a.samplesDecoded / correlationSampleSize / minProcessingRatio
+
+          // rough estimate for a good max thread count for performance
+          const maxThreads =
+            (Math.log(a.samplesDecoded * correlationSampleSize) /
+              Math.log(this._initialGranularity + 1)) *
+            Math.log(correlationSampleSize / 10000 + 1);
+
+          threads = Math.max(
+            Math.round(
+              Math.min(
+                threads,
+                maxThreads,
+                a.samplesDecoded / correlationSampleSize / 4
+              )
+            ),
+            1
           );
-          threads = Math.min(threads, maxThreads);
 
           const aLength = Math.ceil(a.samplesDecoded / threads);
 
           let offset = 0;
-          for (let i = 1; i <= threads; i++) {
+          for (let t = 0; t < threads; t++) {
             const aSplit = {
               channelData: [],
             };
@@ -520,8 +535,12 @@
       );
     }
 
-    async syncWorkerConcurrent(a, b, threads = 1) {
-      return this._instance._syncWorkerConcurrentMain(a, b, threads);
+    async syncWorkerConcurrent(a, b, threads) {
+      return this._instance._syncWorkerConcurrentMain(
+        a,
+        b,
+        threads >= 1 ? threads : 1
+      );
     }
 
     async syncWorker(a, b) {
@@ -532,7 +551,9 @@
       return this._instance._sync(a, b);
     }
 
-    async syncMultiple(clips, threads = 8) {
+    async syncMultiple(clips, threads) {
+      threads = threads >= 1 ? threads : 8;
+
       const workers = [];
       const graph = [];
 
