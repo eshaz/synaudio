@@ -1,6 +1,6 @@
 {
   "name": "synaudio",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Library that finds the synchronization point between two or more audio clips.",
   "files": [
     "index.js",
@@ -17,6 +17,7 @@
   ],
   "main": "index.js",
   "types": "index.d.ts",
+  "sideEffects": false,
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/.bin/jest --maxWorkers=100%",
     "format": "prettier --write '**/*.js' --write '**/*.*json*' --write '**/*.*html*' --write '**/*.*ts*'",
@@ -47,15 +48,15 @@
     "@types/jest": "^27.5.2",
     "gh-pages": "^5.0.0",
     "jest": "^27.5.1",
-    "mpg123-decoder": "^0.4.2",
-    "opus-decoder": "^0.6.2",
-    "prettier": "^2.8.3",
-    "rollup": "^3.10.1",
+    "mpg123-decoder": "^0.4.5",
+    "opus-decoder": "^0.6.5",
+    "prettier": "^2.8.6",
+    "rollup": "^3.20.1",
     "synaudio": "file:./",
-    "terser": "^5.16.1"
+    "terser": "^5.16.6"
   },
   "dependencies": {
-    "simple-yenc": "^0.2.3",
+    "simple-yenc": "^0.3.1",
     "@eshaz/web-worker": "1.2.0"
   }
 }
