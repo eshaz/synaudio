@@ -41,18 +41,18 @@ declare class SynAudio {
 
   public syncWorker(
     base: PCMAudio,
-    comparison: PCMAudio
+    comparison: PCMAudio,
   ): Promise<TwoClipMatch>;
 
   public syncWorkerConcurrent(
     base: PCMAudio,
     comparison: PCMAudio,
-    threads?: number // default 1
+    threads?: number, // default 1
   ): Promise<TwoClipMatch>;
 
   public syncMultiple(
     clips: AudioClip[],
-    threads?: number // default 8
+    threads?: number, // default 8
   ): Promise<MultipleClipMatchList[]>;
 }
 

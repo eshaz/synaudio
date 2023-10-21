@@ -50,7 +50,7 @@ const build = async (simdPath, scalarPath) => {
       scalarWasm,
       scalarContent.groups.end,
       synAudio.substring(scalarEnd),
-    ].map(Buffer.from)
+    ].map(Buffer.from),
   );
 
   await fs.writeFile(synAudioPath, finalString, { encoding: "binary" });
@@ -76,7 +76,7 @@ const build = async (simdPath, scalarPath) => {
   // terser
   const minified = await minify(
     { [bundleOutput.fileName]: bundleOutput.code },
-    terserConfig
+    terserConfig,
   );
 
   // write output files
