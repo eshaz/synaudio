@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,11 +18,8 @@
       text-size-adjust: none;
     }
     body {
-      background: linear-gradient(
-            217deg,
-            rgba(255, 0, 0, 0.3),
-            rgba(255, 0, 0, 0) 70.71%
-          )
+      background:
+        linear-gradient(217deg, rgba(255, 0, 0, 0.3), rgba(255, 0, 0, 0) 70.71%)
           fixed,
         linear-gradient(127deg, rgba(0, 255, 0, 0.3), rgba(0, 255, 0, 0) 70.71%)
           fixed,
@@ -549,7 +546,7 @@
       const audioCtxErrorHandler = (e) => {
         console.error(
           "Failed to start the AudioContext. WebAudio playback will not be possible.",
-          e
+          e,
         );
       };
 
@@ -611,7 +608,7 @@
                 (audioCtx.currentTime * PROGRESS_FACTOR - this.start);
               this._progressBarEl.value = currentTime;
               this._timeEl.innerHTML = this.getTime(
-                currentTime / PROGRESS_FACTOR
+                currentTime / PROGRESS_FACTOR,
               );
             }
           }, 2);
@@ -710,11 +707,11 @@
         // stop progress bar and clear event listeners
         this._progressBarEl.removeEventListener(
           "pointerup",
-          this.startProgress
+          this.startProgress,
         );
         this._progressBarEl.removeEventListener(
           "pointerdown",
-          this.stopProgress
+          this.stopProgress,
         );
         this.stopProgress();
 
@@ -775,16 +772,23 @@
             ...this._audioBufferData.get(buffer),
           }))
           .sort((a, b) => a.offset - b.offset)
-          .reduce((finalBuffer, buffer) => {
-            for (let i = 0; i < this.channelCount; i++) {
-              finalBuffer.copyToChannel(
-                buffer.buffer.getChannelData(i),
-                i,
-                buffer.offset
-              );
-            }
-            return finalBuffer;
-          }, audioCtx.createBuffer(this.channelCount, this.length, this.sampleRate));
+          .reduce(
+            (finalBuffer, buffer) => {
+              for (let i = 0; i < this.channelCount; i++) {
+                finalBuffer.copyToChannel(
+                  buffer.buffer.getChannelData(i),
+                  i,
+                  buffer.offset,
+                );
+              }
+              return finalBuffer;
+            },
+            audioCtx.createBuffer(
+              this.channelCount,
+              this.length,
+              this.sampleRate,
+            ),
+          );
       }
 
       get audioBuffers() {
@@ -808,7 +812,7 @@
             acc > audioBuffer.numberOfChannels
               ? acc
               : audioBuffer.numberOfChannels,
-          0
+          0,
         );
       }
 
@@ -853,7 +857,7 @@
 
         return fftInterval === "auto"
           ? FFTCanvas.FFT_INTERVAL_OPTIONS.reduceRight((acc, val) =>
-              maxWidth > this._displayLength / val ? val : acc
+              maxWidth > this._displayLength / val ? val : acc,
             )
           : parseInt(fftInterval);
       }
@@ -864,7 +868,7 @@
 
         return fftBins === "auto"
           ? FFTCanvas.FFT_BIN_OPTIONS.reduceRight((acc, val) =>
-              maxHeight < val ? val : acc
+              maxHeight < val ? val : acc,
             )
           : parseInt(fftBins);
       }
@@ -914,7 +918,7 @@
               x,
               y,
               width,
-              height
+              height,
             );
           };
 
@@ -940,8 +944,8 @@
                     logTables[binOption].push(
                       Math.round(
                         ((Math.log10(i) * (binOption - 1)) / sampleRateLog) *
-                          logGap
-                      )
+                          logGap,
+                      ),
                     );
                 }
 
@@ -957,7 +961,7 @@
                   0,
                   0,
                   patternCanvas.width,
-                  patternCanvas.height
+                  patternCanvas.height,
                 );
                 /*patternCanvasCtx.beginPath();
                 patternCanvasCtx.moveTo(0, 0);
@@ -998,13 +1002,13 @@
 
                   for (let binIdx = 0; binIdx < bins.length; binIdx++) {
                     const r = Math.round(
-                      (payload.color[0] * bins[binIdx]) / 255
+                      (payload.color[0] * bins[binIdx]) / 255,
                     );
                     const g = Math.round(
-                      (payload.color[1] * bins[binIdx]) / 255
+                      (payload.color[1] * bins[binIdx]) / 255,
                     );
                     const b = Math.round(
-                      (payload.color[2] * bins[binIdx]) / 255
+                      (payload.color[2] * bins[binIdx]) / 255,
                     );
 
                     canvasCtx.fillStyle = `rgb(${r},${g},${b})`;
@@ -1019,7 +1023,7 @@
                       (payload.offset / fftInterval + fftXCursor) * widthScale,
                       bins.length - fftYCursor,
                       widthScale + widthScale / 2,
-                      fftYCursor - fftYPrevious
+                      fftYCursor - fftYPrevious,
                     );
                   }
 
@@ -1033,14 +1037,14 @@
                   0,
                   0,
                   canvas.width,
-                  canvas.height
+                  canvas.height,
                 );
 
                 fillPattern(0, 0, canvas.width, canvas.height);
                 canvasCtx.putImageData(
                   image,
                   (payload / fftInterval) * widthScale,
-                  0
+                  0,
                 );
                 break;
             }
@@ -1057,8 +1061,8 @@
           URL.createObjectURL(
             new Blob([`"use strict";(${source.toString()})()`], {
               type: "text/javascript",
-            })
-          )
+            }),
+          ),
         );
 
         this._messageId = Number.MIN_SAFE_INTEGER;
@@ -1084,7 +1088,7 @@
             fftBinOptions: FFTCanvas.FFT_BIN_OPTIONS,
             patternCanvas: offscreenPatternCanvas,
           },
-          [offscreenPatternCanvas]
+          [offscreenPatternCanvas],
         );
       }
 
@@ -1095,7 +1099,7 @@
           this._pendingMessages.set(messageId, resolve);
           this._canvasWorker.postMessage(
             { name, payload, messageId },
-            transferList
+            transferList,
           );
         });
       }
@@ -1108,7 +1112,7 @@
         const offscreenCanvas = this._canvas.transferControlToOffscreen();
 
         this._canvasContainer = document.getElementById(
-          this._audioKey + "-fft"
+          this._audioKey + "-fft",
         );
 
         this._playerEl.style.width =
@@ -1154,7 +1158,7 @@
 
         await this._postToWorker(
           "translateXSamples",
-          this._translatedSamples - audioData.offset
+          this._translatedSamples - audioData.offset,
         );
 
         audioData.offset = this._translatedSamples;
@@ -1190,7 +1194,7 @@
               "full",
               audioBufferData.fft[audioBufferData.currentFFT],
               audioBufferData.color,
-              audioBufferData.offset
+              audioBufferData.offset,
             );
           } else {
             const offlineAudioCtx = new OfflineAudioContext(audioBuffer);
@@ -1205,7 +1209,7 @@
             const processor = offlineAudioCtx.createScriptProcessor(
               fftInterval,
               audioBuffer.numberOfChannels,
-              audioBuffer.numberOfChannels
+              audioBuffer.numberOfChannels,
             );
 
             let fft = [],
@@ -1225,7 +1229,7 @@
                   "partial",
                   fftChunk,
                   audioBufferData.color,
-                  audioBufferData.offset
+                  audioBufferData.offset,
                 );
                 fftChunk = [];
               }
@@ -1242,7 +1246,7 @@
                 "last-partial",
                 fftChunk,
                 audioBufferData.color,
-                audioBufferData.offset
+                audioBufferData.offset,
               );
 
               audioBufferData.fft[audioBufferData.currentFFT] = fft;
@@ -1255,15 +1259,15 @@
   <script>
     const baseAudioSelect = document.getElementById("base-audio-select");
     const comparisonAudioSelect = document.getElementById(
-      "comparison-audio-select"
+      "comparison-audio-select",
     );
     const multipleAudioSelect = document.getElementById(
-      "multiple-audio-select"
+      "multiple-audio-select",
     );
 
     const baseAudioFile = document.getElementById("base-audio-file");
     const comparisonAudioFile = document.getElementById(
-      "comparison-audio-file"
+      "comparison-audio-file",
     );
     const multipleAudioFile = document.getElementById("multiple-audio-file");
 
@@ -1277,7 +1281,7 @@
 
     const setAudioFormData = () => {
       const formData = Object.fromEntries(
-        new FormData(document.audioForm).entries()
+        new FormData(document.audioForm).entries(),
       );
       audioFormData = {
         audio: {
@@ -1291,7 +1295,7 @@
 
     const setOptionsFormData = () => {
       optionsFormData = Object.fromEntries(
-        new FormData(document.optionsForm).entries()
+        new FormData(document.optionsForm).entries(),
       );
     };
 
@@ -1309,7 +1313,7 @@
 
     const twoClipsFieldsetEl = document.getElementById("two-clips-fieldset");
     const multipleClipsFieldsetEl = document.getElementById(
-      "multiple-clips-fieldset"
+      "multiple-clips-fieldset",
     );
 
     const findCorrelationEl = document.getElementById("find-correlation");
@@ -1318,43 +1322,43 @@
     const correlationMethodEl = document.getElementById("correlation-method");
 
     const correlationMethodRowEl = document.getElementById(
-      "correlation-method-row"
+      "correlation-method-row",
     );
 
     const correlationThreadsRowEl = document.getElementById(
-      "correlation-threads-row"
+      "correlation-threads-row",
     );
 
     const correlationThresholdRowEl = document.getElementById(
-      "correlation-threshold-row"
+      "correlation-threshold-row",
     );
 
     // correlation results
     const correlationCoefficientRowEl = document.getElementById(
-      "correlation-coefficient-row"
+      "correlation-coefficient-row",
     );
     const correlationSampleOffsetRowEl = document.getElementById(
-      "correlation-sample-offset-row"
+      "correlation-sample-offset-row",
     );
 
     const correlationResultsJsonRowEl = document.getElementById(
-      "correlation-results-json-row"
+      "correlation-results-json-row",
     );
 
     const correlationResultsJsonEl = document.getElementById(
-      "correlation-results-json"
+      "correlation-results-json",
     );
     const correlationCoefficientEl = document.getElementById(
-      "correlation-coefficient"
+      "correlation-coefficient",
     );
     const correlationSampleOffsetEl = document.getElementById(
-      "correlation-sample-offset"
+      "correlation-sample-offset",
     );
     const correlationTimeSpent = document.getElementById(
-      "correlation-time-spent"
+      "correlation-time-spent",
     );
     const correlationBytesPerSecEl = document.getElementById(
-      "correlation-bytes-per-sec"
+      "correlation-bytes-per-sec",
     );
     const correlationRateEl = document.getElementById("correlation-rate");
 
@@ -1433,17 +1437,17 @@
         getFFTContainer(comparisonAudioClipKey, "Comparison");
       resultContainer.innerHTML = getFFTContainer(
         correlationAudioClipKey,
-        "Correlation"
+        "Correlation",
       );
 
       const baseAudioFFTContainerEl = document.getElementById(
-        baseAudioClipKey + "-fft"
+        baseAudioClipKey + "-fft",
       );
       const comparisonAudioFFTContainerEl = document.getElementById(
-        comparisonAudioClipKey + "-fft"
+        comparisonAudioClipKey + "-fft",
       );
       const correlationAudioFFTContainerEl = document.getElementById(
-        correlationAudioClipKey + "-fft"
+        correlationAudioClipKey + "-fft",
       );
 
       baseAudioFFTContainerEl.innerHTML = fftPlaceholders[baseAudioClipKey];
@@ -1510,7 +1514,7 @@
       if (mode === twoClipsMode) {
         resultContainer.innerHTML = getFFTContainer(
           correlationAudioClipKey,
-          "Correlation"
+          "Correlation",
         );
       } else if (mode === multipleClipsMode) {
         resultContainer.innerHTML = "";
@@ -1674,20 +1678,20 @@
 
       const synAudio = new SynAudio({
         correlationSampleSize: parseInt(
-          document.getElementById("correlation-sample-size").value
+          document.getElementById("correlation-sample-size").value,
         ),
         initialGranularity: parseInt(
-          document.getElementById("initial-granularity").value
+          document.getElementById("initial-granularity").value,
         ),
         correlationThreshold: parseFloat(
-          document.getElementById("correlation-threshold")
+          document.getElementById("correlation-threshold"),
         ),
       });
 
       const start = performance.now();
       const results = await synAudio.syncMultiple(
         params,
-        parseInt(document.getElementById("correlation-threads").value)
+        parseInt(document.getElementById("correlation-threads").value),
       );
       const duration = (performance.now() - start) / 1000;
 
@@ -1712,7 +1716,7 @@
         node.innerHTML = getFFTContainer(
           correlationKey,
           "Match Group " + (i + 1) + " ",
-          JSON.stringify(stem, null, 2)
+          JSON.stringify(stem, null, 2),
         );
         resultContainer.appendChild(node);
 
@@ -1750,7 +1754,7 @@
       correlationResultsJsonEl.innerHTML = `<pre class="popover-content">${JSON.stringify(
         results,
         null,
-        2
+        2,
       )}</pre>`;
 
       return result;
@@ -1764,10 +1768,10 @@
 
       const synAudio = new SynAudio({
         correlationSampleSize: parseInt(
-          document.getElementById("correlation-sample-size").value
+          document.getElementById("correlation-sample-size").value,
         ),
         initialGranularity: parseInt(
-          document.getElementById("initial-granularity").value
+          document.getElementById("initial-granularity").value,
         ),
       });
 
@@ -1775,7 +1779,7 @@
       const result = await synAudio[method](
         audioBufferToSynAudioParameter(baseAudioBuffer),
         audioBufferToSynAudioParameter(comparisonAudioBuffer),
-        parseInt(document.getElementById("correlation-threads").value)
+        parseInt(document.getElementById("correlation-threads").value),
       );
       const duration = (performance.now() - start) / 1000;
 
@@ -1792,18 +1796,18 @@
 
       audioData[correlationAudioClipKey] = {};
       audioData[correlationAudioClipKey].fft = new FFTCanvas(
-        correlationAudioClipKey
+        correlationAudioClipKey,
       );
       audioData[correlationAudioClipKey].fft.addAudioBuffer(
         baseAudioBuffer,
-        baseFFT.getAudioBufferData(baseAudioBuffer)
+        baseFFT.getAudioBufferData(baseAudioBuffer),
       );
       audioData[correlationAudioClipKey].fft.addAudioBuffer(
         comparisonAudioBuffer,
         {
           ...comparisonFFT.getAudioBufferData(comparisonAudioBuffer),
           offset: result.sampleOffset,
-        }
+        },
       );
       updateFFTCanvasSize();
 
