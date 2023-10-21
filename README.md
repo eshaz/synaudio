@@ -15,6 +15,7 @@
   * [Options](#options)
   * [Methods](#methods)
   * [Types](#types)
+* [Developing](#developing)
 
 ## Installing
 
@@ -305,3 +306,21 @@ declare interface MultipleClipMatch {
   * Ranging from -1 (worst) to 1 (best)
 * `sampleOffset`
   * Number of samples relative to the root clip (first clip in the match)
+
+
+## Developing
+
+### Prerequisites
+1. Install Emscripten by following these [instructions](https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html#installation-instructions).
+   * This repository has been tested with Emscripten 3.1.46.
+
+### Building
+1. Make sure to `source` the Emscripten path in the terminal you want build in.
+   * i.e. `$ source path/to/emsdk/emsdk_env.sh`
+1. Run `npm i` to install the dependencies.
+1. Run `make clean` and `make` to build the libraries.
+   * You can run `make -j8` where `8` is the number of CPU cores on your system to speed up the build.
+1. The builds will be located in the `dist` folder.
+
+### Testing
+1. Run `npm run test` to run the test suite.

@@ -14,7 +14,7 @@ const decode = async (audioData) => {
       .then((audio) => {
         decodedAudio = audio;
       })
-      .then(() => decoder.free())
+      .then(() => decoder.free()),
   );
 
   return decodedAudio;
@@ -28,7 +28,7 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
     });
 
     const result = await testData.then((data) =>
-      synAudio[synAudioFunction](data.fullMpeg, data.cut_1601425_Mpeg, threads)
+      synAudio[synAudioFunction](data.fullMpeg, data.cut_1601425_Mpeg, threads),
     );
 
     process.stdout.write("\n" + synAudioFunction + " offset at 1600849" + "\n");
@@ -47,7 +47,7 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
     });
 
     const result = await testData.then((data) =>
-      synAudio[synAudioFunction](data.fullMpeg, data.cut_287549_Mpeg, threads)
+      synAudio[synAudioFunction](data.fullMpeg, data.cut_287549_Mpeg, threads),
     );
 
     process.stdout.write("\n" + synAudioFunction + " offset at 287549" + "\n");
@@ -66,7 +66,7 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
     });
 
     const result = await testData.then((data) =>
-      synAudio[synAudioFunction](data.fullMpeg, data.cut_2450800_Mpeg, threads)
+      synAudio[synAudioFunction](data.fullMpeg, data.cut_2450800_Mpeg, threads),
     );
 
     process.stdout.write("\n" + synAudioFunction + " offset at 2450224" + "\n");
@@ -85,7 +85,7 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
     });
 
     const result = await testData.then((data) =>
-      synAudio[synAudioFunction](data.fullMpeg, data.cut_194648_Mpeg, threads)
+      synAudio[synAudioFunction](data.fullMpeg, data.cut_194648_Mpeg, threads),
     );
 
     process.stdout.write("\n" + synAudioFunction + " offset at 194072" + "\n");
@@ -109,12 +109,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
       synAudio[synAudioFunction](
         data.fullMpeg,
         data.cut_194648_64_Mpeg,
-        threads
-      )
+        threads,
+      ),
     );
 
     process.stdout.write(
-      "\n" + synAudioFunction + " offset at 194072 64kbs" + "\n"
+      "\n" + synAudioFunction + " offset at 194072 64kbs" + "\n",
     );
     process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -136,12 +136,12 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
       synAudio[synAudioFunction](
         data.fullMpeg,
         data.cut_194648_32_Mpeg,
-        threads
-      )
+        threads,
+      ),
     );
 
     process.stdout.write(
-      "\n" + synAudioFunction + " offset at 194072 32kbs" + "\n"
+      "\n" + synAudioFunction + " offset at 194072 32kbs" + "\n",
     );
     process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -164,15 +164,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen2_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 2nd generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -192,15 +192,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen3_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 3nd generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -220,15 +220,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen4_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 4th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -250,15 +250,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen5_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 5th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -280,15 +280,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen6_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 6th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -310,15 +310,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen7_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 7th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -338,15 +338,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen8_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 8th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -366,15 +366,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen9_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 9th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -394,15 +394,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen10_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 10th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -422,15 +422,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen11_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 11th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -450,15 +450,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen12_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 12th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -478,15 +478,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen13_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 13th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -506,15 +506,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen14_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 14th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -534,15 +534,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen15_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 15th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -562,15 +562,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen16_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 16th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -590,15 +590,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen17_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 17th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -618,15 +618,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen18_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 18th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -646,15 +646,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen19_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 19th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -674,15 +674,15 @@ const runTestSuite = (testData, testFunction, synAudioFunction, threads) => {
         synAudio[synAudioFunction](
           data.fullMpeg,
           data.cut_194648_32_gen20_Mpeg,
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           synAudioFunction +
           " offset at 194072 32kbs 20th generation" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -777,14 +777,14 @@ describe("SynAudio", () => {
         synAudio.syncWorkerConcurrent(
           data.fullMpeg,
           data.cut_194648_32_gen20_Mpeg,
-          16
-        )
+          16,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           "offset at 194072 32kbs 20th generation when granularity is set to 1" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -804,14 +804,14 @@ describe("SynAudio", () => {
         synAudio.syncWorkerConcurrent(
           data.fullMpeg,
           data.cut_194648_32_gen20_Mpeg,
-          16
-        )
+          16,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           "offset at 194072 32kbs 20th generation when granularity is set to 2" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -831,14 +831,14 @@ describe("SynAudio", () => {
         synAudio.syncWorkerConcurrent(
           data.fullMpeg,
           data.cut_194648_32_gen20_Mpeg,
-          16
-        )
+          16,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           "offset at 194072 32kbs 20th generation when granularity is set to 3" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -857,11 +857,11 @@ describe("SynAudio", () => {
       });
 
       const result = await testData.then((data) =>
-        synAudio.syncWorker(data.fullMpeg, data.cut_2450800_Mpeg)
+        synAudio.syncWorker(data.fullMpeg, data.cut_2450800_Mpeg),
       );
 
       process.stdout.write(
-        "\n" + "offset at 2450800, correlationSampleSize 1200" + "\n"
+        "\n" + "offset at 2450800, correlationSampleSize 1200" + "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -878,11 +878,11 @@ describe("SynAudio", () => {
       });
 
       const result = await testData.then((data) =>
-        synAudio.syncWorker(data.fullMpeg, data.cut_2450800_Mpeg)
+        synAudio.syncWorker(data.fullMpeg, data.cut_2450800_Mpeg),
       );
 
       process.stdout.write(
-        "\n" + "offset at 2450800, correlationSampleSize 1200" + "\n"
+        "\n" + "offset at 2450800, correlationSampleSize 1200" + "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -899,11 +899,11 @@ describe("SynAudio", () => {
       });
 
       const result = await testData.then((data) =>
-        synAudio.syncWorker(data.fullMpeg, data.cut_2450800_Mpeg)
+        synAudio.syncWorker(data.fullMpeg, data.cut_2450800_Mpeg),
       );
 
       process.stdout.write(
-        "\n" + "offset at 2450800, correlationSampleSize 1441" + "\n"
+        "\n" + "offset at 2450800, correlationSampleSize 1441" + "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -920,11 +920,11 @@ describe("SynAudio", () => {
       });
 
       const result = await testData.then((data) =>
-        synAudio.syncWorker(data.fullMpeg, data.cut_2450800_Mpeg)
+        synAudio.syncWorker(data.fullMpeg, data.cut_2450800_Mpeg),
       );
 
       process.stdout.write(
-        "\n" + "offset at 2450800, correlationSampleSize 1442" + "\n"
+        "\n" + "offset at 2450800, correlationSampleSize 1442" + "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -941,11 +941,11 @@ describe("SynAudio", () => {
       });
 
       const result = await testData.then((data) =>
-        synAudio.syncWorker(data.fullMpeg, data.cut_2450800_Mpeg)
+        synAudio.syncWorker(data.fullMpeg, data.cut_2450800_Mpeg),
       );
 
       process.stdout.write(
-        "\n" + "offset at 2450800, correlationSampleSize 4000" + "\n"
+        "\n" + "offset at 2450800, correlationSampleSize 4000" + "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -962,13 +962,13 @@ describe("SynAudio", () => {
       });
 
       const result = await testData.then((data) =>
-        synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_2450800_Mpeg, 16)
+        synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_2450800_Mpeg, 16),
       );
 
       process.stdout.write(
         "\n" +
           "offset at 2450800, correlationSampleSize 88200, syncWorkerConcurrent" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -985,13 +985,17 @@ describe("SynAudio", () => {
       });
 
       const result = await testData.then((data) =>
-        synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_2450800_Mpeg, 219)
+        synAudio.syncWorkerConcurrent(
+          data.fullMpeg,
+          data.cut_2450800_Mpeg,
+          219,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           "offset at 2450800, correlationSampleSize 88200, syncWorkerConcurrent high thread ratio" +
-          "\n"
+          "\n",
       );
       process.stdout.write("\t" + JSON.stringify(result) + "\n");
 
@@ -1016,16 +1020,16 @@ describe("SynAudio", () => {
         cut_194648_Mpeg_result,
       ] = await Promise.all([
         testData.then((data) =>
-          synAudio.syncWorker(data.fullMpeg, data.cut_1601425_Mpeg)
+          synAudio.syncWorker(data.fullMpeg, data.cut_1601425_Mpeg),
         ),
         testData.then((data) =>
-          synAudio.syncWorker(data.fullMpeg, data.cut_287549_Mpeg)
+          synAudio.syncWorker(data.fullMpeg, data.cut_287549_Mpeg),
         ),
         testData.then((data) =>
-          synAudio.syncWorker(data.fullMpeg, data.cut_2450800_Mpeg)
+          synAudio.syncWorker(data.fullMpeg, data.cut_2450800_Mpeg),
         ),
         testData.then((data) =>
-          synAudio.syncWorker(data.fullMpeg, data.cut_194648_Mpeg)
+          synAudio.syncWorker(data.fullMpeg, data.cut_194648_Mpeg),
         ),
       ]);
 
@@ -1068,16 +1072,24 @@ describe("SynAudio", () => {
         cut_194648_Mpeg_result,
       ] = await Promise.all([
         testData.then((data) =>
-          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_1601425_Mpeg, 4)
+          synAudio.syncWorkerConcurrent(
+            data.fullMpeg,
+            data.cut_1601425_Mpeg,
+            4,
+          ),
         ),
         testData.then((data) =>
-          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_287549_Mpeg, 4)
+          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_287549_Mpeg, 4),
         ),
         testData.then((data) =>
-          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_2450800_Mpeg, 4)
+          synAudio.syncWorkerConcurrent(
+            data.fullMpeg,
+            data.cut_2450800_Mpeg,
+            4,
+          ),
         ),
         testData.then((data) =>
-          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_194648_Mpeg, 4)
+          synAudio.syncWorkerConcurrent(data.fullMpeg, data.cut_194648_Mpeg, 4),
         ),
       ]);
 
@@ -1128,12 +1140,12 @@ describe("SynAudio", () => {
             { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
             { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
           ],
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
-        "\n" + "should sync multiple clips in order of connection" + "\n"
+        "\n" + "should sync multiple clips in order of connection" + "\n",
       );
       process.stdout.write(JSON.stringify(result, null, 2) + "\n");
 
@@ -1145,12 +1157,12 @@ describe("SynAudio", () => {
           },
           {
             name: "cut_194648_Mpeg",
-            correlation: 0.9937149882316589,
+            correlation: 0.9937149286270142,
             sampleOffset: 194072,
           },
           {
             name: "cut_287549_Mpeg",
-            correlation: 0.9897415637969971,
+            correlation: 0.9897416234016418,
             sampleOffset: 286973,
           },
           {
@@ -1189,14 +1201,14 @@ describe("SynAudio", () => {
             { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
             { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
           ],
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           "should sync multiple clips in order of connection when correlation threshold is set to 0" +
-          "\n"
+          "\n",
       );
       process.stdout.write(JSON.stringify(result, null, 2) + "\n");
 
@@ -1208,12 +1220,12 @@ describe("SynAudio", () => {
           },
           {
             name: "cut_194648_Mpeg",
-            correlation: 0.9937149882316589,
+            correlation: 0.9937149286270142,
             sampleOffset: 194072,
           },
           {
             name: "cut_287549_Mpeg",
-            correlation: 0.9897415637969971,
+            correlation: 0.9897416234016418,
             sampleOffset: 286973,
           },
           {
@@ -1255,8 +1267,8 @@ describe("SynAudio", () => {
             { name: "cut_194648_2_Mpeg", data: data.cut_194648_Mpeg },
             { name: "cut_194648_32_Mpeg", data: data.cut_194648_32_Mpeg },
           ],
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write("\n" + "should prevent cyclic relationships" + "\n");
@@ -1275,12 +1287,12 @@ describe("SynAudio", () => {
           },
           {
             name: "cut_194648_32_Mpeg",
-            correlation: 0.9513630270957947,
+            correlation: 0.9513629674911499,
             sampleOffset: 194072,
           },
           {
             name: "cut_194648_Mpeg",
-            correlation: 0.9937149882316589,
+            correlation: 0.9937149286270142,
             sampleOffset: 194072,
           },
           {
@@ -1290,7 +1302,7 @@ describe("SynAudio", () => {
           },
           {
             name: "cut_287549_Mpeg",
-            correlation: 0.9897415637969971,
+            correlation: 0.9897416234016418,
             sampleOffset: 286973,
           },
           {
@@ -1331,8 +1343,8 @@ describe("SynAudio", () => {
             { name: "cut_194648_2_Mpeg", data: data.cut_194648_Mpeg },
             { name: "cut_194648_32_Mpeg", data: data.cut_194648_32_Mpeg },
           ],
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write("\n" + "should prevent cyclic relationships" + "\n");
@@ -1346,22 +1358,22 @@ describe("SynAudio", () => {
           },
           {
             name: "cut_194648_32_Mpeg",
-            correlation: 0.9513630270957947,
+            correlation: 0.9513629674911499,
             sampleOffset: 194072,
           },
           {
             name: "cut_194648_Mpeg",
-            correlation: 0.9937149882316589,
+            correlation: 0.9937149286270142,
             sampleOffset: 194072,
           },
           {
             name: "cut_194648_2_Mpeg",
-            correlation: 0.9937149882316589,
+            correlation: 0.9937149286270142,
             sampleOffset: 194072,
           },
           {
             name: "cut_287549_Mpeg",
-            correlation: 0.9897415637969971,
+            correlation: 0.9897416234016418,
             sampleOffset: 286973,
           },
           {
@@ -1398,12 +1410,12 @@ describe("SynAudio", () => {
             { name: "cut_1601425_Mpeg", data: data.cut_1601425_Mpeg },
             { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
           ],
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
-        "\n" + "should add multiple nodes for unrelated matches" + "\n"
+        "\n" + "should add multiple nodes for unrelated matches" + "\n",
       );
       process.stdout.write(JSON.stringify(result, null, 2) + "\n");
 
@@ -1449,14 +1461,14 @@ describe("SynAudio", () => {
             { name: "cut_194648_Mpeg", data: data.cut_194648_Mpeg },
             { name: "cut_312782_32_Mpeg", data: data.cut_312782_32_Mpeg },
           ],
-          threads
-        )
+          threads,
+        ),
       );
 
       process.stdout.write(
         "\n" +
           "should sync multiple clips when there is no underlying clip" +
-          "\n"
+          "\n",
       );
       process.stdout.write(JSON.stringify(result, null, 2) + "\n");
 
@@ -1473,7 +1485,7 @@ describe("SynAudio", () => {
           },
           {
             name: "cut_312782_32_Mpeg",
-            correlation: 0.9569606184959412,
+            correlation: 0.9569607973098755,
             sampleOffset: 118134,
           },
           {

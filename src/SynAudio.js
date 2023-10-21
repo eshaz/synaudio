@@ -43,7 +43,7 @@ export default class SynAudio {
       this._module = simd().then((simdSupported) =>
         simdSupported
           ? WebAssembly.compile(decode(simdWasm))
-          : WebAssembly.compile(decode(scalarWasm))
+          : WebAssembly.compile(decode(scalarWasm)),
       );
       wasmModule.set(this._module);
     }
@@ -51,7 +51,7 @@ export default class SynAudio {
     this.SynAudioWorker = function SynAudioWorker(
       module,
       correlationSampleSize,
-      initialGranularity
+      initialGranularity,
     ) {
       this._sourceCache = new Map();
 
@@ -60,7 +60,7 @@ export default class SynAudio {
         Math.min(
           a.samplesDecoded,
           b.samplesDecoded,
-          this._correlationSampleSize
+          this._correlationSampleSize,
         );
 
       // initial granularity must not exceed the size of each audio clip
@@ -93,13 +93,13 @@ export default class SynAudio {
                 SynAudioWorker,
                 functionName,
                 correlationSampleSize,
-                initialGranularity
+                initialGranularity,
               ) => {
                 self.onmessage = (msg) => {
                   const worker = new SynAudioWorker(
                     Promise.resolve(msg.data.module),
                     correlationSampleSize,
-                    initialGranularity
+                    initialGranularity,
                   );
 
                   worker._workerMethods
@@ -119,7 +119,7 @@ export default class SynAudio {
 
           source = isNode
             ? `data:${type};base64,${Buffer.from(webworkerSourceCode).toString(
-                "base64"
+                "base64",
               )}`
             : URL.createObjectURL(new Blob([webworkerSourceCode], { type }));
 
@@ -167,7 +167,7 @@ export default class SynAudio {
           .then((module) =>
             WebAssembly.instantiate(module, {
               env: { memory },
-            })
+            }),
           )
           .then(({ exports }) => {
             const instanceExports = new Map(Object.entries(exports));
@@ -180,12 +180,12 @@ export default class SynAudio {
             const bPtr = this._setAudioDataOnHeap(
               a.channelData,
               dataArray,
-              aPtr
+              aPtr,
             );
             const bestCorrelationPtr = this._setAudioDataOnHeap(
               b.channelData,
               dataArray,
-              bPtr
+              bPtr,
             );
             const bestSampleOffsetPtr = bestCorrelationPtr + floatByteLength;
 
@@ -199,16 +199,16 @@ export default class SynAudio {
               correlationSampleSize,
               initialGranularity,
               bestCorrelationPtr,
-              bestSampleOffsetPtr
+              bestSampleOffsetPtr,
             );
 
             const bestCorrelation = heapView.getFloat32(
               bestCorrelationPtr,
-              true
+              true,
             );
             const bestSampleOffset = heapView.getInt32(
               bestSampleOffsetPtr,
-              true
+              true,
             );
 
             return {
@@ -248,10 +248,10 @@ export default class SynAudio {
             Math.min(
               threads,
               maxThreads,
-              a.samplesDecoded / correlationSampleSize / 4
-            )
+              a.samplesDecoded / correlationSampleSize / 4,
+            ),
           ),
-          1
+          1,
         );
 
         const aLength = Math.ceil(a.samplesDecoded / threads);
@@ -265,7 +265,7 @@ export default class SynAudio {
           for (let i = 0; i < a.channelData.length; i++) {
             const cutChannel = a.channelData[i].subarray(
               offset,
-              offset + aLength + correlationSampleSize
+              offset + aLength + correlationSampleSize,
             );
             aSplit.channelData.push(cutChannel);
             aSplit.samplesDecoded = cutChannel.length;
@@ -324,7 +324,7 @@ export default class SynAudio {
     this._instance = new this.SynAudioWorker(
       this._module,
       this._correlationSampleSize,
-      this._initialGranularity
+      this._initialGranularity,
     );
   }
 
@@ -332,7 +332,7 @@ export default class SynAudio {
     return this._instance._syncWorkerConcurrentMain(
       a,
       b,
-      threads >= 1 ? threads : 1
+      threads >= 1 ? threads : 1,
     );
   }
 
@@ -390,8 +390,8 @@ export default class SynAudio {
               }
               runningThreads--;
               notify();
-            }
-          )
+            },
+          ),
         );
 
         if (runningThreads >= threads) {
@@ -478,7 +478,7 @@ export default class SynAudio {
           path,
           root,
           edge.vertex.edges,
-          sampleOffsetFromRoot + edge.sampleOffset
+          sampleOffsetFromRoot + edge.sampleOffset,
         );
       }
     };
@@ -498,8 +498,8 @@ export default class SynAudio {
           (a, b) =>
             a.sampleOffset - b.sampleOffset ||
             (a.correlation || 0) - (b.correlation || 0) ||
-            b.name.localeCompare(a.name)
-        )
+            b.name.localeCompare(a.name),
+        ),
       );
     }
 

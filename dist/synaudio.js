@@ -4,7 +4,7 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.SynAudio = factory(global.Worker));
 })(this, (function (Worker) { 'use strict';
 
-  const t=(t,e=4294967295,n=79764919)=>{const r=new Int32Array(256);let o,s,c,i=e;for(o=0;o<256;o++){for(c=o<<24,s=8;s>0;--s)c=2147483648&c?c<<1^n:c<<1;r[o]=c;}for(o=0;o<t.length;o++)i=i<<8^r[255&(i>>24^t[o])];return i},n=(e,n=t)=>{const r=t=>new Uint8Array(t.length/2).map(((e,n)=>parseInt(t.substring(2*n,2*(n+1)),16))),o=t=>r(t)[0],s=new Map;[,8364,,8218,402,8222,8230,8224,8225,710,8240,352,8249,338,,381,,,8216,8217,8220,8221,8226,8211,8212,732,8482,353,8250,339,,382,376].forEach(((t,e)=>s.set(t,e)));const c=new Uint8Array(e.length);let i,l,a,f=!1,g=0,h=42,p=e.length>13&&"dynEncode"===e.substring(0,9),u=0;p&&(u=11,l=o(e.substring(9,u)),l<=1&&(u+=2,h=o(e.substring(11,u))),1===l&&(u+=8,a=(t=>new DataView(r(t).buffer).getInt32(0,!0))(e.substring(13,u))));const d=256-h;for(let t=u;t<e.length;t++)if(i=e.charCodeAt(t),61!==i||f){if(i>255){const t=s.get(i);t&&(i=t+127);}f&&(f=!1,i-=64),c[g++]=i<h&&i>0?i+d:i-h;}else f=!0;const m=c.subarray(0,g);if(p&&1===l){const t=n(m);if(t!==a){const e="Decode failed crc32 validation";throw console.error("`simple-yenc`\n",e+"\n","Expected: "+a+"; Got: "+t+"\n","Visit https://github.com/eshaz/simple-yenc for more information"),Error(e)}}return m};
+  const t=(t,n=4294967295,e=79764919)=>{const r=new Int32Array(256);let o,s,c,i=n;for(o=0;o<256;o++){for(c=o<<24,s=8;s>0;--s)c=2147483648&c?c<<1^e:c<<1;r[o]=c;}for(o=0;o<t.length;o++)i=i<<8^r[255&(i>>24^t[o])];return i},e=(n,e=t)=>{const r=t=>new Uint8Array(t.length/2).map(((n,e)=>parseInt(t.substring(2*e,2*(e+1)),16))),o=t=>r(t)[0],s=new Map;[,8364,,8218,402,8222,8230,8224,8225,710,8240,352,8249,338,,381,,,8216,8217,8220,8221,8226,8211,8212,732,8482,353,8250,339,,382,376].forEach(((t,n)=>s.set(t,n)));const c=new Uint8Array(n.length);let i,a,l,f=!1,g=0,h=42,p=n.length>13&&"dynEncode"===n.substring(0,9),u=0;p&&(u=11,a=o(n.substring(9,u)),a<=1&&(u+=2,h=o(n.substring(11,u))),1===a&&(u+=8,l=(t=>new DataView(r(t).buffer).getInt32(0,!0))(n.substring(13,u))));const d=256-h;for(let t=u;t<n.length;t++)if(i=n.charCodeAt(t),61!==i||f){if(92===i&&t<n.length-5&&p){const e=n.charCodeAt(t+1);117!==e&&85!==e||(i=parseInt(n.substring(t+2,t+6),16),t+=5);}if(i>255){const t=s.get(i);t&&(i=t+127);}f&&(f=!1,i-=64),c[g++]=i<h&&i>0?i+d:i-h;}else f=!0;const m=c.subarray(0,g);if(p&&1===a){const t=e(m);if(t!==l){const n="Decode failed crc32 validation";throw console.error("`simple-yenc`\n",n+"\n","Expected: "+l+"; Got: "+t+"\n","Visit https://github.com/eshaz/simple-yenc for more information"),Error(n)}}return m};
 
   /* Copyright 2022-2023 Ethan Halsall
       
@@ -23,6 +23,7 @@
       You should have received a copy of the GNU Lesser General Public License
       along with this program.  If not, see <https://www.gnu.org/licenses/>
   */
+
 
   // prettier-ignore
   const simd=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,10,10,1,8,0,65,0,253,15,253,98,11]));
@@ -47,8 +48,8 @@
       if (!this._module) {
         this._module = simd().then((simdSupported) =>
           simdSupported
-            ? WebAssembly.compile(n(simdWasm))
-            : WebAssembly.compile(n(scalarWasm))
+            ? WebAssembly.compile(e(simdWasm))
+            : WebAssembly.compile(e(scalarWasm)),
         );
         wasmModule.set(this._module);
       }
@@ -56,7 +57,7 @@
       this.SynAudioWorker = function SynAudioWorker(
         module,
         correlationSampleSize,
-        initialGranularity
+        initialGranularity,
       ) {
         this._sourceCache = new Map();
 
@@ -65,7 +66,7 @@
           Math.min(
             a.samplesDecoded,
             b.samplesDecoded,
-            this._correlationSampleSize
+            this._correlationSampleSize,
           );
 
         // initial granularity must not exceed the size of each audio clip
@@ -98,13 +99,13 @@
                 SynAudioWorker,
                 functionName,
                 correlationSampleSize,
-                initialGranularity
+                initialGranularity,
               ) => {
                 self.onmessage = (msg) => {
                   const worker = new SynAudioWorker(
                     Promise.resolve(msg.data.module),
                     correlationSampleSize,
-                    initialGranularity
+                    initialGranularity,
                   );
 
                   worker._workerMethods
@@ -124,7 +125,7 @@
 
             source = isNode
               ? `data:${type};base64,${Buffer.from(webworkerSourceCode).toString(
-                "base64"
+                "base64",
               )}`
               : URL.createObjectURL(new Blob([webworkerSourceCode], { type }));
 
@@ -172,7 +173,7 @@
             .then((module) =>
               WebAssembly.instantiate(module, {
                 env: { memory },
-              })
+              }),
             )
             .then(({ exports }) => {
               const instanceExports = new Map(Object.entries(exports));
@@ -185,12 +186,12 @@
               const bPtr = this._setAudioDataOnHeap(
                 a.channelData,
                 dataArray,
-                aPtr
+                aPtr,
               );
               const bestCorrelationPtr = this._setAudioDataOnHeap(
                 b.channelData,
                 dataArray,
-                bPtr
+                bPtr,
               );
               const bestSampleOffsetPtr = bestCorrelationPtr + floatByteLength;
 
@@ -204,16 +205,16 @@
                 correlationSampleSize,
                 initialGranularity,
                 bestCorrelationPtr,
-                bestSampleOffsetPtr
+                bestSampleOffsetPtr,
               );
 
               const bestCorrelation = heapView.getFloat32(
                 bestCorrelationPtr,
-                true
+                true,
               );
               const bestSampleOffset = heapView.getInt32(
                 bestSampleOffsetPtr,
-                true
+                true,
               );
 
               return {
@@ -253,10 +254,10 @@
               Math.min(
                 threads,
                 maxThreads,
-                a.samplesDecoded / correlationSampleSize / 4
-              )
+                a.samplesDecoded / correlationSampleSize / 4,
+              ),
             ),
-            1
+            1,
           );
 
           const aLength = Math.ceil(a.samplesDecoded / threads);
@@ -270,7 +271,7 @@
             for (let i = 0; i < a.channelData.length; i++) {
               const cutChannel = a.channelData[i].subarray(
                 offset,
-                offset + aLength + correlationSampleSize
+                offset + aLength + correlationSampleSize,
               );
               aSplit.channelData.push(cutChannel);
               aSplit.samplesDecoded = cutChannel.length;
@@ -329,7 +330,7 @@
       this._instance = new this.SynAudioWorker(
         this._module,
         this._correlationSampleSize,
-        this._initialGranularity
+        this._initialGranularity,
       );
     }
 
@@ -337,7 +338,7 @@
       return this._instance._syncWorkerConcurrentMain(
         a,
         b,
-        threads >= 1 ? threads : 1
+        threads >= 1 ? threads : 1,
       );
     }
 
@@ -395,8 +396,8 @@
                 }
                 runningThreads--;
                 notify();
-              }
-            )
+              },
+            ),
           );
 
           if (runningThreads >= threads) {
@@ -483,7 +484,7 @@
             path,
             root,
             edge.vertex.edges,
-            sampleOffsetFromRoot + edge.sampleOffset
+            sampleOffsetFromRoot + edge.sampleOffset,
           );
         }
       };
@@ -503,8 +504,8 @@
             (a, b) =>
               a.sampleOffset - b.sampleOffset ||
               (a.correlation || 0) - (b.correlation || 0) ||
-              b.name.localeCompare(a.name)
-          )
+              b.name.localeCompare(a.name),
+          ),
         );
       }
 
