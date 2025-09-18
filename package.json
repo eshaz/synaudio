@@ -21,7 +21,7 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/.bin/jest --maxWorkers=100%",
     "format": "prettier --write '**/*.js' --write '**/*.*json*' --write '**/*.*html*' --write '**/*.*ts*'",
-    "build": "node build.js $SIMD $SCALAR $SIMD_HEAPBASE $SCALAR_HEAPBASE",
+    "build": "node build.js $SIMD $SCALAR $SHARED $SIMD_HEAPBASE $SCALAR_HEAPBASE $SHARED_HEAPBASE",
     "deploy": "gh-pages -d demo"
   },
   "repository": {
