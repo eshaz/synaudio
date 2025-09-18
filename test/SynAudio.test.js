@@ -6,7 +6,7 @@ import SynAudio from "synaudio";
 
 const decode = async (audioData) => {
   let decodedAudio;
-  const decoder = new MPEGDecoderWebWorker();
+  const decoder = new MPEGDecoderWebWorker({enableGapless: false});
 
   await decoder.ready.then(() =>
     decoder
@@ -1287,7 +1287,7 @@ describe("SynAudio", () => {
           },
           {
             name: "cut_194648_32_Mpeg",
-            correlation: 0.9513629674911499,
+            correlation: 0.9513628482818604,
             sampleOffset: 194072,
           },
           {
@@ -1358,7 +1358,7 @@ describe("SynAudio", () => {
           },
           {
             name: "cut_194648_32_Mpeg",
-            correlation: 0.9513629674911499,
+            correlation: 0.9513628482818604,
             sampleOffset: 194072,
           },
           {

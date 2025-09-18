@@ -20,7 +20,7 @@ correlate-scalar:
 		-Wl,--export=__heap_base \
 		-Wl,--no-entry \
 		-Wl,--lto-O3 \
-		-O3 \
+		-Ofast \
 		-o "$(CORRELATE_SCALAR_BUILD)" \
 		$(CORRELATE_SRC)
 	@ wasm-opt \
@@ -55,6 +55,7 @@ correlate-simd:
 		-mbulk-memory \
 		-DWASM_SIMD \
 		-flto \
+		-ftree-vectorize \
 		-Wl,--import-memory \
 		-Wl,--shared-memory \
 		-Wl,--max-memory=4294967296 \
@@ -62,7 +63,7 @@ correlate-simd:
 		-Wl,--export=__heap_base \
 		-Wl,--no-entry \
 		-Wl,--lto-O3 \
-		-O3 \
+		-Ofast \
 		-o "$(CORRELATE_SIMD_BUILD)" \
 		$(CORRELATE_SRC)
 	@ wasm-opt \
