@@ -17,7 +17,7 @@ const rollupConfigPath = "rollup.json";
 const terserOutput = "synaudio.min.js";
 const terserConfigPath = "terser.json";
 
-const build = async (simdPath, scalarPath) => {
+const build = async (simdPath, scalarPath, simdHeapBase, scalarHeapBase) => {
   const [synAudio, simdWasm, scalarWasm] = await Promise.all([
     fs.readFile(synAudioPath).then((buffer) => buffer.toString()),
     fs.readFile(simdPath).then((data) => dynamicEncode(data, "`")),
@@ -28,15 +28,28 @@ const build = async (simdPath, scalarPath) => {
     /(?<begin>const simdWasm = String.raw`)(?<wasm>[\s\S]*?)(?<end>`;)/;
   const scalarMatcher =
     /(?<begin>const scalarWasm = String.raw`)(?<wasm>[\s\S]*?)(?<end>`;)/;
+  const simdHeapBaseMatcher =
+    /(?<begin>const simdHeapBase = )(?<heapbase>[\s\S]*?)(?<end>;)/;
+  const scalarHeapBaseMatcher =
+    /(?<begin>const scalarHeapBase = )(?<heapbase>[\s\S]*?)(?<end>;)/;
 
   const simdContent = synAudio.match(simdMatcher);
   const scalarContent = synAudio.match(scalarMatcher);
+  const simdHeapBaseContent = synAudio.match(simdHeapBaseMatcher);
+  const scalarHeapBaseContent = synAudio.match(scalarHeapBaseMatcher);
 
   const simdStart = simdContent.index;
   const simdEnd = simdStart + simdContent[0].length;
 
   const scalarStart = scalarContent.index;
   const scalarEnd = scalarStart + scalarContent[0].length;
+
+  const simdHeapBaseStart = simdHeapBaseContent.index;
+  const simdHeapBaseEnd = simdHeapBaseStart + simdHeapBaseContent[0].length;
+
+  const scalarHeapBaseStart = scalarHeapBaseContent.index;
+  const scalarHeapBaseEnd =
+    scalarHeapBaseStart + scalarHeapBaseContent[0].length;
 
   // Concatenate the strings as buffers to preserve extended ascii
   const finalString = Buffer.concat(
@@ -49,7 +62,15 @@ const build = async (simdPath, scalarPath) => {
       scalarContent.groups.begin,
       scalarWasm,
       scalarContent.groups.end,
-      synAudio.substring(scalarEnd),
+      synAudio.substring(scalarEnd, simdHeapBaseStart),
+      simdHeapBaseContent.groups.begin,
+      simdHeapBase,
+      simdHeapBaseContent.groups.end,
+      synAudio.substring(simdHeapBaseEnd, scalarHeapBaseStart),
+      scalarHeapBaseContent.groups.begin,
+      scalarHeapBase,
+      scalarHeapBaseContent.groups.end,
+      synAudio.substring(scalarHeapBaseEnd),
     ].map(Buffer.from),
   );
 
@@ -92,5 +113,7 @@ const build = async (simdPath, scalarPath) => {
 
 const simdPath = process.argv[2];
 const scalarPath = process.argv[3];
+const simdHeapBase = process.argv[4];
+const scalarHeapBase = process.argv[5];
 
-await build(simdPath, scalarPath);
+await build(simdPath, scalarPath, simdHeapBase, scalarHeapBase);

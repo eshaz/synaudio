@@ -31,7 +31,7 @@
   const wasmModule = new WeakMap();
 
   /* WASM strings are embeded during the build */
-  const simdWasm = String.raw`dynEncode010f265bd8a8p|ot}|t|~P*r~t{ptnnwtpnqptÙ1Ö1OP0'S0<OO/PW/Pz0%/P ]O//P z1P1P y1//Y*1P0&//&/zPy0//P1Py1/P/PPOzy0$/P0"/Py0/POz0 //zPz1PZ0!/Py1//&zy0O/0/0O////y1ó///ó/////ó///?/?ó?/POz0/Pz1O//[/0O/!T/ /"/#{1y/$X//$y/ Z/ 0/0O///y/ó/Py0/Py1/0/&T//Py0O///y9/9¡G/Py0//Py1Y//"y0/#Py1#/%V/P[//P1 y/Z//PPz/{y/ZP/PX0/P0/P?y0$/P/y0"/Py0!//'0OP0O/TO////#{P1y/óO/PU/!//!y/!ó/PU/"//"y/"ó/PU/$//$y/$ó//1U/0/O//y0//Py0/0O///y9/9¡G/Py0/Pz1//zPZ//z0//Py0O///y19/9¡G//9/9¡G//9/9¡G//9/9¡G/Py0/Pz1// y0/#Py1#/%VO/PW/Pz0$/P ]O//P z1P1P y1//W*1P0%//%/zPy0//P1Py1/P/PPOzy0"/P0!/Py0/POz0P0//zPz1PZ0 /Py1//%zy0P0#O/0/0O////y1ó///ó/////ó///?/?ó?/POz0/Pz1O//[/0O/ T//!/#{1y/"X//"y/Z/0/0O///y/ó/Py0/Py1/0/%T//Py0O///y9/9¡G/Py0//Py1Y//!y0/#Py1#/$V/P[//P1y/Z//PPz/{y/ZP/PX0/P0/P?y0"/P/y0!/Py0 //'0P0P0#OP0O/TO////#{P1y/óO/PU/ // y/ ó/PU/!//!y/!ó/PU/"//"y/"ó//1U/0/O//y0//Py0/0O///y9/9¡G/Py0/Pz1//zPZ//z0//Py0O///y19/9¡G//9/9¡G//9/9¡G//9/9¡G/Py0/Pz1//y0/#Py1#/$VP0!/PE/PE/PYO/P0O/Pz1PXOP0/0//'10O/8/9Ê¯/9Ê¯/9Ê¯/9Ê¯08/Py0/Pz1/O//Py0/0O/8/9Ê¯08/Py0/Pz1O/PXOP0/0//'10O/9/9Ê¯/9Ê¯/9Ê¯/9Ê¯09/Py0/Pz1/O//Py0O/9/9Ê¯09/Py0/Pz1/Pz0/9/Æ19²Å0)P/P W)/)"04P0/0O/1//4ô12/2õó//4ô12/2õó///4ô12/2õó/?/4ô12/2õó01/POz0//Py1YP0!/P zPPy/Pz0/</Æ19²Å0)P0/1./1./1./1.¡¡¡0*O//]//zP1//Py0/0O/9/)¢1(/(£/*¡0*/Py0/Pz1//y/0//zPZ//z0//Py0O/9/)¢1(/(£/9/)¢1(/(£/9/)¢1(/(£/9/)¢1(/(£/*¡¡¡¡0*/Py0/Pz1P0/!O/)"02/0O///2ô///2ô////2ô///?/2ô?/POz0//Py1Y/*/ÁRÎ¡1.¤0(//z0 O//[///z1PZ//Py0/)"02/P10O///2ô/Py0/Pz1//U//y/1z0//Py0O//9/)¢G/Py0/Pz1/( 0,/ PYO/P0/Pz0/P zPPy0/90)/,Ê0:P0/0O//Py1900/8/9²Å0//!TO0103P//"05P0P00301O/3//y1/5ô16//y1õó//5ô17/õó///5ô14//õó/?/5ô12/?õó03/1/6/6õó/7/7õó/4/4õó/2/2õó01/POz0//Py1Y/0/1./1./1./1.¡¡¡0*/3./3./3./3.¡¡¡0+O//]//zP//P1y9//¢1(//y9£/+¡0+/(/(£/*¡0*/Py/0//U/P0//z0O//y19//¢1-//y19£/9//¢1(/9£/+¡¡0+/-/-£/(/(£/*¡¡0*/Py0/Pz1//Py9Ê0;/)/+/.¤Ê/*/.¤Ê®/:±²Å1(l//E//(G/(/)0)/8/0Ê°/;¯08//y0//y1/ WO/P[/71//{1y1/ // W*0P0//z1P/PY*0O/P[O/<08/P0O/PzPXO/<08//Py0/<08//'10O/8/9Ê¯/9Ê¯/9Ê¯/9Ê¯08/Py0/Pz1/T//P/Pyy0O/8/9Ê¯08/Py0/Pz1//]/Pz0//Py0/P zPPy0/90)/,Ê0:O//Py1900/8/9²Å0,/!TO0103P/,"05P0/0/00301O/3//5ô16/õó//5ô17/õó///5ô14//õó/?/5ô12/?õó03/1/6/6õó/7/7õó/4/4õó/2/2õó01/POz0/POz0//Py1Y/0/1./1./1./1.¡¡¡0*/3./3./3./3.¡¡¡0+O//]//zP//P1y9/,¢1(//y9£/+¡0+/(/(£/*¡0*/Py/0//U/P0//z0O//y19/,¢1-//y19£/9/,¢1(/9£/+¡¡0+/-/-£/(/(£/*¡¡0*/Py0/Pz1//Py9Ê0;/)/+/.¤Ê/*/.¤Ê®/:±²Å1(l//E//(G/(/)0)/8/0Ê°/;¯08/Py0/Py1/VDpvtnutpt:|pq{t<v{~qp{:x|s@AG:xv}<t`;
+  const simdWasm = String.raw`dynEncode010fe4732c5fp|o!t}|t|~P*r~t{ptnnwtpnqptÙ1Ö1OP0'S0<OO/PW/Pz0%/P ]O//P z1P1P y1//Y*1P0&//&/zPy0//P1Py1/P/PPOzy0$/P0"/Py0/POz0 //zPz1PZ0!/Py1//&zy0O/0/0O////y1ó///ó/////ó///?/?ó?/POz0/Pz1O//[/0O/!T/ /"/#{1y/$X//$y/ Z/ 0/0O///y/ó/Py0/Py1/0/&T//Py0O///y9/9¡G/Py0//Py1Y//"y0/#Py1#/%V/P[//P1 y/Z//PPz/{y/ZP/PX0/P0/P?y0$/P/y0"/Py0!//'0OP0O/TO////#{P1y/óO/PU/!//!y/!ó/PU/"//"y/"ó/PU/$//$y/$ó//1U/0/O//y0//Py0/0O///y9/9¡G/Py0/Pz1//zPZ//z0//Py0O///y19/9¡G//9/9¡G//9/9¡G//9/9¡G/Py0/Pz1// y0/#Py1#/%VO/PW/Pz0$/P ]O//P z1P1P y1//W*1P0%//%/zPy0//P1Py1/P/PPOzy0"/P0!/Py0/POz0P0//zPz1PZ0 /Py1//%zy0P0#O/0/0O////y1ó///ó/////ó///?/?ó?/POz0/Pz1O//[/0O/ T//!/#{1y/"X//"y/Z/0/0O///y/ó/Py0/Py1/0/%T//Py0O///y9/9¡G/Py0//Py1Y//!y0/#Py1#/$V/P[//P1y/Z//PPz/{y/ZP/PX0/P0/P?y0"/P/y0!/Py0 //'0P0P0#OP0O/TO////#{P1y/óO/PU/ // y/ ó/PU/!//!y/!ó/PU/"//"y/"ó//1U/0/O//y0//Py0/0O///y9/9¡G/Py0/Pz1//zPZ//z0//Py0O///y19/9¡G//9/9¡G//9/9¡G//9/9¡G/Py0/Pz1//y0/#Py1#/$VP0!/PE/PE/PYO/P0O/Pz1PXOP0/0//'10O/8/9Ê¯/9Ê¯/9Ê¯/9Ê¯08/Py0/Pz1/O//Py0/0O/8/9Ê¯08/Py0/Pz1O/PXOP0/0//'10O/9/9Ê¯/9Ê¯/9Ê¯/9Ê¯09/Py0/Pz1/O//Py0O/9/9Ê¯09/Py0/Pz1/Pz0/9/Æ19²Å0)P/P W)/)"04P0/0O/1//4ô12/2õó//4ô12/2õó///4ô12/2õó/?/4ô12/2õó01/POz0//Py1YP0!/P zPPy/Pz0/</Æ19²Å0)P0/1./1./1./1.¡¡¡0*O//]//zP1//Py0/0O/9/)¢1(/(£/*¡0*/Py0/Pz1//y/0//zPZ//z0//Py0O/9/)¢1(/(£/9/)¢1(/(£/9/)¢1(/(£/9/)¢1(/(£/*¡¡¡¡0*/Py0/Pz1P0/!O/)"02/0O///2ô///2ô////2ô///?/2ô?/POz0//Py1Y/*/ÁRÎ¡1.¤0(//z0 O//[///z1PZ//Py0/)"02/P10O///2ô/Py0/Pz1//U//y/1z0//Py0O//9/)¢G/Py0/Pz1/( 0,/ PYO/P0/Pz0/P zPPy0/90)/,Ê0:P0/0O//Py1900/8/9²Å0//!TO0103P//"05P0P00301O/3//y1/5ô16//y1õó//5ô17/õó///5ô14//õó/?/5ô12/?õó03/1/6/6õó/7/7õó/4/4õó/2/2õó01/POz0//Py1Y/0/1./1./1./1.¡¡¡0*/3./3./3./3.¡¡¡0+O//]//zP//P1y9//¢1(//y9£/+¡0+/(/(£/*¡0*/Py/0//U/P0//z0O//y19//¢1-//y19£/9//¢1(/9£/+¡¡0+/-/-£/(/(£/*¡¡0*/Py0/Pz1//Py9Ê0;/)/+/.¤Ê/*/.¤Ê®/:±²Å1(l//E//(G/(/)0)/8/0Ê°/;¯08//y0//y1/ WO/P[/71//{1y1/ // W*0P0//z1P/PY*0O/P[O/<08/P0O/PzPXO/<08//Py0/<08//'10O/8/9Ê¯/9Ê¯/9Ê¯/9Ê¯08/Py0/Pz1/T//P/Pyy0O/8/9Ê¯08/Py0/Pz1//]/Pz0//Py0/P zPPy0/90)/,Ê0:O//Py1900/8/9²Å0,/!TO0103P/,"05P0/0/00301O/3//5ô16/õó//5ô17/õó///5ô14//õó/?/5ô12/?õó03/1/6/6õó/7/7õó/4/4õó/2/2õó01/POz0/POz0//Py1Y/0/1./1./1./1.¡¡¡0*/3./3./3./3.¡¡¡0+O//]//zP//P1y9/,¢1(//y9£/+¡0+/(/(£/*¡0*/Py/0//U/P0//z0O//y19/,¢1-//y19£/9/,¢1(/9£/+¡¡0+/-/-£/(/(£/*¡¡0*/Py0/Pz1//Py9Ê0;/)/+/.¤Ê/*/.¤Ê®/:±²Å1(l//E//(G/(/)0)/8/0Ê°/;¯08/Py0/Py1/VZpvtnutpt:p~|xr:|pq{t<v{~qp{:x|s@AG:q{z<|t|~:xv}<t`;
   const scalarWasm = String.raw`dynEncode010f317f7943p|,ooot}|t|~P*r~t{ptnnwtpnqptà ¡O/PW/Pz0/P]O/Pz0/P0/Py10O/0/0/0P0O///y19/9¡G//9/9¡G//9/9¡G//9/9¡G/1Py0/1Py0/Py0//Py1Y//YOO//9/9¡G/Py0/Py0//Py1Y//y0//y0/Py1/V/P[/P0/90/PU0/PU0/0O//9/¡1GO///9/9¡G/PU//9/9¡G///9/9¡G//y0/Pz1O/1PWP/Pz0/Pz0O//y19/¢1//y19£/9/¢1/9£/9/¢1/9£/9/¢1/9£/¡¡¡¡0//£//£//£//£/¡¡¡¡0/Py0//Py1Y/PPy1/]//zP//P1y9/¢1//y9£/¡0//£/¡0/Py/0/Pz/U//z0//P1y0//y0O/9/¢1/£/9/¢1/£/¡¡0//9£//9£/¡¡0/Py0/Py0/Pz1//ÁRÎ¡1¤Ê//¤Ê®/Ê±²ÅÁOP0S0%O///////PE/PE/PYO/P0/Pz1P^O/0//10O/!/9Ê¯/9Ê¯/9Ê¯/9Ê¯0!/Py0/Pz1/O/P/y0/0O/!/9Ê¯0!/Py0/Pz1/P^O/0//10O/"/9Ê¯/9Ê¯/9Ê¯/9Ê¯0"/Py0/Pz1/O/P/y0O/"/9Ê¯0"/Py0/Pz1/Pz0/Á0 /PWOP0P/"Å/ ¤0P0/0O/9/¢1/£/9/¢1/£/9/¢1/£/9/¢1/£/¡¡¡¡0/Py0/Py1/WP0/PzPPy/Pz0/Á0 P0/"/Æ1"²Å0O//]//zP1/P/y0/0O/9/¢1/£/¡0/Py0/Pz1//y/0//zPZ//z0/P/y0O/9/¢1/£/9/¢1/£/9/¢1/£/9/¢1/£/¡¡¡¡0/Py0/Pz1P0/O/0O//9/¢G//9/¢G//9/¢G//9/¢G/Py0/Py1/W// RÎ¡¤0//z0O//]/0//zP1O//y0/P/y0O//9/¢G/Py0/Pz1//zPZ//z0/P/y0O//9/¢G//9/¢G//9/¢G//9/¢G/Py0/Pz1/ 0O/P[OP0/P0/P0P0/0P0O/!/9Ê°0#//y9Ê0$/90///!/"²Å//1 /m//E// G//0/#/$¯0!//y0//y1/WO/P[///{1y1///W*0P0//z1P/PY*0O/P[O/%0!/P0O/PzPXO/%0!/P/y0/%0!//10O/!/9Ê¯/9Ê¯/9Ê¯/9Ê¯0!/Py0/Pz1/T/P/Py/y0O/!/9Ê¯0!/Py0/Pz1//]/P0/P/y0O/!/9Ê°0#//y9Ê0$/90///!/"²Å//1 /mO//E// G/#/$¯0!/Py0/Py1/V;pvtnutpt:|pq{t<v{~qp{:xv}<t`;
 
   class SynAudio {
@@ -44,7 +44,6 @@
         options.correlationThreshold >= 0 ? options.correlationThreshold : 0.5;
 
       this._module = wasmModule.get(SynAudio);
-
       if (!this._module) {
         this._module = simd().then((simdSupported) =>
           simdSupported
@@ -54,8 +53,13 @@
         wasmModule.set(this._module);
       }
 
+      this._heapBase = this._module
+        .then(() => WebAssembly.instantiate(module, {}))
+        .then((instance) => instance["exports"]["__heap_base"].value);
+
       this.SynAudioWorker = function SynAudioWorker(
         module,
+        heapBase,
         correlationSampleSize,
         initialGranularity,
       ) {
@@ -153,22 +157,19 @@
           return result;
         };
 
-        this._sync = (a, b) => {
-          const pageSize = 64 * 1024;
-          const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
-
-          const correlationSampleSize = this._getCorrelationSampleSize(a, b);
-          const initialGranularity = this._getInitialGranularity(a, b);
-
-          const memory = new WebAssembly.Memory({
-            initial:
-              ((a.samplesDecoded * a.channelData.length +
-                b.samplesDecoded * b.channelData.length) *
-                floatByteLength) /
-                pageSize +
-              4,
-          });
-
+        this._syncWasmMemory = (
+          memory,
+          aPtr,
+          aSamplesDecoded,
+          aChannelDataLength,
+          bPtr,
+          bSamplesDecoded,
+          bChannelDataLength,
+          correlationSampleSize,
+          initialGranularity,
+          bestCorrelationPtr,
+          bestSampleOffsetPtr,
+        ) => {
           return this._module
             .then((module) =>
               WebAssembly.instantiate(module, {
@@ -179,41 +180,29 @@
               const instanceExports = new Map(Object.entries(exports));
 
               const correlate = instanceExports.get("correlate");
-              const dataArray = new Float32Array(memory.buffer);
               const heapView = new DataView(memory.buffer);
-
-              const aPtr = instanceExports.get("__heap_base").value;
-              const bPtr = this._setAudioDataOnHeap(
-                a.channelData,
-                dataArray,
-                aPtr,
-              );
-              const bestCorrelationPtr = this._setAudioDataOnHeap(
-                b.channelData,
-                dataArray,
-                bPtr,
-              );
-              const bestSampleOffsetPtr = bestCorrelationPtr + floatByteLength;
+              const heapBase = instanceExports.get("__heap_base").value;
+              console.log("heap base", heapBase);
 
               correlate(
-                aPtr,
-                a.samplesDecoded,
-                a.channelData.length,
-                bPtr,
-                b.samplesDecoded,
-                b.channelData.length,
+                aPtr + heapBase,
+                aSamplesDecoded,
+                aChannelDataLength,
+                bPtr + heapBase,
+                bSamplesDecoded,
+                bChannelDataLength,
                 correlationSampleSize,
                 initialGranularity,
-                bestCorrelationPtr,
-                bestSampleOffsetPtr,
+                bestCorrelationPtr + heapBase,
+                bestSampleOffsetPtr + heapBase,
               );
 
               const bestCorrelation = heapView.getFloat32(
-                bestCorrelationPtr,
+                bestCorrelationPtr + heapBase,
                 true,
               );
               const bestSampleOffset = heapView.getInt32(
-                bestSampleOffsetPtr,
+                bestSampleOffsetPtr + heapBase,
                 true,
               );
 
@@ -222,6 +211,128 @@
                 sampleOffset: bestSampleOffset,
               };
             });
+        };
+
+        this._sync = (a, b) => {
+          const pageSize = 64 * 1024;
+          const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
+
+          const aLen = a.samplesDecoded * a.channelData.length * floatByteLength;
+          const bLen = b.samplesDecoded * b.channelData.length * floatByteLength;
+          const outVariablesLen = 2 * floatByteLength;
+
+          const memorySize = (aLen + bLen + outVariablesLen) / pageSize + 4;
+          const memory = new WebAssembly.Memory({
+            initial: memorySize,
+            maximum: memorySize,
+            shared: true,
+          });
+          const dataArray = new Float32Array(memory.buffer);
+
+          return this._heapBase.then((heapBase) => {
+            const aPtr = heapBase;
+            const bPtr = this._setAudioDataOnHeap(a.channelData, dataArray, aPtr);
+            const bestCorrelationPtr = this._setAudioDataOnHeap(
+              b.channelData,
+              dataArray,
+              bPtr,
+            );
+            const bestSampleOffsetPtr = bestCorrelationPtr + floatByteLength;
+
+            const correlationSampleSize = this._getCorrelationSampleSize(a, b);
+            const initialGranularity = this._getInitialGranularity(a, b);
+
+            return this._syncWasmMemory(
+              memory,
+              aPtr,
+              a.samplesDecoded,
+              a.channelData.length,
+              bPtr,
+              b.samplesDecoded,
+              b.channelData.length,
+              correlationSampleSize,
+              initialGranularity,
+              bestCorrelationPtr,
+              bestSampleOffsetPtr,
+            );
+          });
+        };
+
+        this._syncOneToMany = (a, bArray) => {
+          return this._heapBase.then((heapBase) => {
+            const pageSize = 64 * 1024;
+            const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
+
+            const aPtr = heapBase;
+            const aLen =
+              a.samplesDecoded * a.channelData.length * floatByteLength;
+            const bArrayLen = bArray.reduce(
+              (acc, b) =>
+                b.samplesDecoded * b.channelData.length * floatByteLength + acc,
+              0,
+            );
+            const outVariablesLen = bArray.length * (2 * floatByteLength);
+
+            const memorySize =
+              (aLen + bArrayLen + outVariablesLen) / pageSize + 4;
+            const memory = new WebAssembly.Memory({
+              initial: memorySize,
+              maximum: memorySize,
+              shared: true,
+            });
+            const dataArray = new Float32Array(memory.buffer);
+            let bPtr = this._setAudioDataOnHeap(a.channelData, dataArray, aPtr);
+
+            return Promise.all(
+              bArray.map((b) => {
+                const bestCorrelationPtr = this._setAudioDataOnHeap(
+                  b.channelData,
+                  dataArray,
+                  bPtr,
+                );
+                const bestSampleOffsetPtr = bestCorrelationPtr + floatByteLength;
+                const nextBPtr = bestSampleOffsetPtr + floatByteLength;
+
+                const correlationSampleSize = this._getCorrelationSampleSize(
+                  a,
+                  b,
+                );
+                const initialGranularity = this._getInitialGranularity(a, b);
+                ///*
+                const syncPromise = this._executeAsWorker("_syncWasmMemory", [
+                  memory,
+                  bestCorrelationPtr,
+                  bestSampleOffsetPtr,
+                  aPtr,
+                  a.samplesDecoded,
+                  a.channelData.length,
+                  bPtr,
+                  b.samplesDecoded,
+                  b.channelData.length,
+                  correlationSampleSize,
+                  initialGranularity,
+                ]);
+                //*/
+                /*
+              const syncPromise = this._syncWasmMemory(
+                memory,
+                bestCorrelationPtr,
+                bestSampleOffsetPtr,
+                aPtr,
+                a.samplesDecoded,
+                a.channelData.length,
+                bPtr,
+                b.samplesDecoded,
+                b.channelData.length,
+                correlationSampleSize,
+                initialGranularity,
+              );
+  */
+                bPtr = nextBPtr;
+                return syncPromise;
+              }),
+            );
+          });
         };
 
         this._syncWorkerConcurrent = (a, b, threads) => {
@@ -301,6 +412,10 @@
           });
         };
 
+        this._syncOneToManyWorker = (a, bArray) => {
+          return this._executeAsWorker("_syncOneToMany", [a, bArray]);
+        };
+
         this._syncWorker = (a, b) => {
           return this._executeAsWorker("_sync", [a, b]);
         };
@@ -314,21 +429,25 @@
 
         // constructor
 
-        // needed to serialize minified code when methods are refererenced as a string
+        // needed to serialize minified code when methods are referenced as a string
         // prettier-ignore
         this._workerMethods = new Map([
           ["_sync", this._sync],
+          ["_syncWasmMemory", this._syncWasmMemory],
+          ["_syncOneToMany", this._syncOneToMany],
           ["_syncWorker", this._syncWorker],
           ["_syncWorkerConcurrent", this._syncWorkerConcurrent],
         ]);
 
         this._module = module;
+        this._heapBase = heapBase;
         this._correlationSampleSize = correlationSampleSize;
         this._initialGranularity = initialGranularity;
       };
 
       this._instance = new this.SynAudioWorker(
         this._module,
+        this._heapBase,
         this._correlationSampleSize,
         this._initialGranularity,
       );
@@ -348,6 +467,14 @@
 
     async sync(a, b) {
       return this._instance._sync(a, b);
+    }
+
+    async syncOneToManyWorker(a, bArray) {
+      return this._instance._syncOneToManyWorker(a, bArray);
+    }
+
+    async syncOneToMany(a, bArray) {
+      return this._instance._syncOneToMany(a, bArray);
     }
 
     async syncMultiple(clips, threads) {
