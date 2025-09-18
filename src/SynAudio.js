@@ -43,10 +43,6 @@ export default class SynAudio {
       options.correlationThreshold >= 0 ? options.correlationThreshold : 0.5;
 
     this._module = wasmModule.get(SynAudio);
-    this._heapBase = simd().then((simdSupported) =>
-      simdSupported ? simdHeapBase : scalarHeapBase,
-    );
-
     if (!this._module) {
       this._module = simd().then((simdSupported) =>
         simdSupported
@@ -54,6 +50,14 @@ export default class SynAudio {
           : WebAssembly.compile(decode(scalarWasm)),
       );
       wasmModule.set(this._module);
+    }
+
+    this._heapBase = wasmHeapBase.get(SynAudio);
+    if (!this._heapBase) {
+      this._heapBase = simd().then((simdSupported) =>
+        simdSupported ? simdHeapBase : scalarHeapBase,
+      );
+      wasmHeapBase.set(this._heapBase);
     }
 
     this.SynAudioWorker = function SynAudioWorker(
@@ -262,7 +266,12 @@ export default class SynAudio {
         });
       };
 
-      this._syncOneToMany = (a, bArray) => {
+      this._syncOneToMany = (
+        a,
+        bArray,
+        threads = 1,
+        progressCallback = () => {},
+      ) => {
         return this._heapBase.then((heapBase) => {
           const pageSize = 64 * 1024;
           const floatByteLength = Float32Array.BYTES_PER_ELEMENT;
@@ -285,43 +294,83 @@ export default class SynAudio {
           });
           const dataArray = new Float32Array(memory.buffer);
 
+          // build the parameters
           const aPtr = heapBase;
           let bPtr = this._setAudioDataOnHeap(a.channelData, dataArray, aPtr);
 
-          return Promise.all(
-            bArray.map((b) => {
-              const bestCorrelationPtr = this._setAudioDataOnHeap(
-                b.channelData,
-                dataArray,
-                bPtr,
-              );
-              const bestSampleOffsetPtr = bestCorrelationPtr + floatByteLength;
-              const nextBPtr = bestSampleOffsetPtr + floatByteLength;
+          const syncParameters = bArray.map((b) => {
+            const bestCorrelationPtr = this._setAudioDataOnHeap(
+              b.channelData,
+              dataArray,
+              bPtr,
+            );
+            const bestSampleOffsetPtr = bestCorrelationPtr + floatByteLength;
+            const nextBPtr = bestSampleOffsetPtr + floatByteLength;
 
-              const correlationSampleSize = this._getCorrelationSampleSize(
-                a,
-                b,
-              );
-              const initialGranularity = this._getInitialGranularity(a, b);
+            const correlationSampleSize = this._getCorrelationSampleSize(a, b);
+            const initialGranularity = this._getInitialGranularity(a, b);
 
-              const syncPromise = this._executeAsWorker("_syncWasmMemory", [
-                memory,
-                aPtr,
-                a.samplesDecoded,
-                a.channelData.length,
-                bPtr,
-                b.samplesDecoded,
-                b.channelData.length,
-                correlationSampleSize,
-                initialGranularity,
-                bestCorrelationPtr,
-                bestSampleOffsetPtr,
-              ]);
+            const params = [
+              memory,
+              aPtr,
+              a.samplesDecoded,
+              a.channelData.length,
+              bPtr,
+              b.samplesDecoded,
+              b.channelData.length,
+              correlationSampleSize,
+              initialGranularity,
+              bestCorrelationPtr,
+              bestSampleOffsetPtr,
+            ];
 
-              bPtr = nextBPtr;
-              return syncPromise;
-            }),
-          );
+            bPtr = nextBPtr;
+            return params;
+          });
+
+          // start tasks concurrently, limiting by a defined thread count
+          let taskIndex = 0;
+          let activeCount = 0;
+          let doneCount = 0;
+          const results = new Array(syncParameters.length);
+          const running = [];
+
+          return new Promise((resolve, reject) => {
+            progressCallback(0);
+            const runNext = () => {
+              // All tasks have been started
+              if (taskIndex >= syncParameters.length) {
+                if (activeCount === 0) resolve(results);
+                return;
+              }
+
+              // Start a new task
+              const currentIndex = taskIndex++;
+              activeCount++;
+
+              const promise = this._executeAsWorker(
+                "_syncWasmMemory",
+                syncParameters[currentIndex],
+              )
+                .then((result) => {
+                  results[currentIndex] = result;
+                })
+                .catch(reject)
+                .finally(() => {
+                  activeCount--;
+                  doneCount++;
+                  progressCallback(doneCount / results.length);
+                  runNext(); // Start the next task
+                });
+
+              running.push(promise);
+
+              // If we haven't reached the limit, start another one
+              if (activeCount < threads) runNext();
+            };
+
+            runNext();
+          });
         });
       };
 
@@ -402,10 +451,6 @@ export default class SynAudio {
         });
       };
 
-      this._syncOneToManyWorker = (a, bArray) => {
-        return this._executeAsWorker("_syncOneToMany", [a, bArray]);
-      };
-
       this._syncWorker = (a, b) => {
         return this._executeAsWorker("_sync", [a, b]);
       };
@@ -459,12 +504,8 @@ export default class SynAudio {
     return this._instance._sync(a, b);
   }
 
-  async syncOneToManyWorker(a, bArray) {
-    return this._instance._syncOneToManyWorker(a, bArray);
-  }
-
-  async syncOneToMany(a, bArray) {
-    return this._instance._syncOneToMany(a, bArray);
+  async syncOneToMany(a, bArray, threads, progressCallback) {
+    return this._instance._syncOneToMany(a, bArray, threads, progressCallback);
   }
 
   async syncMultiple(clips, threads) {

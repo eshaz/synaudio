@@ -6,7 +6,7 @@ import SynAudio from "synaudio";
 
 const decode = async (audioData) => {
   let decodedAudio;
-  const decoder = new MPEGDecoderWebWorker({enableGapless: false});
+  const decoder = new MPEGDecoderWebWorker({ enableGapless: false });
 
   await decoder.ready.then(() =>
     decoder
