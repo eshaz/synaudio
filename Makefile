@@ -39,18 +39,11 @@ correlate-scalar:
 		$(CORRELATE_SCALAR_BUILD) \
 		-o $(CORRELATE_SCALAR_BUILD)
 
-CORRELATE_SCALAR_HEAPBASE:= $(shell \
-    wasm-objdump -x $(CORRELATE_SCALAR_BUILD) | grep '<__heap_base>' | \
-	grep -oE 'i32=[0-9]+' | \
-	cut -d= -f2)
-
-# TODO split out shared memory into a separate wasm
 correlate-simd:
 	@ clang \
 		--target=wasm32 \
 		-nostdlib \
 		-msimd128 \
-		-matomics \
 		-mbulk-memory \
 		-DWASM_SIMD \
 		-flto \
@@ -80,17 +73,19 @@ correlate-simd:
 		$(CORRELATE_SIMD_BUILD) \
 		-o $(CORRELATE_SIMD_BUILD)
 
-CORRELATE_SIMD_HEAPBASE:= $(shell \
-    wasm-objdump -x $(CORRELATE_SIMD_BUILD) | grep '<__heap_base>' | \
-	grep -oE 'i32=[0-9]+' | \
-	cut -d= -f2)
-
 correlate-shared:
 	@ clang \
 		--target=wasm32 \
 		-nostdlib \
 		-msimd128 \
 		-matomics \
+		-mrelaxed-simd \
+		-mextended-const \
+		-mnontrapping-fptoint \
+		-msign-ext \
+		-mmultivalue \
+		-mreference-types \
+		-mtail-call \
 		-mbulk-memory \
 		-DWASM_SIMD \
 		-flto \
@@ -122,17 +117,21 @@ correlate-shared:
 		$(CORRELATE_SHARED_BUILD) \
 		-o $(CORRELATE_SHARED_BUILD)
 
-CORRELATE_SHARED_HEAPBASE:= $(shell \
-    wasm-objdump -x $(CORRELATE_SHARED_BUILD) | grep '<__heap_base>' | \
-	grep -oE 'i32=[0-9]+' | \
-	cut -d= -f2)
-
 embed-wasm: correlate-scalar correlate-simd correlate-shared
 	SIMD=$(CORRELATE_SIMD_BUILD) \
 	SCALAR=$(CORRELATE_SCALAR_BUILD) \
 	SHARED=$(CORRELATE_SHARED_BUILD) \
-	SIMD_HEAPBASE=$(CORRELATE_SIMD_HEAPBASE) \
-	SCALAR_HEAPBASE=$(CORRELATE_SCALAR_HEAPBASE) \
-	SHARED_HEAPBASE=$(CORRELATE_SHARED_HEAPBASE) \
+	SIMD_HEAPBASE=$(shell \
+   		wasm-objdump -x $(CORRELATE_SIMD_BUILD) | grep '<__heap_base>' | \
+		grep -oE 'i32=[0-9]+' | \
+		cut -d= -f2) \
+	SCALAR_HEAPBASE=$(shell \
+	    wasm-objdump -x $(CORRELATE_SCALAR_BUILD) | grep '<__heap_base>' | \
+		grep -oE 'i32=[0-9]+' | \
+		cut -d= -f2) \
+	SHARED_HEAPBASE=$(shell \
+    	wasm-objdump -x $(CORRELATE_SHARED_BUILD) | grep '<__heap_base>' | \
+		grep -oE 'i32=[0-9]+' | \
+		cut -d= -f2) \
 	npm run build
 	
