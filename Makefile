@@ -25,6 +25,8 @@ correlate-scalar:
 	@ wasm-opt \
 		-lmu \
 		-O4 \
+		--merge-blocks \
+		--precompute-propagate \
 		--reorder-functions \
 		--reorder-locals \
 		--coalesce-locals \
@@ -34,6 +36,7 @@ correlate-scalar:
 		--simplify-globals \
 		--simplify-locals \
 		--strip-producers \
+		--strip-target-features \
 		--vacuum \
 		--converge \
 		$(CORRELATE_SCALAR_BUILD) \
@@ -59,6 +62,8 @@ correlate-simd:
 	@ wasm-opt \
 		-lmu \
 		-O4 \
+		--merge-blocks \
+		--precompute-propagate \
 		--reorder-functions \
 		--reorder-locals \
 		--coalesce-locals \
@@ -68,6 +73,7 @@ correlate-simd:
 		--simplify-globals \
 		--simplify-locals \
 		--strip-producers \
+		--strip-target-features \
 		--vacuum \
 		--converge \
 		$(CORRELATE_SIMD_BUILD) \
@@ -103,6 +109,8 @@ correlate-shared:
 	@ wasm-opt \
 		-lmu \
 		-O4 \
+		--merge-blocks \
+		--precompute-propagate \
 		--reorder-functions \
 		--reorder-locals \
 		--coalesce-locals \
@@ -112,6 +120,7 @@ correlate-shared:
 		--simplify-globals \
 		--simplify-locals \
 		--strip-producers \
+		--strip-target-features \
 		--vacuum \
 		--converge \
 		$(CORRELATE_SHARED_BUILD) \
