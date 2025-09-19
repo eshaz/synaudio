@@ -330,10 +330,26 @@
               const correlationSampleSize = this._getCorrelationSampleSize(a, b);
               const initialGranularity = this._getInitialGranularity(a, b);
 
+              let syncStart = b.syncStart || 0;
+              let syncEnd = b.syncEnd || a.samplesDecoded;
+              if (syncEnd - syncStart < b.samplesDecoded) {
+                syncStart = 0;
+                syncEnd = a.samplesDecoded;
+              }
+
+              const baseOffset = Math.min(
+                a.samplesDecoded,
+                Math.max(0, syncStart),
+              );
+              const baseSampleLength = Math.min(
+                a.samplesDecoded - baseOffset,
+                Math.max(0, baseOffset + syncEnd),
+              );
+
               const params = [
                 memory,
-                aPtr,
-                a.samplesDecoded,
+                aPtr + baseOffset * a.channelData.length * floatByteLength,
+                baseSampleLength,
                 a.channelData.length,
                 bPtr,
                 b.samplesDecoded,
@@ -345,8 +361,11 @@
               ];
 
               bPtr = nextBPtr;
-              return params;
+              return [params, baseOffset];
             });
+
+            a = null;
+            bArray = null;
 
             // start tasks concurrently, limiting the number of threads
             let taskIndex = 0;
@@ -369,9 +388,10 @@
 
                 this._executeAsWorker(
                   "_syncWasmMemory",
-                  syncParameters[currentIndex],
+                  syncParameters[currentIndex][0],
                 )
                   .then((result) => {
+                    result.sampleOffset += syncParameters[currentIndex][1];
                     results[currentIndex] = result;
                   })
                   .catch(reject)
@@ -524,7 +544,15 @@
     }
 
     async syncOneToMany(a, bArray, threads, progressCallback) {
-      return this._instance._syncOneToMany(a, bArray, threads, progressCallback);
+      const result = this._instance._syncOneToMany(
+        a,
+        bArray,
+        threads,
+        progressCallback,
+      );
+      a = null;
+      bArray = null;
+      return result;
     }
 
     async syncMultiple(clips, threads) {
