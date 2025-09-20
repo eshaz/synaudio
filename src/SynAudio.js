@@ -340,14 +340,14 @@ export default class SynAudio {
               Math.max(0, syncStart),
             );
             const baseSampleLength = Math.min(
-              a.samplesDecoded - baseOffset,
-              Math.max(0, baseOffset + syncEnd),
+              a.samplesDecoded,
+              Math.max(0, syncEnd),
             );
 
             const params = [
               memory,
               aPtr + baseOffset * a.channelData.length * this._floatByteLength,
-              baseSampleLength,
+              baseSampleLength - baseOffset,
               a.channelData.length,
               bPtr,
               b.samplesDecoded,

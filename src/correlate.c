@@ -13,7 +13,7 @@
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    aint64_t with this program.  If not, see <https://www.gnu.org/licenses/>
+    along with this program.  If not, see <https://www.gnu.org/licenses/>
 */
 
 #define min(a, b) a < b ? a : b
