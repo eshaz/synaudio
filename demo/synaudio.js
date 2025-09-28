@@ -120,7 +120,9 @@
             a.samplesDecoded * a.channelData.length * this._floatByteLength;
           const bArrayLen = bArray.reduce(
             (acc, b) =>
-              b.samplesDecoded * b.channelData.length * this._floatByteLength +
+              b.data.samplesDecoded *
+                b.data.channelData.length *
+                this._floatByteLength +
               acc,
             0,
           );
@@ -287,7 +289,7 @@
 
         this._sync = (a, b) => {
           return this._heapBase.then((heapBase) => {
-            const memory = this._initWasmMemory(a, [b], heapBase);
+            const memory = this._initWasmMemory(a, [{ data: b }], heapBase);
 
             let aPtr, bPtr, bestCorrelationPtr, bestSampleOffsetPtr, heapPosition;
             [aPtr, heapPosition] = this._setBaseAudioOnHeap(a, memory, heapBase);
@@ -317,7 +319,7 @@
           a,
           bArray,
           threads = 1,
-          progressCallback = () => {},
+          onProgressUpdate = () => {},
         ) => {
           return this._heapBase.then((heapBase) => {
             const memory = this._initWasmMemory(a, bArray, heapBase);
@@ -328,15 +330,18 @@
 
             const syncParameters = bArray.map((b) => {
               [bPtr, bestCorrelationPtr, bestSampleOffsetPtr, heapPosition] =
-                this._setComparisonAudioOnHeap(b, memory, heapPosition);
+                this._setComparisonAudioOnHeap(b.data, memory, heapPosition);
 
-              const correlationSampleSize = this._getCorrelationSampleSize(a, b);
-              const initialGranularity = this._getInitialGranularity(a, b);
+              const correlationSampleSize = this._getCorrelationSampleSize(
+                a,
+                b.data,
+              );
+              const initialGranularity = this._getInitialGranularity(a, b.data);
 
               // optionally set boundaries for the base data
               let syncStart = b.syncStart || 0;
               let syncEnd = b.syncEnd || a.samplesDecoded;
-              if (syncEnd - syncStart < b.samplesDecoded) {
+              if (syncEnd - syncStart < b.data.samplesDecoded) {
                 syncStart = 0;
                 syncEnd = a.samplesDecoded;
               }
@@ -346,24 +351,24 @@
                 Math.max(0, syncStart),
               );
               const baseSampleLength = Math.min(
-                a.samplesDecoded - baseOffset,
-                Math.max(0, baseOffset + syncEnd),
+                a.samplesDecoded,
+                Math.max(0, syncEnd),
               );
 
               const params = [
                 memory,
                 aPtr + baseOffset * a.channelData.length * this._floatByteLength,
-                baseSampleLength,
+                baseSampleLength - baseOffset,
                 a.channelData.length,
                 bPtr,
-                b.samplesDecoded,
-                b.channelData.length,
+                b.data.samplesDecoded,
+                b.data.channelData.length,
                 correlationSampleSize,
                 initialGranularity,
                 bestCorrelationPtr,
                 bestSampleOffsetPtr,
               ];
-              return [params, baseOffset];
+              return [params, baseOffset, b.name];
             });
 
             a = null;
@@ -376,7 +381,7 @@
             const results = new Array(syncParameters.length);
 
             return new Promise((resolve, reject) => {
-              progressCallback(0);
+              onProgressUpdate(0);
               const runNext = () => {
                 // All tasks have been started
                 if (taskIndex >= syncParameters.length) {
@@ -394,13 +399,14 @@
                 )
                   .then((result) => {
                     result.sampleOffset += syncParameters[currentIndex][1];
+                    result.name = syncParameters[currentIndex][2];
                     results[currentIndex] = result;
                   })
                   .catch(reject)
                   .finally(() => {
                     activeCount--;
                     doneCount++;
-                    progressCallback(doneCount / results.length);
+                    onProgressUpdate(doneCount / results.length);
                     runNext(); // Start the next task
                   });
 
@@ -549,12 +555,12 @@
       return this._instance._sync(a, b);
     }
 
-    async syncOneToMany(a, bArray, threads, progressCallback) {
+    async syncOneToMany(a, bArray, threads, onProgressUpdate) {
       const result = this._instance._syncOneToMany(
         a,
         bArray,
         threads,
-        progressCallback,
+        onProgressUpdate,
       );
       a = null;
       bArray = null;

@@ -6,6 +6,8 @@ declare interface PCMAudio {
 declare interface AudioClip {
   name: string;
   data: PCMAudio;
+  syncStart?: number;
+  syncEnd?: number;
 }
 
 declare interface TwoClipMatch {
@@ -32,6 +34,7 @@ declare interface SynAudioOptions {
   correlationSampleSize?: number; // default 11025
   initialGranularity?: number; // default 16
   correlationThreshold?: number; // default 0.5
+  shared?: boolean; // default false
 }
 
 declare class SynAudio {
@@ -49,6 +52,13 @@ declare class SynAudio {
     comparison: PCMAudio,
     threads?: number, // default 1
   ): Promise<TwoClipMatch>;
+
+  public syncOneToMany(
+    base: PCMAudio,
+    comparisonClips: AudioClip[],
+    threads?: number, // default 1
+    onProgressUpdate?: (progress: number) => void
+  ): Promise<MultipleClipMatch[]>;
 
   public syncMultiple(
     clips: AudioClip[],
