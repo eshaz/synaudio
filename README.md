@@ -1,9 +1,20 @@
 # `synaudio`
 
-`synaudio` is a JavaScript library that finds the synchronization points between two or more similar audio clips.
-  * Synchronize two or more audio clips by finding the sample offsets with the [Pearson correlation coefficient](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient).
-  * Correlation algorithm implemented as WebAssembly SIMD.
-  * Built in Web Worker implementations for concurrency.
+`synaudio` is a JavaScript and WebAssembly library that finds the synchronization points between two or more similar audio clips.
+
+Audio clips are synchronized using the [Pearson correlation coefficient](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient) algorithm to compare each sample of the digital audio. The audio clips are shifted slightly, compared, and the correlation coefficient is stored. The shift offset with the highest correlation coefficient is returned as the synchronization point.
+
+  * Correlation algorithm implemented as hand optimized WebAssembly 128bit SIMD instructions.
+  * Works in all major browsers, and JavaScript runtimes
+  * Built in Web Worker implementations for parallel processing.
+
+## Examples Use-Cases
+* Syncing audio playback for streaming radio when the stream switches bit-rates, codecs, or reconnects. See [IcecastMetadataPlayer](https://github.com/eshaz/icecast-metadata-js/tree/main/src/icecast-metadata-player)
+* Syncing multiple recordings from analog tape where the speed has slightly varied between captures. See [synaudio-cli](https://github.com/eshaz/synaudio-cli)
+* Syncing multiple digital audio recordings where the digital clocks were mismatched.
+* Syncing audio to an existing audio / video stream.
+* Syncing audio clips that have been cut or recorded in multiple segments so they can be reconstructed.
+* Syncing multitrack recordings that have slight delay, phase differences, or miss-matched clocks.
 
 ## View the live [Demo](https://eshaz.github.io/synaudio)!
 
@@ -64,6 +75,70 @@ SynAudio can synchronize two clips: one base and one comparison. The comparison 
      comparison, //   audio data to compare against the base
      4 //             number of threads to spawn
    );
+   ```
+
+### Sync One to Many Clips
+
+`syncOneToMany` will synchronize one base to one or more comparison clips. The comparison clip(s) must be derived from the same audio source as the base clip in order for there to be a valid match.
+* Note: This method requires `SharedMemory` to be enabled on your runtime platform.
+
+* Call the `syncOneToMany` method on the instance to find the synchronization point in samples between base and the comparison audio clips.
+
+   * See the [API](#api) section below for details on these methods.
+
+   ```js
+   // example "base" object
+   const base = {
+     channelData: [leftChannelFloat32Array, rightChannelFloat32Array]
+     samplesDecoded: 20000
+   };
+
+   // example "comparisonClips" array
+   const comparisonClips = [
+     {
+       name: "clip1",
+       data: { // first comparison clip
+         channelData: [leftChannelFloat32Array, rightChannelFloat32Array]
+         samplesDecoded: 1234
+       },
+       syncStart: 0,
+       syncEnd: 10000
+     },
+     {
+       name: "clip2",
+       data: { // second comparison clip
+         channelData: [leftChannelFloat32Array, rightChannelFloat32Array]
+         samplesDecoded: 1234
+       }
+       syncStart: 5000,
+       syncEnd: 15000
+     }
+   ]
+
+   const results = await synAudio.syncOneToMany(
+     base, //            audio data to use a base for the comparison
+     comparisonClips, // array of audio data to compare against the base
+     16 //               number of comparison clips to sync concurrently
+     onProgressUpdate // optional callback function
+   );  
+   ```
+
+* The return value will contain an array of `MultipleClipMatch` objects that represent the correlation and sample offset for each comparison clip. The order of the results matches the order of the input comparison clips.
+   ```js
+   // results example
+   [
+     { // first comparison clip
+       name: "clip1",
+       sampleOffset: 1234, // position relative to `base` where the first `comparison` matches best
+       correlation: 0.8,
+     },
+     { // second comparison clip
+       name: "clip2",
+       sampleOffset: 5678, // position relative to `base` where the second `comparison` matches best
+       correlation: 0.9, 
+     }
+   ]
+
    ```
 
 ### Sync Multiple Clips
@@ -151,7 +226,7 @@ Class that that finds the synchronization point between two or more similar audi
 ```js
 new SynAudio({
   correlationSampleSize: 1234,
-  initialGranularity: 1
+  initialGranularity: 1,
 });
 ```
 
@@ -161,6 +236,7 @@ declare interface SynAudioOptions {
   correlationSampleSize?: number; // default 11025
   initialGranularity?: number; // default 16
   correlationThreshold?: number; // default 0.5
+  shared?: boolean; // default false
 }
 ```
 * `correlationSampleSize` *optional, defaults to 11025*
@@ -172,6 +248,10 @@ declare interface SynAudioOptions {
 * `correlationThreshold` *optional, defaults to 0.5*
   * Threshold that will filter out any low correlation matches
   * Only applicable to `syncMultiple`
+* `shared` *optional, defaults to false*
+  * Enables the use of `SharedMemory` between the main and worker threads
+  * Runtime environment must support Web Assembly SIMD and Shared Memory features
+  * Must be enabled to use `syncOneToMany`
 
 
 ### Methods
@@ -197,6 +277,16 @@ declare class SynAudio {
     comparison: PCMAudio,
     threads?: number // default 1
   ): Promise<TwoClipMatch>;
+
+  /*
+   * One Base, Multiple Comparison Clips 
+  */
+  public syncOneToMany(
+    base: PCMAudio,
+    comparisonClips: AudioClip[],
+    threads?: number, // default 1
+    onProgressUpdate?: (progress: number) => void
+  ): Promise<MultipleClipMatch[]>;
 
   /* 
    * Multiple Clips
@@ -231,10 +321,22 @@ declare class SynAudio {
   * Returns
     * Promise resolving to `TwoClipMatch` that contains the `correlation` and `sampleOffset`
 
-### Multiple Clips
+### One To Many Clips
+* `syncOneToMany(base: PCMAudio, comparisonClips: AudioClip[], threads?: number, onProgressUpdate?: (progress: number) => void): Promise<MultipleClipMatch[]>`
+  * Executes on worker threads for each comparison clip
+  * Parameters
+    * `base` Audio data to use as the base of comparison
+    * `comparisonClips` Array of `AudioClip`(s) to compare
+       * `syncStart` and `syncEnd` can be set for each comparison `AudioClip` to define sync range of the base clip.
+         If you have a known lower or upper bound, this will speed up the sync operation by limiting the search to those bounds.
+    * `threads` Maximum number of concurrent comparisons to run. *optional, defaults to 1*
+    * `onProgressUpdate` Callback function that is called with a number from 0 to 1 indicating the progress of the sync operation.
+  * Returns
+    * Promise resolving to an array of `MultipleClipMatch` that contains the `name`, `correlation`, and `sampleOffset` for each comparison clip
 
+### Multiple Clips
 * `syncMultiple(clips: AudioClip[], threads?: number): Promise<MultipleClipMatch[][]>`
-  * Executes on the main thread.
+  * Executes on the worker threads for each comparison.
   * Parameters
     * `clips` Array of `AudioClip`(s) to compare
     * `threads` Maximum number of threads to spawn *optional, defaults to 8*
@@ -261,12 +363,20 @@ interface PCMAudio {
 interface AudioClip {
   name: string;
   data: PCMAudio;
+  syncStart?: number;
+  syncEnd?: number;
 }
 ```
 * `name`
   * Name of the audio clip
 * `data`
   * Audio data for the clip
+* `syncStart`
+  * Audio sample starting offset from the base file to start syncing
+  * Defaults to `0` (start of the base audio clip)
+* `syncEnd`
+  * Audio sample ending offset from the base file to end syncing
+  * Defaults to the length of the base audio clip (end of the base audio clip)
 
 #### Return Types
 
@@ -312,7 +422,7 @@ declare interface MultipleClipMatch {
 
 ### Prerequisites
 1. Install Emscripten by following these [instructions](https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html#installation-instructions).
-   * This repository has been tested with Emscripten 3.1.46.
+   * This repository has been tested with Emscripten 4.0.7.
 
 ### Building
 1. Make sure to `source` the Emscripten path in the terminal you want build in.

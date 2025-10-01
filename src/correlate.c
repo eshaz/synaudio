@@ -30,6 +30,7 @@
 #define sum_and_store(a, b) a += b
 #define sub_and_store(a, b) a -= b
 
+#include <stdint.h>
 #ifdef WASM_SIMD
 
 #include <wasm_simd128.h>
@@ -85,14 +86,14 @@ typedef float float4;
 
 #endif
 
-float calc_correlation(float *a, float *b, float aMean, float bStdFloat, long sampleSize) {
-    int loopUnroll = 4*float4_size;
+float calc_correlation(float *a, float *b, float aMean, float bStdFloat, int64_t sampleSize) {
+    int32_t loopUnroll = 4*float4_size;
 
     float4 covariance_4 = float_to_float4(0);
     float4 aSquare_4 = float_to_float4(0);
     float4 aMean_4 = float_to_float4(aMean);
 
-    long i = 0;
+    int64_t i = 0;
     for (
       ;
       i < sampleSize - loopUnroll;
@@ -124,14 +125,14 @@ float calc_correlation(float *a, float *b, float aMean, float bStdFloat, long sa
 }
 
 // calculates the standard deviations of data at each offset
-float calc_std(float *in, double meanSum, long dataLength, long sampleLength) {
-    int loopUnroll = 4*float4_size;
+float calc_std(float *in, double meanSum, int64_t dataLength, int64_t sampleLength) {
+    int32_t loopUnroll = 4*float4_size;
 
     float4 square_4 = float_to_float4(0);
     float4 mean_4 = float_to_float4(meanSum / sampleLength);
 
     // get the first square and use simd
-    int i = 0;
+    int64_t i = 0;
     for (
       i = 0;
       i < sampleLength - loopUnroll;
@@ -154,11 +155,11 @@ float calc_std(float *in, double meanSum, long dataLength, long sampleLength) {
     return calc_stddev(square, sampleLength);
 }
 
-void sum_channels(float *data, long samples, int channels) {
-    for (int i = 0; i < channels - 1; i++) {
-      int loopUnroll = 4*float4_size;
+void sum_channels(float *data, int64_t samples, int32_t channels) {
+    for (int32_t i = 0; i < channels - 1; i++) {
+      int32_t loopUnroll = 4*float4_size;
 
-      long j = 0;
+      int64_t j = 0;
       for (; j < samples - loopUnroll; j += loopUnroll) {
         sum_and_store_float4(data[j], data[j+i*samples]);
         sum_and_store_float4(data[j + 1 * float4_size], data[(j + 1 * float4_size)+i*samples]);
@@ -171,20 +172,20 @@ void sum_channels(float *data, long samples, int channels) {
     }
 }
 
-double sum_for_mean(float *data, long length) {
+double sum_for_mean(float *data, int64_t length) {
     double meanSum = 0;
 
-    for (long i = 0; i < length; i++)
+    for (int64_t i = 0; i < length; i++)
       meanSum += data[i];
 
     return meanSum;
 }
 
-void subtract_mean(float* data, float mean, long samples) {
-    int loopUnroll = 4*float4_size;
+void subtract_mean(float* data, float mean, int64_t samples) {
+    int32_t loopUnroll = 4*float4_size;
     float4 mean_4 = float_to_float4(mean);
 
-    long i = 0;
+    int64_t i = 0;
     for (; i < samples - loopUnroll; i += loopUnroll) {
       sub_and_store_float4(data[i],                   mean_4);
       sub_and_store_float4(data[i + 1 * float4_size], mean_4);
@@ -200,16 +201,16 @@ void subtract_mean(float* data, float mean, long samples) {
 void correlate(
     // audio baseline
     float *a, 
-    long aSamples, 
-    int aChannels,
+    uint32_t aSamples, 
+    uint32_t aChannels,
     // audio to compare
     float *b, 
-    long bSamples, 
-    int bChannels,
-    long sampleSize, // amount of data to compare on b
-    long increment, // initial granularity search size
+    uint32_t bSamples, 
+    uint32_t bChannels,
+    uint32_t sampleSize, // amount of data to compare on b
+    uint32_t increment, // initial granularity search size
     float *bestCorrelation, // stores best correlation
-    long *bestSampleOffset // stores sample offset of a where b has the best correlation
+    uint32_t *bestSampleOffset // stores sample offset of a where b has the best correlation
   )
 {
     // sum together to normalize audio with differing channels
@@ -222,8 +223,8 @@ void correlate(
 
     // find sample offset of a where the greatest correlation exists between a and b
     // do a rough search for correlation in every <initialGranularity> samples
-    long aOffsetStart = 0;
-    long aOffsetEnd = aSamples - sampleSize;
+    int64_t aOffsetStart = 0;
+    int64_t aOffsetEnd = aSamples - sampleSize;
 
     // get the standard deviation arrays
     double aSum = sum_for_mean(a, sampleSize);
@@ -233,7 +234,7 @@ void correlate(
     float bStd = calc_std(b, bSum, sampleSize, sampleSize);
     subtract_mean(b, bSum / sampleSize, sampleSize);
 
-    for (long aOffset = aOffsetStart; aOffset < aOffsetEnd; aOffset += increment) {
+    for (int64_t aOffset = aOffsetStart; aOffset < aOffsetEnd; aOffset += increment) {
       aMean = aSum / sampleSize;
       // shift mean sum up one increment
       aSum -= a[aOffset];
@@ -254,7 +255,7 @@ void correlate(
   
       aSum = sum_for_mean(a + aOffsetStart, sampleSize);
   
-      for (long aOffset = aOffsetStart; aOffset < aOffsetEnd; aOffset++) {
+      for (int64_t aOffset = aOffsetStart; aOffset < aOffsetEnd; aOffset++) {
         aMean = aSum / sampleSize;
         // shift mean sum up one element
         aSum -= a[aOffset];
