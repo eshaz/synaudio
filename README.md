@@ -8,7 +8,7 @@ Audio clips are synchronized using the [Pearson correlation coefficient](https:/
   * Works in all major browsers, and JavaScript runtimes
   * Built in Web Worker implementations for parallel processing.
 
-## Examples Use-Cases
+## Example Use-Cases
 * Syncing audio playback for streaming radio when the stream switches bit-rates, codecs, or reconnects. See [IcecastMetadataPlayer](https://github.com/eshaz/icecast-metadata-js/tree/main/src/icecast-metadata-player)
 * Syncing multiple recordings from analog tape where the speed has slightly varied between captures. See [synaudio-cli](https://github.com/eshaz/synaudio-cli)
 * Syncing multiple digital audio recordings where the digital clocks were mismatched.
