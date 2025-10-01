@@ -1,6 +1,6 @@
 {
   "name": "synaudio",
-  "version": "0.3.5",
+  "version": "0.4.0",
   "description": "Library that finds the synchronization point between two or more audio clips.",
   "files": [
     "index.js",
